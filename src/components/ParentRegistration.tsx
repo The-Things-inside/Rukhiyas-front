@@ -16,7 +16,7 @@ export default function ParentRegistration({
 }: ParentRegistrationProps) {
   const [activeTab, setActiveTab] = useState<"online" | "call">("online");
   return (
-    <div className="min-h-screen bg-[#19191F] flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <RegistrationHeader onBack={onBack} />
       <main className="flex-1 flex flex-col items-center justify-start pt-0">
         {/* Card with top curve, edge-to-edge, always below header */}
