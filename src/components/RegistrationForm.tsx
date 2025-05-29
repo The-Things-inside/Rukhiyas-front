@@ -10,7 +10,13 @@ interface FormValues {
   password: string;
 }
 
-export default function RegistrationForm() {
+interface RegistrationFormProps {
+  onContinue: () => void;
+}
+
+export default function RegistrationForm({
+  onContinue,
+}: RegistrationFormProps) {
   const {
     register,
     handleSubmit,
@@ -21,6 +27,7 @@ export default function RegistrationForm() {
   const onSubmit = (data: FormValues) => {
     // Handle registration logic
     console.log(data);
+    onContinue();
   };
 
   return (
@@ -96,38 +103,47 @@ export default function RegistrationForm() {
           <input
             {...register("password", { required: "Password is required" })}
             type={showPassword ? "text" : "password"}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 pr-10"
-            placeholder="Create a password"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+            placeholder="Enter your password"
           />
           <button
             type="button"
-            tabIndex={-1}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
               <svg
-                width="20"
-                height="20"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
                 viewBox="0 0 24 24"
               >
-                <path d="M1 1l22 22M17.94 17.94A10.94 10.94 0 0 1 12 19C7 19 2.73 15.11 1 12c.74-1.32 2.1-3.36 4.06-5.06M9.53 9.53A3 3 0 0 1 12 9c1.66 0 3 1.34 3 3 0 .47-.11.91-.29 1.29" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                />
               </svg>
             ) : (
               <svg
-                width="20"
-                height="20"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
                 viewBox="0 0 24 24"
               >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M2.05 12C3.81 7.61 7.86 5 12 5c4.14 0 8.19 2.61 9.95 7-1.76 4.39-5.81 7-9.95 7-4.14 0-8.19-2.61-9.95-7z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
             )}
           </button>

@@ -4,6 +4,7 @@
 import RegistrationHeader from "./RegistrationHeader";
 import RegistrationStepper from "./RegistrationStepper";
 import RegistrationForm from "./RegistrationForm";
+import StudentDetailsForm from "./StudentDetailsForm";
 import BottomSheetFooter from "./BottomSheetFooter";
 import { useState } from "react";
 
@@ -15,6 +16,12 @@ export default function ParentRegistration({
   onBack,
 }: ParentRegistrationProps) {
   const [activeTab, setActiveTab] = useState<"online" | "call">("online");
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const handleContinue = () => {
+    setCurrentStep(2);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <RegistrationHeader onBack={onBack} />
@@ -32,29 +39,86 @@ export default function ParentRegistration({
           {activeTab === "online" && (
             <div className="w-full flex flex-col items-center pt-2 pb-4">
               <div className="relative w-11/12 max-w-xs h-2 flex items-center justify-center">
-                {" "}
                 {/* Stripe */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-gray-200 w-full z-0" />
                 {/* Steps */}
                 <div className="flex justify-between items-center w-full z-10">
                   {/* Step 1 */}
-                  <div className="w-6 h-6 rounded-full bg-[#E8B600] border-2 border-[#E8B600] flex items-center justify-center">
-                    <span className="w-2 h-2 bg-white rounded-full"></span>
+                  <div
+                    className={`w-6 h-6 rounded-full ${currentStep >= 1 ? "bg-[#E8B600] border-2 border-[#E8B600]" : "bg-white border-2 border-gray-200"} flex items-center justify-center`}
+                  >
+                    {currentStep > 1 ? (
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      <span className="w-2 h-2 bg-white rounded-full"></span>
+                    )}
                   </div>
                   {/* Step 2 */}
-                  <div className="w-6 h-6 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center">
-                    {/* empty for inactive */}
+                  <div
+                    className={`w-6 h-6 rounded-full ${currentStep >= 2 ? "bg-[#E8B600] border-2 border-[#E8B600]" : "bg-white border-2 border-gray-200"} flex items-center justify-center`}
+                  >
+                    {currentStep > 2 ? (
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      <span className="w-2 h-2 bg-white rounded-full"></span>
+                    )}
                   </div>
                   {/* Step 3 */}
-                  <div className="w-6 h-6 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center">
-                    {/* empty for inactive */}
+                  <div
+                    className={`w-6 h-6 rounded-full ${currentStep >= 3 ? "bg-[#E8B600] border-2 border-[#E8B600]" : "bg-white border-2 border-gray-200"} flex items-center justify-center`}
+                  >
+                    {currentStep > 3 ? (
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      <span className="w-2 h-2 bg-white rounded-full"></span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
           {activeTab === "online" ? (
-            <RegistrationForm />
+            currentStep === 1 ? (
+              <RegistrationForm onContinue={handleContinue} />
+            ) : (
+              <StudentDetailsForm />
+            )
           ) : (
             <div className="flex flex-col items-center justify-center w-full px-6 pt-4">
               <img
