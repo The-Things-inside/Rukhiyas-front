@@ -30,7 +30,17 @@ const MapAddressPicker = dynamic(() => import("./MapAddressPicker"), {
   ssr: false,
 });
 
-export default function StudentDetailsForm() {
+interface StudentDetailsFormProps {
+  onContinue: (students: StudentCard[]) => void;
+  students: StudentCard[];
+  setStudents: React.Dispatch<React.SetStateAction<StudentCard[]>>;
+}
+
+export default function StudentDetailsForm({
+  onContinue,
+  students,
+  setStudents,
+}: StudentDetailsFormProps) {
   const {
     register,
     handleSubmit,
@@ -43,7 +53,6 @@ export default function StudentDetailsForm() {
   const schoolValue = watch("school");
   const [mapOpen, setMapOpen] = useState(false);
   const homeAddress = watch("homeAddress");
-  const [students, setStudents] = useState<StudentCard[]>([]);
 
   const onSubmit = (data: FormValues) => {
     const newStudent: StudentCard = {
@@ -59,22 +68,7 @@ export default function StudentDetailsForm() {
       console.log("No students added yet");
       return;
     }
-
-    console.log("All Students Data:");
-    students.forEach((student, index) => {
-      console.log(`\nStudent ${index + 1}:`);
-      console.log("Name:", student.studentName);
-      console.log("Class:", student.class);
-      console.log("Division:", student.division);
-      console.log("School:", student.school);
-      console.log("Address:", student.homeAddress);
-      if (student.location) {
-        console.log("Location:", {
-          latitude: student.location.lat,
-          longitude: student.location.lng,
-        });
-      }
-    });
+    onContinue(students);
   };
 
   const StudentCard = ({ student }: { student: StudentCard }) => (

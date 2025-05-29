@@ -6,6 +6,7 @@ import RegistrationStepper from "./RegistrationStepper";
 import RegistrationForm from "./RegistrationForm";
 import StudentDetailsForm from "./StudentDetailsForm";
 import BottomSheetFooter from "./BottomSheetFooter";
+import ReviewAndPay from "./ReviewAndPay";
 import { useState } from "react";
 
 interface ParentRegistrationProps {
@@ -17,9 +18,11 @@ export default function ParentRegistration({
 }: ParentRegistrationProps) {
   const [activeTab, setActiveTab] = useState<"online" | "call">("online");
   const [currentStep, setCurrentStep] = useState(1);
+  const [students, setStudents] = useState([]);
 
-  const handleContinue = () => {
-    setCurrentStep(2);
+  const handleContinue = (newStudents) => {
+    setStudents(newStudents);
+    setCurrentStep(3);
   };
 
   return (
@@ -115,9 +118,15 @@ export default function ParentRegistration({
           )}
           {activeTab === "online" ? (
             currentStep === 1 ? (
-              <RegistrationForm onContinue={handleContinue} />
+              <RegistrationForm onContinue={() => setCurrentStep(2)} />
+            ) : currentStep === 2 ? (
+              <StudentDetailsForm
+                onContinue={handleContinue}
+                students={students}
+                setStudents={setStudents}
+              />
             ) : (
-              <StudentDetailsForm />
+              <ReviewAndPay students={students} />
             )
           ) : (
             <div className="flex flex-col items-center justify-center w-full px-6 pt-4">
