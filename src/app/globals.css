@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Base styles for consistent mobile experience */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  height: -webkit-fill-available;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* Prevent content from being hidden under notches and home indicators */
+.safe-area-top {
+  padding-top: var(--safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Ensure consistent touch targets */
+button, 
+a {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+/* Prevent text size adjustment on orientation change */
+* {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Ensure images don't overflow their containers */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* About Section Styles */
+.heading-styles {
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 100%;
+  letter-spacing: 0;
+  color: #000000;
+  width: 237px;
+  height: 31px;
+}
+
+@media (min-width: 768px) {
+  .heading-styles {
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 64px;
+    width: 413px;
+    height: 64px;
+  }
+}
+
+.paragraph-styles {
+  width: 338px;
+  height: 182px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 26px;
+  letter-spacing: 2%;
+  color: #000000;
+  text-align: justify;
+}
+
+@media (min-width: 768px) {
+  .paragraph-styles {
+    width: 668px;
+    height: 130px;
+    font-size: 18px;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  /* Ensure consistent font sizes across devices */
+  html {
+    font-size: 16px;
+  }
+
+  /* Adjust padding and margins for smaller screens */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Ensure buttons are easily tappable */
+  button {
+    padding: 12px 20px;
+  }
+
+  /* Adjust form elements for better touch interaction */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px;
+  }
+}
