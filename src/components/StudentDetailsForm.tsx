@@ -53,7 +53,7 @@ export default function StudentDetailsForm() {
         </label>
         <input
           {...register("studentName", { required: "Student name is required" })}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-gray-900"
           placeholder="Enter student's full name"
         />
         {errors.studentName && (
@@ -71,7 +71,7 @@ export default function StudentDetailsForm() {
           <input
             {...register("class", { required: "Class is required" })}
             type="text"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-gray-900"
             placeholder="Enter class"
           />
           {errors.class && (
@@ -86,7 +86,7 @@ export default function StudentDetailsForm() {
           <input
             {...register("division", { required: "Division is required" })}
             type="text"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-gray-900"
             placeholder="Enter division"
           />
           {errors.division && (
@@ -114,7 +114,7 @@ export default function StudentDetailsForm() {
         </label>
         <button
           type="button"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-left flex items-center gap-2"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black text-left flex items-center gap-2"
           onClick={() => setMapOpen(true)}
         >
           <svg

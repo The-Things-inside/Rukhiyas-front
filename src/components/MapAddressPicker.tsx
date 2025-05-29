@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import type { LeafletEvent } from "leaflet";
+import type { Map as LeafletMap } from "leaflet";
 
 const Map = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -50,7 +50,13 @@ export default function MapAddressPicker({
     )
       .then((res) => res.json())
       .then((data) => {
-        setAddress(data.display_name || "");
+        const address = data.display_name || "";
+        setAddress(address);
+        console.log("Current Location:", {
+          latitude: center.lat,
+          longitude: center.lng,
+          address: address,
+        });
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -62,7 +68,17 @@ export default function MapAddressPicker({
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          const { latitude, longitude } = pos.coords;
+          const newCenter = { lat: latitude, lng: longitude };
+          setCenter(newCenter);
+          console.log("Current Location from Geolocation:", {
+            latitude,
+            longitude,
+          });
+          // Update the map's view to the new location
+          if (mapRef.current) {
+            mapRef.current.setView([latitude, longitude], 17);
+          }
           setLocating(false);
         },
         () => setLocating(false)
@@ -71,6 +87,9 @@ export default function MapAddressPicker({
       setLocating(false);
     }
   };
+
+  // Add map reference
+  const mapRef = useRef<L.Map | null>(null);
 
   if (!open) return null;
 
@@ -86,8 +105,10 @@ export default function MapAddressPicker({
             scrollWheelZoom={true}
             dragging={true}
             doubleClickZoom={true}
-            whenReady={(event: LeafletEvent) => {
+            ref={mapRef}
+            whenReady={(event: { target: LeafletMap }) => {
               const map = event.target;
+              mapRef.current = map;
               map.on("moveend", () => {
                 const c = map.getCenter();
                 setCenter({ lat: c.lat, lng: c.lng });
@@ -112,9 +133,11 @@ export default function MapAddressPicker({
             />
           </div>
         </div>
-        <div className="p-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-semibold text-lg">Set Your Address</span>
+        <div className="p-4 flex flex-col gap-2 rounded-t-[24px] bg-white shadow-lg">
+          <div className="flex items-center justify-between -mb-4">
+            <span className="font-spartan font-semibold text-[18px] text-black text-center ml-10 w-full">
+              Set Your Address
+            </span>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-700 text-2xl"
@@ -122,7 +145,7 @@ export default function MapAddressPicker({
               ×
             </button>
           </div>
-          <div className="text-sm text-gray-500 mb-2">
+          <div className="font-satoshi text-[16px] text-black text-center w-full mb-2">
             Drag the map to move the pin
           </div>
           <button

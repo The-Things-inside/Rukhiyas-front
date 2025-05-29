@@ -53,7 +53,7 @@ export default function RegistrationForm({
         </label>
         <input
           {...register("fullName", { required: "Full name is required" })}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
           placeholder="Enter your full name"
         />
         {errors.fullName && (
@@ -71,7 +71,7 @@ export default function RegistrationForm({
           type="tel"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
           placeholder="Enter your mobile number"
         />
         {errors.mobile && (
@@ -88,7 +88,7 @@ export default function RegistrationForm({
           inputMode="email"
           autoCapitalize="none"
           autoComplete="email"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
           placeholder="Enter your email"
         />
         {errors.email && (
@@ -103,7 +103,7 @@ export default function RegistrationForm({
           <input
             {...register("password", { required: "Password is required" })}
             type={showPassword ? "text" : "password"}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
             placeholder="Enter your password"
           />
           <button
