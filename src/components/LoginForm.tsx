@@ -249,12 +249,12 @@ export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
         </span>
       </button>
       <div className="text-center mt-4">
-        <span className="inline-flex items-center justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-extralight whitespace-nowrap">
-          Don&apos;t have an account?{" "}
+        <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
+          Don&apos;t have an account?&nbsp;
           <a
             href="#"
             onClick={handleRegister}
-            className="text-[#f2c200] font-medium hover:underline ml-1"
+            className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
           >
             Register
           </a>

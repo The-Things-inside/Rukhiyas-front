@@ -64,14 +64,22 @@ export default function ParentRegistration({
               />
               <div className="text-center mt-6">
                 <h2
-                  className="text-xl font-bold text-black mb-2"
-                  style={{ fontFamily: "Spartan, sans-serif" }}
+                  className="text-[20px] text-black mb-2"
+                  style={{ fontFamily: "Spartan, sans-serif", fontWeight: 600 }}
                 >
                   Register hassle-free
                 </h2>
-                <p className="text-gray-600 text-base mb-4">
-                  Our friendly agent is ready to help you register. Simply tap
-                  &apos;Call Now&apos; to get started.
+                <p
+                  className="text-black text-[18px] mb-4"
+                  style={{
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 400,
+                    lineHeight: "26px",
+                  }}
+                >
+                  Our friendly agent is ready to help you
+                  <br />
+                  register. Simply tap &apos;Call Now&apos; to get started.
                 </p>
                 <a
                   href="tel:+919979645635"
