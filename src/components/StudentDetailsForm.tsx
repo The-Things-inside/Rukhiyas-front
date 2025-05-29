@@ -20,6 +20,10 @@ interface StudentCard {
   division: string;
   school: string;
   homeAddress: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 const MapAddressPicker = dynamic(() => import("./MapAddressPicker"), {
@@ -48,6 +52,29 @@ export default function StudentDetailsForm() {
     };
     setStudents([...students, newStudent]);
     reset(); // Reset form after adding student
+  };
+
+  const handleContinue = () => {
+    if (students.length === 0) {
+      console.log("No students added yet");
+      return;
+    }
+
+    console.log("All Students Data:");
+    students.forEach((student, index) => {
+      console.log(`\nStudent ${index + 1}:`);
+      console.log("Name:", student.studentName);
+      console.log("Class:", student.class);
+      console.log("Division:", student.division);
+      console.log("School:", student.school);
+      console.log("Address:", student.homeAddress);
+      if (student.location) {
+        console.log("Location:", {
+          latitude: student.location.lat,
+          longitude: student.location.lng,
+        });
+      }
+    });
   };
 
   const StudentCard = ({ student }: { student: StudentCard }) => (
@@ -217,8 +244,13 @@ export default function StudentDetailsForm() {
             <MapAddressPicker
               open={mapOpen}
               onClose={() => setMapOpen(false)}
-              onConfirm={(address) => {
+              onConfirm={(address, latlng) => {
                 setValue("homeAddress", address, { shouldValidate: true });
+                // Store the lat/lng in the current student's data
+                const currentStudent = students[students.length - 1];
+                if (currentStudent) {
+                  currentStudent.location = latlng;
+                }
                 setMapOpen(false);
               }}
               initialLatLng={undefined}
@@ -232,6 +264,7 @@ export default function StudentDetailsForm() {
         <button
           type="submit"
           className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2"
+          onClick={handleContinue}
         >
           Continue
         </button>
