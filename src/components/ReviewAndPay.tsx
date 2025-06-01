@@ -52,6 +52,21 @@ export default function ReviewAndPay({
     setEditForm({});
   };
 
+  const handleAddStudent = () => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newStudent: StudentCard = {
+      id: newId,
+      studentName: "",
+      class: "",
+      division: "",
+      school: "",
+      homeAddress: "",
+    };
+    setStudents((prev) => [...prev, newStudent]);
+    setEditingStudentId(newId);
+    setEditForm({ ...newStudent });
+  };
+
   return (
     <div className="p-6">
       <h2
@@ -224,7 +239,10 @@ export default function ReviewAndPay({
             )}
           </div>
         ))}
-        <button className="w-full border border-yellow-400 text-yellow-400 font-semibold rounded-full py-3 mt-2 text-lg bg-white hover:bg-yellow-50 transition">
+        <button
+          className="w-full border border-yellow-400 text-yellow-400 font-semibold rounded-full py-3 mt-2 text-lg bg-white hover:bg-yellow-50 transition"
+          onClick={handleAddStudent}
+        >
           Add Another Student
         </button>
       </div>
