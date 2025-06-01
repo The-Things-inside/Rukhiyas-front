@@ -15,8 +15,7 @@ const httpsOptions = {
 app.prepare().then(() => {
   createServer(httpsOptions, (req, res) => {
     handle(req, res);
-  }).listen(3000, (err) => {
-    if (err) throw err;
+  }).listen(3000, () => {
     console.log('> Ready on https://localhost:3000');
   });
 });

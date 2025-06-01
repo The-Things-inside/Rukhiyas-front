@@ -3,7 +3,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import type { Map as LeafletMap } from "leaflet";
 
 const Map = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -106,13 +105,14 @@ export default function MapAddressPicker({
             dragging={true}
             doubleClickZoom={true}
             ref={mapRef}
-            whenReady={(event: { target: LeafletMap }) => {
-              const map = event.target;
-              mapRef.current = map;
-              map.on("moveend", () => {
-                const c = map.getCenter();
-                setCenter({ lat: c.lat, lng: c.lng });
-              });
+            whenReady={() => {
+              const map = mapRef.current;
+              if (map) {
+                map.on("moveend", () => {
+                  const c = map.getCenter();
+                  setCenter({ lat: c.lat, lng: c.lng });
+                });
+              }
             }}
           >
             <TileLayer
