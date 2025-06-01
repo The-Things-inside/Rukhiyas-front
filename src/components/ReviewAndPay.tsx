@@ -14,10 +14,11 @@ export interface StudentCard {
 }
 
 export default function ReviewAndPay({
-  students,
+  students: initialStudents,
 }: {
   students: StudentCard[];
 }) {
+  const [students, setStudents] = useState<StudentCard[]>(initialStudents);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StudentCard>>({});
 
@@ -34,6 +35,19 @@ export default function ReviewAndPay({
   };
 
   const handleCancel = () => {
+    setEditingStudentId(null);
+    setEditForm({});
+  };
+
+  const handleSave = () => {
+    if (!editingStudentId) return;
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === editingStudentId
+          ? ({ ...student, ...editForm } as StudentCard)
+          : student
+      )
+    );
     setEditingStudentId(null);
     setEditForm({});
   };
@@ -82,7 +96,7 @@ export default function ReviewAndPay({
                     value={editForm.studentName || ""}
                     onChange={handleFormChange}
                     placeholder="Enter student's full name"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -96,7 +110,7 @@ export default function ReviewAndPay({
                       value={editForm.class || ""}
                       onChange={handleFormChange}
                       placeholder="Enter class"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
                     />
                   </div>
                   <div className="w-1/2">
@@ -109,7 +123,7 @@ export default function ReviewAndPay({
                       value={editForm.division || ""}
                       onChange={handleFormChange}
                       placeholder="Enter division"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
                     />
                   </div>
                 </div>
@@ -121,7 +135,7 @@ export default function ReviewAndPay({
                     name="school"
                     value={editForm.school || ""}
                     onChange={handleFormChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-black placeholder:text-gray-500"
                   >
                     <option value="">Select School</option>
                     <option value="School A">School A</option>
@@ -139,16 +153,23 @@ export default function ReviewAndPay({
                     value={editForm.homeAddress || ""}
                     onChange={handleFormChange}
                     placeholder="Enter student address"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
                   />
                 </div>
-                <div className="flex justify-end mt-2">
+                <div className="flex w-full gap-4 mt-2">
                   <button
                     type="button"
-                    className="bg-yellow-400 text-white font-semibold rounded-full py-2 px-8 text-base shadow hover:bg-yellow-500 transition"
-                    onClick={handleCancel}
+                    className="bg-yellow-400 text-white font-semibold rounded-full py-2 px-8 text-base shadow hover:bg-yellow-500 transition w-1/2"
+                    onClick={handleSave}
                   >
                     Save
+                  </button>
+                  <button
+                    type="button"
+                    className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2"
+                    onClick={handleCancel}
+                  >
+                    Cancel
                   </button>
                 </div>
               </form>
