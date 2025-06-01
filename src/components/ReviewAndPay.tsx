@@ -143,7 +143,60 @@ export default function ReviewAndPay({
           Add Another Student
         </button>
       </div>
-      <div className="mt-6 text-center"></div>
+      <div className="mt-6 text-center">
+        <h2
+          className="text-black text-[20px] text-center mb-6 -mt-3 font-bold"
+          style={{ fontFamily: "Spartan, sans-serif", fontWeight: 600 }}
+        >
+          Approximate Price
+        </h2>
+        <div className="bg-white border border-gray-200 rounded-[24px] p-4                  max-w-md mx-auto shadow-sm">
+          <div
+            className="text-black text-lg text-left font-bold mb-2"
+            style={{ fontFamily: "Spartan, sans-serif" }}
+          >
+            Estimation
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-500 text-sm font-semibold">Student</span>
+            <span className="text-gray-500 text-sm font-semibold">Amount</span>
+          </div>
+          <ul className="mb-2">
+            {students.map((student) => (
+              <li
+                key={student.id}
+                className="flex justify-between items-center py-1"
+              >
+                <span className="text-black text-base">
+                  {student.studentName || "Unnamed Student"}
+                </span>
+                <span className="text-black text-base font-semibold">
+                  ₹2000
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="flex justify-between items-center border-t border-gray-200 pt-2 mt-2">
+            <span className="text-black text-base">Total</span>
+            <span className="text-black text-base font-bold">
+              ₹{students.length * 2000}
+            </span>
+          </div>
+        </div>
+        <div className="max-w-md mx-auto mt-4 px-2">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-[16px]">
+            <p className="text-xs text-gray-600 italic leading-relaxed">
+              This is an{" "}
+              <span className="font-semibold text-yellow-700">
+                approximate price
+              </span>
+              . Once we allocate the bus and verify your data, we will send a
+              WhatsApp message to the registered number. Then you will be able
+              to pay the amount.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
