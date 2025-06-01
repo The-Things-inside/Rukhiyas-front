@@ -20,7 +20,7 @@ export default function BottomNavBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#19191F] border-t border-gray-800 z-50">
       <div className="max-w-md mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {navItems.map((item) => {
             const isActive = pathname === item.path;
             return (
@@ -30,25 +30,32 @@ export default function BottomNavBar() {
                 className="flex-1 flex flex-col items-center justify-center h-full relative"
               >
                 <div
-                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-200 ${
-                    isActive ? "bg-[#282828]" : ""
-                  }`}
+                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-200`}
                 >
-                  <span className="relative">
-                    <Image
-                      src={item.icon}
-                      alt={item.name}
-                      width={28}
-                      height={28}
-                      className={
-                        isActive
-                          ? "filter brightness-150 invert-[.7] sepia-[1] hue-rotate-[20deg] saturate-[8] drop-shadow-[0_0_4px_#f2c200]"
-                          : "opacity-80"
-                      }
-                    />
-                    {/* Notification badge example */}
-                    {item.badge && item.name === "Notification" && (
-                      <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#f2c200] rounded-full border-2 border-[#19191F]" />
+                  <span className="relative flex items-center justify-center">
+                    {isActive ? (
+                      <span className="flex items-center justify-center w-[64px] h-[32px] rounded-[16px] bg-[#e8b600]/15">
+                        <Image
+                          src={item.icon}
+                          alt={item.name}
+                          width={28}
+                          height={28}
+                          className={
+                            "filter brightness-150  sepia-[1] hue-rotate-[20deg] saturate-[8] drop-shadow-[0_0_4px_#f2c200]"
+                          }
+                        />
+                        {item.badge && item.name === "Notification" && (
+                          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#f2c200] rounded-full border-2 border-[#19191F]" />
+                        )}
+                      </span>
+                    ) : (
+                      <Image
+                        src={item.icon}
+                        alt={item.name}
+                        width={28}
+                        height={28}
+                        className={"opacity-80"}
+                      />
                     )}
                   </span>
                   <span
