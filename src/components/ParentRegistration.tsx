@@ -155,11 +155,20 @@ export default function ParentRegistration({
                   register. Simply tap &apos;Call Now&apos; to get started.
                 </p>
                 <a
-                  href="tel:+919979645635"
+                  href="tel:+918113037647"
                   className="block w-full bg-[#f2c200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#e6b800] transition mt-2"
                 >
                   Call Now
                 </a>
+                <p className="text-gray-400 text-sm mt-2 text-center">
+                  Alternative number:{" "}
+                  <a
+                    href="tel:+919895931658"
+                    className="underline hover:text-gray-600"
+                  >
+                    +91 9895931658
+                  </a>
+                </p>
               </div>
             </div>
           )}
