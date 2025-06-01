@@ -67,6 +67,14 @@ export default function ReviewAndPay({
     setEditForm({ ...newStudent });
   };
 
+  const handleRemove = (id: string) => {
+    setStudents((prev) => prev.filter((student) => student.id !== id));
+    if (editingStudentId === id) {
+      setEditingStudentId(null);
+      setEditForm({});
+    }
+  };
+
   return (
     <div className="p-6">
       <h2
@@ -96,7 +104,7 @@ export default function ReviewAndPay({
                   <button
                     type="button"
                     className="text-black underline text-sm font-medium"
-                    onClick={handleCancel}
+                    onClick={() => handleRemove(student.id)}
                   >
                     Remove
                   </button>
@@ -231,7 +239,10 @@ export default function ReviewAndPay({
                   >
                     Edit
                   </button>
-                  <button className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2">
+                  <button
+                    className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2"
+                    onClick={() => handleRemove(student.id)}
+                  >
                     Remove
                   </button>
                 </div>
