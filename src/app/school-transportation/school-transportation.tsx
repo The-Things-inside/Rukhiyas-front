@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect } from "react";
@@ -658,7 +659,7 @@ function MapMarkers({ selectedSchool }: { selectedSchool: string | null }) {
       // When no school is selected (cross pressed), restore previous view
       map.setView(previousView.center, previousView.zoom);
     }
-  }, [selectedSchool, map]);
+  }, [selectedSchool, map, previousView.center, previousView.zoom]);
 
   return (
     <>
