@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import StudentEditForm from "./StudentEditForm";
 
 export interface StudentCard {
   id: string;
@@ -20,36 +21,9 @@ export default function ReviewAndPay({
 }) {
   const [students, setStudents] = useState<StudentCard[]>(initialStudents);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<StudentCard>>({});
 
   const handleEdit = (student: StudentCard) => {
     setEditingStudentId(student.id);
-    setEditForm({ ...student });
-  };
-
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCancel = () => {
-    setEditingStudentId(null);
-    setEditForm({});
-  };
-
-  const handleSave = () => {
-    if (!editingStudentId) return;
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.id === editingStudentId
-          ? ({ ...student, ...editForm } as StudentCard)
-          : student
-      )
-    );
-    setEditingStudentId(null);
-    setEditForm({});
   };
 
   const handleAddStudent = () => {
@@ -64,14 +38,12 @@ export default function ReviewAndPay({
     };
     setStudents((prev) => [...prev, newStudent]);
     setEditingStudentId(newId);
-    setEditForm({ ...newStudent });
   };
 
   const handleRemove = (id: string) => {
     setStudents((prev) => prev.filter((student) => student.id !== id));
     if (editingStudentId === id) {
       setEditingStudentId(null);
-      setEditForm({});
     }
   };
 
@@ -96,106 +68,20 @@ export default function ReviewAndPay({
             className="mb-4 p-4 rounded-2xl border border-yellow-400 shadow-sm"
           >
             {editingStudentId === student.id ? (
-              <form className="space-y-2">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-yellow-500 font-semibold text-base">
-                    Student {idx + 1}
-                  </span>
-                  <button
-                    type="button"
-                    className="text-black underline text-sm font-medium"
-                    onClick={() => handleRemove(student.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="studentName"
-                    value={editForm.studentName || ""}
-                    onChange={handleFormChange}
-                    placeholder="Enter student's full name"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-1/2">
-                    <label className="block text-gray-700 text-sm font-medium mb-1">
-                      Class
-                    </label>
-                    <input
-                      type="text"
-                      name="class"
-                      value={editForm.class || ""}
-                      onChange={handleFormChange}
-                      placeholder="Enter class"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <label className="block text-gray-700 text-sm font-medium mb-1">
-                      Division
-                    </label>
-                    <input
-                      type="text"
-                      name="division"
-                      value={editForm.division || ""}
-                      onChange={handleFormChange}
-                      placeholder="Enter division"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    School
-                  </label>
-                  <select
-                    name="school"
-                    value={editForm.school || ""}
-                    onChange={handleFormChange}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-black placeholder:text-gray-500"
-                  >
-                    <option value="">Select School</option>
-                    <option value="School A">School A</option>
-                    <option value="School B">School B</option>
-                    <option value="School C">School C</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Student Address
-                  </label>
-                  <input
-                    type="text"
-                    name="homeAddress"
-                    value={editForm.homeAddress || ""}
-                    onChange={handleFormChange}
-                    placeholder="Enter student address"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 text-black placeholder:text-gray-500"
-                  />
-                </div>
-                <div className="flex w-full gap-4 mt-2">
-                  <button
-                    type="button"
-                    className="bg-yellow-400 text-white font-semibold rounded-full py-2 px-8 text-base shadow hover:bg-yellow-500 transition w-1/2"
-                    onClick={handleSave}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              <StudentEditForm
+                initialStudent={student}
+                studentNumber={idx + 1}
+                onSave={(updatedStudent) => {
+                  setStudents((prev) =>
+                    prev.map((s) => (s.id === student.id ? updatedStudent : s))
+                  );
+                  setEditingStudentId(null);
+                }}
+                onCancel={() => {
+                  setEditingStudentId(null);
+                }}
+                onRemove={() => handleRemove(student.id)}
+              />
             ) : (
               <>
                 <div className="mb-2">
