@@ -40,14 +40,18 @@ export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (emailOrMobile === "test@test.com" && password !== "test") {
+
+    // Hardcoded credentials check
+    if (emailOrMobile === "test@test.com" && password === "test") {
+      if (onSubmit) {
+        onSubmit({ emailOrMobile, password, stayLoggedIn });
+      }
+      // Navigate to app home
+      router.push("/app");
+    } else {
       setPasswordError(true);
       setShakePassword(true);
       setTimeout(() => setShakePassword(false), 500);
-      return;
-    }
-    if (onSubmit) {
-      onSubmit({ emailOrMobile, password, stayLoggedIn });
     }
   };
 
