@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Loading from "./Loading";
 
@@ -20,14 +19,12 @@ export default function LoginForm({
   loading,
   headerText = "Log in to view your child's transport details and account info",
 }: LoginFormProps) {
-  const [emailOrMobile, setEmailOrMobile] = useState("test@test.com");
-  const [password, setPassword] = useState("test");
+  const [emailOrMobile, setEmailOrMobile] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(true);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [shakePassword, setShakePassword] = useState(false);
-  const router = useRouter();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,24 +43,9 @@ export default function LoginForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Hardcoded credentials check
-    if (emailOrMobile === "test@test.com" && password === "test") {
-      if (onSubmit) {
-        onSubmit({ emailOrMobile, password, stayLoggedIn });
-      }
-      // Navigate to app home
-      router.push("/app");
-    } else {
-      setPasswordError(true);
-      setShakePassword(true);
-      setTimeout(() => setShakePassword(false), 500);
+    if (onSubmit) {
+      onSubmit({ emailOrMobile, password, stayLoggedIn });
     }
-  };
-
-  const handleRegister = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push("/register");
   };
 
   return (
@@ -129,7 +111,7 @@ export default function LoginForm({
             autoComplete="off"
             className={`w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] pr-12 bg-[#faf9f6] placeholder-gray-400 text-[#000000] ${
               passwordError ? "border-[#E20020]" : "border-gray-300"
-            } ${shakePassword ? "animate-shake" : ""}`}
+            }`}
             placeholder="Enter password"
             value={password}
             onChange={(e) => {
@@ -234,7 +216,6 @@ export default function LoginForm({
           className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
           style={{
             fontFamily: "Satoshi, sans-serif",
-
             display: "inline-block",
           }}
         >
@@ -250,25 +231,12 @@ export default function LoginForm({
           className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
           style={{
             fontFamily: "Satoshi, sans-serif",
-
             display: "inline-block",
           }}
         >
           Apple
         </span>
       </button>
-      <div className="text-center mt-4">
-        <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
-          Don&apos;t have an account?&nbsp;
-          <a
-            href="#"
-            onClick={handleRegister}
-            className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
-          >
-            Register
-          </a>
-        </span>
-      </div>
     </form>
   );
 }

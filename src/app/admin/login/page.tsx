@@ -1,15 +1,30 @@
 "use client";
 import LoginForm from "../../../components/LoginForm";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Placeholder for actual admin login logic
-  const handleLogin = async () => {
+  const handleLogin = async (data: {
+    emailOrMobile: string;
+    password: string;
+    stayLoggedIn: boolean;
+  }) => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => setLoading(false), 1200);
+    // Check for admin credentials
+    if (data.emailOrMobile === "admin@test.com" && data.password === "test") {
+      // Simulate API call
+      setTimeout(() => {
+        setLoading(false);
+        router.push("/admin/dashboard");
+      }, 1200);
+    } else {
+      setLoading(false);
+      // Handle invalid credentials
+      alert("Invalid admin credentials");
+    }
   };
 
   return (
@@ -17,7 +32,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md mx-auto">
         <header className="w-full bg-[#14141B] px-4 py-3">
           <h1
-            className="text-[20px] font-semibold text-white text-center"
+            className="text-[20px] font-semibold text-white text-left"
             style={{
               fontFamily: "Spartan, sans-serif",
             }}
