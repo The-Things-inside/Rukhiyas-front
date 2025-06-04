@@ -4,9 +4,10 @@ import MenuOverlay from "./MenuOverlay";
 
 interface LoginHeaderProps {
   onBack?: () => void;
+  title?: string;
 }
 
-const LoginHeader: FC<LoginHeaderProps> = ({ onBack }) => {
+const LoginHeader: FC<LoginHeaderProps> = ({ onBack, title = "Log In" }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -38,7 +39,7 @@ const LoginHeader: FC<LoginHeaderProps> = ({ onBack }) => {
               verticalAlign: "text-top",
             }}
           >
-            Log In
+            {title}
           </span>
         </button>
         <button

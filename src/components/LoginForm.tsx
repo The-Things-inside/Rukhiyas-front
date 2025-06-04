@@ -11,9 +11,15 @@ interface LoginFormProps {
     stayLoggedIn: boolean;
   }) => void;
   loading?: boolean;
+  headerText?: string;
+  descriptionText?: string;
 }
 
-export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
+export default function LoginForm({
+  onSubmit,
+  loading,
+  headerText = "Log in to view your child's transport details and account info",
+}: LoginFormProps) {
   const [emailOrMobile, setEmailOrMobile] = useState("test@test.com");
   const [password, setPassword] = useState("test");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,24 +47,12 @@ export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check for admin credentials
-    if (emailOrMobile === "admin@test.com" && password === "test") {
-      // Store admin role in localStorage
-      localStorage.setItem("userRole", "admin");
+    // Hardcoded credentials check
+    if (emailOrMobile === "test@test.com" && password === "test") {
       if (onSubmit) {
         onSubmit({ emailOrMobile, password, stayLoggedIn });
       }
-      // Navigate to admin dashboard
-      router.push("/admin/dashboard");
-    }
-    // Check for parent credentials
-    else if (emailOrMobile === "test@test.com" && password === "test") {
-      // Store parent role in localStorage
-      localStorage.setItem("userRole", "parent");
-      if (onSubmit) {
-        onSubmit({ emailOrMobile, password, stayLoggedIn });
-      }
-      // Navigate to parent dashboard
+      // Navigate to app home
       router.push("/app");
     } else {
       setPasswordError(true);
@@ -83,9 +77,8 @@ export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
           className="text-[18px] text-black mb-2 leading-[28px] tracking-[0.02em] text-left font-medium"
           style={{ fontFamily: "Spartan, sans-serif", letterSpacing: "0.02em" }}
         >
-          Log in to view your child&apos;s transport
+          {headerText}
           <br />
-          details and account info
         </h2>
       </div>
       <div>
