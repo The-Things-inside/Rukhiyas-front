@@ -41,12 +41,24 @@ export default function LoginForm({ onSubmit, loading }: LoginFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Hardcoded credentials check
-    if (emailOrMobile === "test@test.com" && password === "test") {
+    // Check for admin credentials
+    if (emailOrMobile === "admin@test.com" && password === "test") {
+      // Store admin role in localStorage
+      localStorage.setItem("userRole", "admin");
       if (onSubmit) {
         onSubmit({ emailOrMobile, password, stayLoggedIn });
       }
-      // Navigate to app home
+      // Navigate to admin dashboard
+      router.push("/admin/dashboard");
+    }
+    // Check for parent credentials
+    else if (emailOrMobile === "test@test.com" && password === "test") {
+      // Store parent role in localStorage
+      localStorage.setItem("userRole", "parent");
+      if (onSubmit) {
+        onSubmit({ emailOrMobile, password, stayLoggedIn });
+      }
+      // Navigate to parent dashboard
       router.push("/app");
     } else {
       setPasswordError(true);
