@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import AdminPageHeader from "@/components/AdminPageHeader";
 
 const tabs = [
   { name: "Home", path: "/admin/dashboard" },
@@ -19,17 +20,8 @@ export default function AdminDashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#19191F]">
-      {/* Top Navigation Bar */}
-      <nav className="bg-[#14141B] px-4 py-3">
-        <div className="max-w-7xl mx-auto">
-          <h1
-            className="text-[20px] font-semibold text-white"
-            style={{ fontFamily: "Spartan, sans-serif" }}
-          >
-            Admin Dashboard
-          </h1>
-        </div>
-      </nav>
+      {/* Admin Page Header */}
+      <AdminPageHeader />
 
       {/* Tab Navigation */}
       <div className="bg-[#1E1E24] border-b border-[#2A2A32]">
