@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function AdminLoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async (data: {
     emailOrMobile: string;
@@ -13,6 +14,8 @@ export default function AdminLoginPage() {
     stayLoggedIn: boolean;
   }) => {
     setLoading(true);
+    setError("");
+
     // Check for admin credentials
     if (data.emailOrMobile === "admin@test.com" && data.password === "test") {
       // Simulate API call
@@ -22,8 +25,7 @@ export default function AdminLoginPage() {
       }, 1200);
     } else {
       setLoading(false);
-      // Handle invalid credentials
-      alert("Invalid admin credentials");
+      setError("Invalid admin credentials");
     }
   };
 
@@ -46,6 +48,9 @@ export default function AdminLoginPage() {
           loading={loading}
           headerText="Log in to your admin panel"
           showSocialLogin={false}
+          defaultEmail="admin@test.com"
+          defaultPassword="test"
+          error={error}
         />
       </div>
     </div>

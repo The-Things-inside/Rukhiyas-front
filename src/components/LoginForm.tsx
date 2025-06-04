@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Loading from "./Loading";
+import React from "react";
 
 interface LoginFormProps {
   onSubmit?: (data: {
@@ -14,6 +15,9 @@ interface LoginFormProps {
   headerText?: string;
   descriptionText?: string;
   showSocialLogin?: boolean;
+  defaultEmail?: string;
+  defaultPassword?: string;
+  error?: string;
 }
 
 export default function LoginForm({
@@ -21,9 +25,12 @@ export default function LoginForm({
   loading,
   headerText = "Log in to view your child's transport details and account info",
   showSocialLogin = true,
+  defaultEmail = "test@test.com",
+  defaultPassword = "test",
+  error,
 }: LoginFormProps) {
-  const [emailOrMobile, setEmailOrMobile] = useState("test@test.com");
-  const [password, setPassword] = useState("test");
+  const [emailOrMobile, setEmailOrMobile] = useState(defaultEmail);
+  const [password, setPassword] = useState(defaultPassword);
   const [showPassword, setShowPassword] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(true);
   const [emailError, setEmailError] = useState(false);
@@ -48,18 +55,8 @@ export default function LoginForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Hardcoded credentials check
-    if (emailOrMobile === "test@test.com" && password === "test") {
-      if (onSubmit) {
-        onSubmit({ emailOrMobile, password, stayLoggedIn });
-      }
-      // Navigate to app home
-      router.push("/app");
-    } else {
-      setPasswordError(true);
-      setShakePassword(true);
-      setTimeout(() => setShakePassword(false), 500);
+    if (onSubmit) {
+      onSubmit({ emailOrMobile, password, stayLoggedIn });
     }
   };
 
@@ -67,6 +64,15 @@ export default function LoginForm({
     e.preventDefault();
     router.push("/register");
   };
+
+  // Update password error state when error prop changes
+  React.useEffect(() => {
+    if (error) {
+      setPasswordError(true);
+      setShakePassword(true);
+      setTimeout(() => setShakePassword(false), 500);
+    }
+  }, [error]);
 
   return (
     <form
