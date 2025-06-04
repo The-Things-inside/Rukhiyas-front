@@ -18,6 +18,7 @@ interface LoginFormProps {
   defaultEmail?: string;
   defaultPassword?: string;
   error?: string;
+  registerLink?: string;
 }
 
 export default function LoginForm({
@@ -28,6 +29,7 @@ export default function LoginForm({
   defaultEmail = "test@test.com",
   defaultPassword = "test",
   error,
+  registerLink = "/register",
 }: LoginFormProps) {
   const [emailOrMobile, setEmailOrMobile] = useState(defaultEmail);
   const [password, setPassword] = useState(defaultPassword);
@@ -62,7 +64,7 @@ export default function LoginForm({
 
   const handleRegister = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push("/register");
+    router.push(registerLink);
   };
 
   // Update password error state when error prop changes

@@ -51,6 +51,7 @@ export default function AdminLoginPage() {
           defaultEmail="admin@test.com"
           defaultPassword="test"
           error={error}
+          registerLink="/admin/register"
         />
       </div>
     </div>
