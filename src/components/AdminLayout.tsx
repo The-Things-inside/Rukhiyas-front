@@ -7,20 +7,20 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#19191F]">
-      <div className="fixed top-0 left-0 right-0 z-50">
+    <div className="min-h-screen bg-[#19191F] relative">
+      <div className="fixed top-0 left-0 right-0 z-50 max-w-md mx-auto">
         <AdminPageHeader />
       </div>
       <div
-        className="fixed left-0 right-0 mx-auto bg-white mt-3 rounded-t-[24px] max-w-md"
+        className="absolute left-0 right-0 mx-auto bg-white mt-3 rounded-t-[24px] max-w-md flex flex-col"
         style={{
           top: 67, // header height
+          height:
+            "100dvh" in window ? "calc(100dvh - 67px)" : "calc(100vh - 67px)",
           bottom: 0,
-          height: "calc(100vh - 67px)",
-          overflowY: "auto",
         }}
       >
-        {children}
+        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
