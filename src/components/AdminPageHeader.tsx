@@ -24,7 +24,7 @@ export default function AdminPageHeader({
         {title}
       </span>
       <div className="flex items-center gap-2">
-        {/* Bell Icon with notification dot */}
+        {/* Bell Icon with  dot */}
         <button
           aria-label="Notifications"
           className="relative focus:outline-none -mt-1"
