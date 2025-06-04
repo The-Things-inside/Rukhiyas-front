@@ -45,6 +45,7 @@ export default function AdminLoginPage() {
           onSubmit={handleLogin}
           loading={loading}
           headerText="Log in to your admin panel"
+          showSocialLogin={false}
         />
       </div>
     </div>

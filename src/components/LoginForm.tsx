@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Loading from "./Loading";
 
@@ -12,19 +13,23 @@ interface LoginFormProps {
   loading?: boolean;
   headerText?: string;
   descriptionText?: string;
+  showSocialLogin?: boolean;
 }
 
 export default function LoginForm({
   onSubmit,
   loading,
   headerText = "Log in to view your child's transport details and account info",
+  showSocialLogin = true,
 }: LoginFormProps) {
-  const [emailOrMobile, setEmailOrMobile] = useState("");
-  const [password, setPassword] = useState("");
+  const [emailOrMobile, setEmailOrMobile] = useState("test@test.com");
+  const [password, setPassword] = useState("test");
   const [showPassword, setShowPassword] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(true);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [shakePassword, setShakePassword] = useState(false);
+  const router = useRouter();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,15 +48,30 @@ export default function LoginForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit) {
-      onSubmit({ emailOrMobile, password, stayLoggedIn });
+
+    // Hardcoded credentials check
+    if (emailOrMobile === "test@test.com" && password === "test") {
+      if (onSubmit) {
+        onSubmit({ emailOrMobile, password, stayLoggedIn });
+      }
+      // Navigate to app home
+      router.push("/app");
+    } else {
+      setPasswordError(true);
+      setShakePassword(true);
+      setTimeout(() => setShakePassword(false), 500);
     }
+  };
+
+  const handleRegister = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push("/register");
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-t-3xl shadow-lg px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4"
+      className="bg-white rounded-t-3xl shadow-lg px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4 min-h-[calc(100vh-80px)]"
       autoComplete="off"
     >
       <div className="mb-2">
@@ -111,7 +131,7 @@ export default function LoginForm({
             autoComplete="off"
             className={`w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] pr-12 bg-[#faf9f6] placeholder-gray-400 text-[#000000] ${
               passwordError ? "border-[#E20020]" : "border-gray-300"
-            }`}
+            } ${shakePassword ? "animate-shake" : ""}`}
             placeholder="Enter password"
             value={password}
             onChange={(e) => {
@@ -202,41 +222,57 @@ export default function LoginForm({
           Stay logged in on this device
         </label>
       </div>
-      <div className="flex items-center justify-center text-gray-400 text-sm my-1">
-        <span className="border-t border-gray-200 flex-1" />
-        <span className="px-3">or log in with</span>
-        <span className="border-t border-gray-200 flex-1" />
+      {showSocialLogin && (
+        <>
+          <div className="flex items-center justify-center text-gray-400 text-sm my-1">
+            <span className="border-t border-gray-200 flex-1" />
+            <span className="px-3">or log in with</span>
+            <span className="border-t border-gray-200 flex-1" />
+          </div>
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 border-2 border-[#f2c200] rounded-full py-2.5 text-base font-medium text-gray-900 bg-white hover:bg-[#fffbe6] transition mb-2"
+          >
+            <Image src="/google-logo.svg" alt="Google" width={24} height={24} />
+            <span
+              className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
+              style={{
+                fontFamily: "Satoshi, sans-serif",
+                display: "inline-block",
+              }}
+            >
+              Google
+            </span>
+          </button>
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 border-2 border-[#f2c200] rounded-full py-2.5 text-base font-medium text-gray-900 bg-white hover:bg-[#fffbe6] transition"
+          >
+            <Image src="/apple-logo.svg" alt="Apple" width={20} height={20} />
+            <span
+              className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
+              style={{
+                fontFamily: "Satoshi, sans-serif",
+                display: "inline-block",
+              }}
+            >
+              Apple
+            </span>
+          </button>
+        </>
+      )}
+      <div className="text-center mt-4">
+        <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
+          Don&apos;t have an account?&nbsp;
+          <a
+            href="#"
+            onClick={handleRegister}
+            className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
+          >
+            Register
+          </a>
+        </span>
       </div>
-      <button
-        type="button"
-        className="w-full flex items-center justify-center gap-3 border-2 border-[#f2c200] rounded-full py-2.5 text-base font-medium text-gray-900 bg-white hover:bg-[#fffbe6] transition mb-2"
-      >
-        <Image src="/google-logo.svg" alt="Google" width={24} height={24} />
-        <span
-          className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
-          style={{
-            fontFamily: "Satoshi, sans-serif",
-            display: "inline-block",
-          }}
-        >
-          Google
-        </span>
-      </button>
-      <button
-        type="button"
-        className="w-full flex items-center justify-center gap-3 border-2 border-[#f2c200] rounded-full py-2.5 text-base font-medium text-gray-900 bg-white hover:bg-[#fffbe6] transition"
-      >
-        <Image src="/apple-logo.svg" alt="Apple" width={20} height={20} />
-        <span
-          className="text-[18px] leading-[100%] tracking-[0%] font-medium text-[#3C3C3C]"
-          style={{
-            fontFamily: "Satoshi, sans-serif",
-            display: "inline-block",
-          }}
-        >
-          Apple
-        </span>
-      </button>
     </form>
   );
 }
