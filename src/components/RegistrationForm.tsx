@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import React from "react";
 
 interface FormValues {
   fullName: string;
@@ -23,11 +24,42 @@ export default function RegistrationForm({
     formState: { errors },
   } = useForm<FormValues>();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-  const onSubmit = (data: FormValues) => {
-    // Handle registration logic
-    console.log(data);
-    onContinue();
+  const onSubmit = async (data: FormValues) => {
+    setLoading(true);
+    setApiError("");
+    try {
+      const response = await fetch("https://13.235.104.94/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          full_name: data.fullName,
+          mobile_no: data.mobile,
+          email: data.email,
+          password: data.password,
+        }),
+      });
+      if (response.status === 201) {
+        setLoading(false);
+        onContinue();
+      } else {
+        const errorData = await response.json();
+        setApiError(
+          errorData?.detail?.[0]?.msg ||
+            errorData?.detail ||
+            "Registration failed. Please try again."
+        );
+        setLoading(false);
+      }
+    } catch (err) {
+      setApiError("Network error. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +79,9 @@ export default function RegistrationForm({
           Log In
         </a>
       </div>
+      {apiError && (
+        <div className="text-red-500 text-center text-sm mb-2">{apiError}</div>
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">
           Full Name
@@ -156,9 +191,10 @@ export default function RegistrationForm({
       </div>
       <button
         type="submit"
-        className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2"
+        className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2 disabled:opacity-60"
+        disabled={loading}
       >
-        Continue
+        {loading ? "Registering..." : "Continue"}
       </button>
     </form>
   );

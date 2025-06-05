@@ -25,7 +25,7 @@ export default function RegistrationStepper({
   }, []);
 
   return (
-    <div className="px-6 pb-2 rounded-t-3xl pt-6">
+    <div className="px-6 pb-0 rounded-t-3xl pt-2">
       {/* Tabs group, clipped and centered */}
       <div className="flex justify-center mb-6">
         <div className="flex items-end p-1" style={{ gap: 20 }}>
