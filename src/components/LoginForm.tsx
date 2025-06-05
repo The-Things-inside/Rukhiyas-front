@@ -79,7 +79,7 @@ export default function LoginForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-t-3xl shadow-lg px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4 min-h-[calc(100vh-80px)]"
+      className="bg-white rounded-t-3xl  px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4 min-h-[calc(100vh-80px)]"
       autoComplete="off"
     >
       <div className="mb-2">
