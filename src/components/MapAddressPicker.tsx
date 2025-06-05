@@ -23,14 +23,14 @@ export default function MapAddressPicker({
 }: MapAddressPickerProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
-  const [mapCenter, setMapCenter] = useState(
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(
     initialLatLng || { lat: 11.707, lng: 75.531 }
   );
-  const [address, setAddress] = useState("Fetching address...");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [address, setAddress] = useState<string>("Fetching address...");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     if (!open) return;
