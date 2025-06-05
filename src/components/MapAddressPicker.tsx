@@ -30,6 +30,7 @@ export default function MapAddressPicker({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [L, setL] = useState<any>(null);
 
@@ -51,9 +52,16 @@ export default function MapAddressPicker({
         touchZoom: true,
         scrollWheelZoom: true,
         doubleClickZoom: true,
-        zoomControl: true,
+        zoomControl: false, // Disable default zoom control
       });
       mapRef.current = map;
+
+      // Add custom positioned zoom control
+      L.control
+        .zoom({
+          position: "bottomright",
+        })
+        .addTo(map);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
@@ -160,6 +168,41 @@ export default function MapAddressPicker({
     }
   };
 
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (mapRef.current && markerRef.current) {
+          mapRef.current.setView([latitude, longitude], 16);
+          markerRef.current.setLatLng([latitude, longitude]);
+          setMapCenter({ lat: latitude, lng: longitude });
+
+          // Fetch address for the current location
+          fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              setAddress(data.display_name || "Address not found");
+              setSearchQuery(data.display_name || "");
+            });
+        }
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Unable to retrieve your location");
+        setIsLocating(false);
+      }
+    );
+  };
+
   if (!open) return null;
 
   return (
@@ -211,6 +254,60 @@ export default function MapAddressPicker({
           <p className="text-sm text-gray-600">Selected Address:</p>
           <p className="text-sm text-gray-800">{address}</p>
         </div>
+        <button
+          className="mt-4 w-full py-3 rounded-full bg-yellow-400 text-white font-bold shadow flex items-center justify-center gap-2"
+          onClick={handleUseCurrentLocation}
+          disabled={isLocating}
+        >
+          {isLocating ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Locating...</span>
+            </>
+          ) : (
+            <>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17.657 16.657L13.414 12.414a4 4 0 10-1.414 1.414l4.243 4.243a1 1 0 001.414-1.414z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>Use My Current Location</span>
+            </>
+          )}
+        </button>
         <button
           className="mt-4 w-full py-3 rounded-full bg-yellow-400 text-white font-bold shadow"
           onClick={() => onConfirm(address, mapCenter)}
