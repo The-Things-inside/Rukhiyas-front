@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import React from "react";
 
 interface FormValues {
   fullName: string;
@@ -25,11 +24,11 @@ export default function RegistrationForm({
   } = useForm<FormValues>();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const [error, setError] = useState("");
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
-    setApiError("");
+    setError("");
     try {
       const response = await fetch("https://13.235.104.94/register", {
         method: "POST",
@@ -44,20 +43,28 @@ export default function RegistrationForm({
           password: data.password,
         }),
       });
-      if (response.status === 201) {
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(
+          errorData?.detail?.[0]?.msg ||
+            errorData?.detail ||
+            "Registration failed. Please check your details."
+        );
+        setLoading(false);
+        return;
+      }
+      const result = await response.json();
+      if (result.access_token && result.user?.user_id) {
+        localStorage.setItem("access_token", result.access_token);
+        localStorage.setItem("parent_id", result.user.user_id.toString());
         setLoading(false);
         onContinue();
       } else {
-        const errorData = await response.json();
-        setApiError(
-          errorData?.detail?.[0]?.msg ||
-            errorData?.detail ||
-            "Registration failed. Please try again."
-        );
+        setError("Registration failed. Please try again.");
         setLoading(false);
       }
-    } catch (err) {
-      setApiError("Network error. Please try again.");
+    } catch (e) {
+      setError("Network error. Please try again.");
       setLoading(false);
     }
   };
@@ -79,8 +86,8 @@ export default function RegistrationForm({
           Log In
         </a>
       </div>
-      {apiError && (
-        <div className="text-red-500 text-center text-sm mb-2">{apiError}</div>
+      {error && (
+        <div className="text-red-500 text-center text-sm mb-2">{error}</div>
       )}
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -157,7 +164,7 @@ export default function RegistrationForm({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 />
               </svg>
             ) : (
