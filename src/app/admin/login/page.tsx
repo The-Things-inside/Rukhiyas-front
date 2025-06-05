@@ -16,16 +16,49 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError("");
 
-    // Check for admin credentials
-    if (data.emailOrMobile === "admin@test.com" && data.password === "test") {
-      // Simulate API call
-      setTimeout(() => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append("grant_type", "");
+      formData.append("username", data.emailOrMobile);
+      formData.append("password", data.password);
+      formData.append("scope", "");
+      formData.append("client_id", "");
+      formData.append("client_secret", "");
+
+      const response = await fetch("https://13.235.104.94/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          accept: "application/json",
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(
+          errorData?.detail?.[0]?.msg ||
+            errorData?.detail ||
+            "Invalid credentials or server error"
+        );
+        setLoading(false);
+        return;
+      }
+
+      const result = await response.json();
+      if (result.access_token) {
+        if (data.stayLoggedIn) {
+          localStorage.setItem("access_token", result.access_token);
+        }
         setLoading(false);
         router.push("/admin/dashboard");
-      }, 1200);
-    } else {
+      } else {
+        setError("Login failed: No access token returned");
+        setLoading(false);
+      }
+    } catch {
+      setError("Network or server error");
       setLoading(false);
-      setError("Invalid admin credentials");
     }
   };
 
