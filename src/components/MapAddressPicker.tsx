@@ -3,6 +3,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
+import type { Map as LeafletMap } from "leaflet";
+import L from "leaflet";
 
 const Map = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -10,6 +12,10 @@ const Map = dynamic(
 );
 const TileLayer = dynamic(
   () => import("react-leaflet").then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Marker),
   { ssr: false }
 );
 
@@ -39,6 +45,7 @@ export default function MapAddressPicker({
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
 
   // Reverse geocode to get address from lat/lng
   useEffect(() => {
@@ -70,6 +77,7 @@ export default function MapAddressPicker({
           const { latitude, longitude } = pos.coords;
           const newCenter = { lat: latitude, lng: longitude };
           setCenter(newCenter);
+          setCurrentLocation(newCenter);
           console.log("Current Location from Geolocation:", {
             latitude,
             longitude,
@@ -105,20 +113,30 @@ export default function MapAddressPicker({
             dragging={true}
             doubleClickZoom={true}
             ref={mapRef}
-            whenReady={() => {
-              const map = mapRef.current;
-              if (map) {
-                map.on("moveend", () => {
-                  const c = map.getCenter();
-                  setCenter({ lat: c.lat, lng: c.lng });
-                });
-              }
+            whenReady={(event: { target: LeafletMap }) => {
+              const map = event.target;
+              mapRef.current = map;
+              map.on("moveend", () => {
+                const c = map.getCenter();
+                setCenter({ lat: c.lat, lng: c.lng });
+              });
             }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            {currentLocation && (
+              <Marker
+                position={[currentLocation.lat, currentLocation.lng]}
+                icon={L.divIcon({
+                  className: "current-location-marker",
+                  html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>',
+                  iconSize: [16, 16],
+                  iconAnchor: [8, 8],
+                })}
+              />
+            )}
           </Map>
           {/* Fixed pointer */}
           <div
