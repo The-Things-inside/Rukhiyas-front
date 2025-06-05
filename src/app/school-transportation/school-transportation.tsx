@@ -8,6 +8,15 @@ import { useState } from "react";
 import SimpleStepsToJoin from "./SimpleStepsToJoin";
 import dynamic from "next/dynamic";
 
+// Move this to the top of your file, outside any component:
+const allSchools = [
+  "St. Mary's High School",
+  "Delhi Public School",
+  "Kendriya Vidyalaya",
+  "Modern Public School",
+  "Springdales School",
+];
+
 // Custom dropdown for school selection
 function SchoolDropdown({
   schools,
@@ -398,14 +407,6 @@ function SearchBar({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-
-  const allSchools = [
-    "St. Mary's High School",
-    "Delhi Public School",
-    "Kendriya Vidyalaya",
-    "Modern Public School",
-    "Springdales School",
-  ];
 
   useEffect(() => {
     if (query && active === "school") {
