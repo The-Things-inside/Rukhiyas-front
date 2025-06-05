@@ -20,8 +20,16 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+let idCounter = 0;
+
 export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  if (typeof window !== 'undefined') {
+    idCounter += 1;
+    return 'cid-' + idCounter.toString(36) + '-' + Date.now().toString(36);
+  } else {
+    // SSR: fallback to a deterministic value (not random)
+    return 'sid-ssr';
+  }
 }
 
 export function debounce<T extends (...args: unknown[]) => unknown>(

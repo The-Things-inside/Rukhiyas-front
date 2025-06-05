@@ -1,0 +1,11 @@
+import { useState, useEffect } from 'react';
+
+export default function useHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  return hydrated;
+} 

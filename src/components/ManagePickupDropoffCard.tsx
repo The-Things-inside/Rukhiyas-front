@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useMemo } from "react";
 import MapAddressPicker from "./MapAddressPicker";
 
 // LatLng type for address picker
@@ -28,23 +30,26 @@ function CalendarPopup({
   onClose: () => void;
   selectedDates: Date[];
 }) {
-  // Simple calendar for current month
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDay = new Date(year, month, 1).getDay();
-  const weeks: (number | null)[][] = [[]];
-  let week = 0;
-  for (let i = 0; i < firstDay; i++) weeks[week].push(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    if (weeks[week].length === 7) {
-      week++;
-      weeks[week] = [];
+  // Move all date logic into useMemo to ensure it only runs on the client
+  const { today, year, month, weeks } = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const weeks: (number | null)[][] = [[]];
+    let week = 0;
+    for (let i = 0; i < firstDay; i++) weeks[week].push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (weeks[week].length === 7) {
+        week++;
+        weeks[week] = [];
+      }
+      weeks[week].push(d);
     }
-    weeks[week].push(d);
-  }
-  while (weeks[week].length < 7) weeks[week].push(null);
+    while (weeks[week].length < 7) weeks[week].push(null);
+    return { today, year, month, daysInMonth, firstDay, weeks };
+  }, []);
 
   function isSelected(day: number) {
     return selectedDates.some(

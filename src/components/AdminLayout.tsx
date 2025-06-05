@@ -15,8 +15,7 @@ export default function AdminLayout({
         className="absolute left-0 right-0 mx-auto bg-white mt-3 rounded-t-[24px] max-w-md flex flex-col"
         style={{
           top: 67, // header height
-          height:
-            "100dvh" in window ? "calc(100dvh - 67px)" : "calc(100vh - 67px)",
+          height: "calc(100vh - 67px)",
           bottom: 0,
         }}
       >

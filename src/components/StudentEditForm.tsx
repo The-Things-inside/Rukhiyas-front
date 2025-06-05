@@ -3,6 +3,7 @@ import SchoolDropdown from "./SchoolDropdown";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { StudentCard } from "./ReviewAndPay";
+import { generateId } from "@/lib/utils";
 
 const MapAddressPicker = dynamic(() => import("./MapAddressPicker"), {
   ssr: false,
@@ -47,7 +48,7 @@ export default function StudentEditForm({
 
   const onSubmit = (data: Omit<StudentCard, "id" | "location">) => {
     onSave({
-      id: initialStudent.id || Date.now().toString(),
+      id: initialStudent.id || generateId(),
       ...data,
       location,
     });

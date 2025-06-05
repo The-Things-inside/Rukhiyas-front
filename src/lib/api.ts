@@ -11,7 +11,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // You can add auth token here
-    const token = localStorage.getItem('token');
+    let token: string | null = null;
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      token = localStorage.getItem('token');
+    }
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,13 +38,17 @@ api.interceptors.response.use(
       try {
         // Implement refresh token logic here
         // const newToken = await refreshToken();
-        // localStorage.setItem('token', newToken);
+        // if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        //   localStorage.setItem('token', newToken);
+        // }
         // originalRequest.headers.Authorization = `Bearer ${newToken}`;
         // return api(originalRequest);
       } catch (refreshError) {
         // Handle refresh token failure
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

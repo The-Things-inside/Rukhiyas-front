@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { LatLngExpression } from "leaflet";
 import { useState, useEffect } from "react";
+import type * as Leaflet from "leaflet";
 
 // Sample school locations in Mahe, Kerala
 const schoolLocations: Array<{
@@ -48,14 +49,12 @@ const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
 });
 
 function MapMarkers({ selectedSchool }: MapMarkersProps) {
-  const [L, setL] = useState<any>(null);
+  const [L, setL] = useState<typeof Leaflet | null>(null);
 
   useEffect(() => {
     // Dynamically import leaflet only on client
     import("leaflet").then((leaflet) => {
       setL(leaflet);
-      // Import CSS only on client
-      import("leaflet/dist/leaflet.css");
     });
   }, []);
 

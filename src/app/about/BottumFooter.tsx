@@ -1,18 +1,17 @@
 "use client";
 
 import Image from "next/image";
-
-
-
-
-
+import useHydrated from "../../hooks/useHydrated";
 
 export default function BottomFooter() {
+  const hydrated = useHydrated();
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    if (hydrated) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   };
 
   return (

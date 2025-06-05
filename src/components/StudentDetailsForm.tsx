@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import SchoolDropdown from "./SchoolDropdown";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import useHydrated from "../hooks/useHydrated";
 
 interface FormValues {
   studentName: string;
@@ -53,10 +54,11 @@ export default function StudentDetailsForm({
   const schoolValue = watch("school");
   const [mapOpen, setMapOpen] = useState(false);
   const homeAddress = watch("homeAddress");
+  const hydrated = useHydrated();
 
   const onSubmit = (data: FormValues) => {
     const newStudent: StudentCard = {
-      id: Date.now().toString(),
+      id: hydrated ? Date.now().toString() : "ssr-id",
       ...data,
     };
     setStudents([...students, newStudent]);

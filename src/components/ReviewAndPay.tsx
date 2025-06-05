@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import StudentEditForm from "./StudentEditForm";
+import { generateId } from "@/lib/utils";
 
 export interface StudentCard {
   id: string;
@@ -27,7 +28,7 @@ export default function ReviewAndPay({
   };
 
   const handleAddStudent = () => {
-    const newId = Math.random().toString(36).substr(2, 9);
+    const newId = generateId();
     const newStudent: StudentCard = {
       id: newId,
       studentName: "",
