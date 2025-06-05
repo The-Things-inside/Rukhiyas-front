@@ -47,4 +47,15 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+// Decodes a JWT and returns the payload as an object
+export function decodeJWT(token: string): any {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch (e) {
+    return null;
+  }
 } 
