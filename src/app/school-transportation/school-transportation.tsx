@@ -5,59 +5,8 @@ import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import BottomFooter from "./BottumFooter";
 import { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import SimpleStepsToJoin from "./SimpleStepsToJoin";
-
-// Fix for default marker icons in Leaflet with Next.js
-
-// Add these custom icons after the existing icon definition
-const defaultIcon = L.icon({
-  iconUrl: "/images/marker-icon.png",
-  iconRetinaUrl: "/images/marker-icon-2x.png",
-  shadowUrl: "/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-}) as L.Icon;
-
-const selectedIcon = L.icon({
-  iconUrl: "/images/marker-icon-red.png", // You'll need to add this red marker image
-  iconRetinaUrl: "/images/marker-icon-red-2x.png", // And this one
-  shadowUrl: "/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-}) as L.Icon;
-
-// Sample school locations in Mahe, Kerala
-const schoolLocations: Array<{
-  name: string;
-  position: LatLngExpression;
-}> = [
-  {
-    name: "Al Falah College",
-    position: [11.711084304588613, 75.5429556066623] as LatLngExpression,
-  },
-  {
-    name: "MMUP SCHOOL NEW MAHE",
-    position: [11.71065599999993, 75.53547406413618] as LatLngExpression,
-  },
-  {
-    name: "MM HSS New Mahe",
-    position: [11.71060252983104, 75.53505722621212] as LatLngExpression,
-  },
-  {
-    name: "MM NURSERY SCHOOL",
-    position: [11.711193045476325, 75.53431931640563] as LatLngExpression,
-  },
-
-  // Add more schools as needed
-];
+import dynamic from "next/dynamic";
 
 // Custom dropdown for school selection
 function SchoolDropdown({
@@ -131,6 +80,10 @@ function SchoolDropdown({
     </div>
   );
 }
+
+const DynamicMapComponent = dynamic(() => import("./MapComponent"), {
+  ssr: false,
+});
 
 export default function SchoolTransportation() {
   const router = useRouter();
@@ -312,7 +265,6 @@ function WhyChooseUs() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -369,21 +321,7 @@ function WhyChooseUs() {
             className="w-full h-[405px] md:h-[500px] rounded-2xl overflow-hidden shadow-lg"
             style={{ zIndex: 1 }}
           >
-            <MapContainer
-              center={
-                [11.711123056659488, 75.53716054175986] as LatLngExpression
-              }
-              zoom={15}
-              style={{ height: "100%", width: "100%", zIndex: 1 }}
-              scrollWheelZoom={true}
-              ref={mapRef}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapMarkers selectedSchool={selectedSchool} />
-            </MapContainer>
+            <DynamicMapComponent selectedSchool={selectedSchool} />
           </div>
 
           {/* School List */}
@@ -457,15 +395,22 @@ function SearchBar({
 }) {
   const [active, setActive] = useState<null | "school" | "area">(null);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<typeof schoolLocations>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Filter schools based on query
+  const allSchools = [
+    "St. Mary's High School",
+    "Delhi Public School",
+    "Kendriya Vidyalaya",
+    "Modern Public School",
+    "Springdales School",
+  ];
+
   useEffect(() => {
     if (query && active === "school") {
-      const filtered = schoolLocations.filter((school) =>
-        school.name.toLowerCase().includes(query.toLowerCase())
+      const filtered = allSchools.filter((school) =>
+        school.toLowerCase().includes(query.toLowerCase())
       );
       setSuggestions(filtered);
       setShowSuggestions(true);
@@ -475,7 +420,6 @@ function SearchBar({
     }
   }, [query, active]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -490,17 +434,17 @@ function SearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSuggestionClick = (school: (typeof schoolLocations)[0]) => {
-    setQuery(school.name);
+  const handleSuggestionClick = (school: string) => {
+    setQuery(school);
     setShowSuggestions(false);
-    onSchoolSelect(school.name);
+    onSchoolSelect(school);
   };
 
   const handleClearSearch = () => {
     setActive(null);
     setQuery("");
     setShowSuggestions(false);
-    onSchoolSelect(null); // This will trigger the zoom out in MapMarkers
+    onSchoolSelect(null);
   };
 
   return (
@@ -581,7 +525,7 @@ function SearchBar({
                     className="px-4 py-2 hover:bg-[#FFF8E1] cursor-pointer text-gray-700 font-satoshi w-full"
                     onClick={() => handleSuggestionClick(school)}
                   >
-                    {school.name}
+                    {school}
                   </div>
                   {/* Updated divider with full width */}
                   {index < suggestions.length - 1 && (
@@ -615,63 +559,5 @@ function SearchBar({
         </svg>
       </button>
     </div>
-  );
-}
-
-// Create a new component for the map markers
-function MapMarkers({ selectedSchool }: { selectedSchool: string | null }) {
-  const map = useMap();
-  const [previousView, setPreviousView] = useState<{
-    center: LatLngExpression;
-    zoom: number;
-  }>({
-    center: [11.711123056659488, 75.53716054175986],
-    zoom: 15,
-  });
-
-  useEffect(() => {
-    if (selectedSchool) {
-      // Store current view before zooming in
-      setPreviousView({
-        center: map.getCenter(),
-        zoom: map.getZoom(),
-      });
-
-      // Find the selected school's position
-      const school = schoolLocations.find((s) => s.name === selectedSchool);
-      if (school) {
-        // Zoom to the selected school
-        map.setView(school.position, 17);
-
-        // Find and open the popup for the selected marker
-        const markers = document.querySelectorAll(".leaflet-marker-icon");
-        markers.forEach((marker, index) => {
-          if (schoolLocations[index].name === selectedSchool) {
-            const markerElement = marker as HTMLElement;
-            const popup = markerElement.nextElementSibling as HTMLElement;
-            if (popup && popup.classList.contains("leaflet-popup")) {
-              popup.style.display = "block";
-            }
-          }
-        });
-      }
-    } else {
-      // When no school is selected (cross pressed), restore previous view
-      map.setView(previousView.center, previousView.zoom);
-    }
-  }, [selectedSchool, map, previousView.center, previousView.zoom]);
-
-  return (
-    <>
-      {schoolLocations.map((school, index) => (
-        <Marker
-          key={index}
-          position={school.position}
-          icon={selectedSchool === school.name ? selectedIcon : defaultIcon}
-        >
-          <Popup>{school.name}</Popup>
-        </Marker>
-      ))}
-    </>
   );
 }
