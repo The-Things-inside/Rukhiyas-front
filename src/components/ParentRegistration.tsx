@@ -28,7 +28,7 @@ export default function ParentRegistration({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <RegistrationHeader onBack={onBack} />
-      <main className="flex-1 flex flex-col items-center justify-start pt-0">
+      <main className="flex-1 flex flex-col items-center justify-start md:pt-10 pt-0">
         {/* Card with top curve, edge-to-edge, always below header */}
         <section
           className="relative w-full max-w-md mx-auto bg-white rounded-t-[2.5rem] shadow-lg px-0 pb-8 flex flex-col min-h-[calc(100vh-56px)]"
