@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
+import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 
 interface MapAddressPickerProps {
@@ -21,8 +21,8 @@ export default function MapAddressPicker({
   onConfirm,
   initialLatLng,
 }: MapAddressPickerProps) {
-  const mapRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(
     initialLatLng || { lat: 11.707, lng: 75.531 }
   );
@@ -31,9 +31,17 @@ export default function MapAddressPicker({
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [L, setL] = useState<any>(null);
 
   useEffect(() => {
-    if (!open) return;
+    // Dynamically import leaflet only on client side
+    import("leaflet").then((leaflet) => {
+      setL(leaflet.default);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open || !L) return;
 
     if (!mapRef.current) {
       const map = L.map("map", {
@@ -103,7 +111,7 @@ export default function MapAddressPicker({
         markerRef.current = null;
       }
     };
-  }, [open, initialLatLng]);
+  }, [open, initialLatLng, L]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
