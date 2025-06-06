@@ -2,6 +2,7 @@
 import AppLayout from "@/components/AppLayout";
 import RideStatusCard from "@/components/RideStatusCard";
 import ManagePickupDropoffCard from "@/components/ManagePickupDropoffCard";
+import PaymentsHistoryCard from "@/components/PaymentsHistoryCard";
 
 export default function AppHome() {
   return (
@@ -10,6 +11,8 @@ export default function AppHome() {
         <RideStatusCard />
         <div className="h-6" />
         <ManagePickupDropoffCard />
+        <div className="h-6" />
+        <PaymentsHistoryCard />
         <div className="mt-6" />
         <h1 className="text-2xl font-semibold mb-4">Welcome to Rukhiyas</h1>
         <div className="bg-white rounded-lg shadow p-4">

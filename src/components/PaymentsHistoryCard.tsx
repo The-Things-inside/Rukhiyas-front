@@ -1,0 +1,125 @@
+import React from "react";
+
+export default function PaymentsHistoryCard() {
+  return (
+    <div
+      className="bg-white rounded-[20px] shadow-lg p-4 w-full mx-auto border border-gray-200"
+      style={{ boxShadow: "0 8px 32px 0 rgba(0,0,0,0.12)" }}
+    >
+      <h2
+        className="mb-2"
+        style={{
+          fontFamily: "Spartan, sans-serif",
+          fontWeight: 600,
+          fontSize: 18,
+          color: "#000",
+        }}
+      >
+        Payments & History
+      </h2>
+      <div className="mb-4">
+        <div
+          style={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "#000",
+          }}
+          className="mb-2"
+        >
+          Next Payment
+        </div>
+        <div className="flex justify-between items-center mb-1">
+          <span
+            style={{
+              fontFamily: "Satoshi, sans-serif",
+              fontWeight: 500,
+              fontSize: 16,
+              color: "#5e5e5e",
+            }}
+          >
+            Due Date
+          </span>
+          <span
+            style={{
+              fontFamily: "Satoshi, sans-serif",
+              fontWeight: 500,
+              fontSize: 16,
+              color: "#5e5e5e",
+            }}
+          >
+            Amount
+          </span>
+        </div>
+        <div className="flex justify-between items-center mb-2">
+          <span
+            style={{
+              fontFamily: "Satoshi, sans-serif",
+              fontWeight: 500,
+              fontSize: 16,
+              color: "#000",
+            }}
+          >
+            01/07/2025
+          </span>
+          <span
+            style={{
+              fontFamily: "Satoshi, sans-serif",
+              fontWeight: 500,
+              fontSize: 16,
+              color: "#000",
+            }}
+          >
+            ₹1300
+          </span>
+        </div>
+        <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-2 text-base mb-2 hover:bg-[#d4a900] transition">
+          Pay Now
+        </button>
+        <button className="w-full border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-base bg-white hover:bg-[#fffbe6] transition">
+          View Payment History
+        </button>
+      </div>
+      <div
+        style={{
+          fontFamily: "Satoshi, sans-serif",
+          fontWeight: 500,
+          fontSize: 16,
+          color: "#000",
+        }}
+        className="mb-2"
+      >
+        Offers
+      </div>
+      <div className="border border-[#E8B600] rounded-xl p-3 mt-2">
+        <div
+          className="text-center text-black text-sm font-semibold mb-2"
+          style={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "#000",
+          }}
+        >
+          Pay annually and save more
+        </div>
+        <div className="flex justify-between text-xs mb-2">
+          <div className="flex flex-col items-center">
+            <span className="text-gray-500">Annual Total</span>
+            <span className="text-black font-bold text-base">₹13000</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-gray-500">Offer Price</span>
+            <span className="text-black font-bold text-base">₹11500</span>
+          </div>
+        </div>
+        <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-2 text-base mt-2 hover:bg-[#d4a900] transition">
+          Pay Now
+        </button>
+        <div className="text-xs text-center text-gray-500 mt-2 italic">
+          Offer Expires On 30/07/2025*
+        </div>
+      </div>
+    </div>
+  );
+}

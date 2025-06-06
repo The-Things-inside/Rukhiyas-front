@@ -1,30 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const registrations = [
-  {
-    name: "Aryan Sharma",
-    date: "08/06/2025",
-    class: "2 B",
-    school: "Avila Primary School",
-    address: "32, AB Villa, 1st Cross, Mico Layout, Madiwala, Bangalore.",
-    fee: "₹1300/month",
-    id: "456",
-  },
-  {
-    name: "Aryan Sharma",
-    date: "08/06/2025",
-    class: "2 B",
-    school: "Avila Primary School",
-    address: "32, AB Villa, 1st Cross, Mico Layout, Madiwala, Bangalore.",
-    fee: "₹1300/month",
-    id: "456",
-  },
-];
+interface Student {
+  id: number;
+  parent_id: number;
+  school_id: number;
+  bus_id: number | null;
+  full_name: string;
+  class_name: string;
+  division: string;
+  student_address: string;
+  location_latitude: number;
+  location_longitude: number;
+  approximate_fees: number;
+  actual_fees: number | null;
+  profile_picture_url: string | null;
+  is_submitted: boolean;
+  is_paid: boolean;
+  created_at: string;
+}
 
 const dropdownItems = [
-  { key: "new", label: "New Registrations", count: 3 },
-  { key: "bus", label: "Bus Assignments", count: 2 },
-  { key: "parent", label: "Parent Requests", count: 3 },
+  { key: "new", label: "New Registrations", count: 0 },
+  { key: "bus", label: "Bus Assignments", count: 0 },
+  { key: "parent", label: "Parent Requests", count: 0 },
 ];
 
 const busOptions = [
@@ -107,17 +106,76 @@ function BusSelect({
 export default function HomeContent() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selected, setSelected] = useState(dropdownItems[0]);
-  const [busSelections, setBusSelections] = useState<string[]>(
-    registrations.map(() => "")
-  );
-  const [busDropdowns, setBusDropdowns] = useState<boolean[]>(
-    registrations.map(() => false)
-  );
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busSelections, setBusSelections] = useState<string[]>([]);
+  const [busDropdowns, setBusDropdowns] = useState<boolean[]>([]);
+  const [editingFeeIdx, setEditingFeeIdx] = useState<number | null>(null);
+  const [feeInput, setFeeInput] = useState<string>("");
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          throw new Error("No access token found");
+        }
+
+        const response = await axios.get(
+          "https://13.235.104.94/admin/students/no-fees",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              accept: "application/json",
+            },
+          }
+        );
+
+        setStudents(response.data);
+        setBusSelections(response.data.map(() => ""));
+        setBusDropdowns(response.data.map(() => false));
+
+        // Update dropdown counts
+        const newDropdownItems = dropdownItems.map((item) => ({
+          ...item,
+          count: response.data.length,
+        }));
+        setSelected(newDropdownItems[0]);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch students"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const handleSelect = (item: (typeof dropdownItems)[0]) => {
     setSelected(item);
     setDropdownOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <div className="text-[#19191F] text-[18px] font-satoshi">
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <div className="text-red-500 text-[18px] font-satoshi">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-6 px-2 py-4 overflow-y-auto">
@@ -170,9 +228,9 @@ export default function HomeContent() {
       </div>
       {/* Conditional Content */}
       {selected.key === "bus"
-        ? registrations.map((reg, idx) => (
+        ? students.map((student, idx) => (
             <div
-              key={idx}
+              key={student.id}
               className="border border-[#E8B600] rounded-xl px-4 py-3 mb-4 bg-white"
             >
               <div className="flex items-center justify-between mb-1">
@@ -180,11 +238,11 @@ export default function HomeContent() {
                   Name
                 </span>
                 <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                  {reg.date}
+                  {new Date(student.created_at).toLocaleDateString()}
                 </span>
               </div>
               <div className="text-[#19191F] text-[16px] font-bold mb-2 font-satoshi">
-                {reg.name}
+                {student.full_name}
               </div>
               <div className="flex items-center justify-between mb-1">
                 <div>
@@ -192,7 +250,7 @@ export default function HomeContent() {
                     School
                   </span>
                   <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {reg.school}
+                    School ID: {student.school_id}
                   </div>
                 </div>
                 <div className="text-right">
@@ -200,7 +258,7 @@ export default function HomeContent() {
                     ID No.
                   </span>
                   <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {reg.id}
+                    {student.id}
                   </div>
                 </div>
               </div>
@@ -209,7 +267,7 @@ export default function HomeContent() {
                   Address
                 </span>
                 <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                  {reg.address}
+                  {student.student_address}
                 </div>
               </div>
               <div className="mb-3">
@@ -249,9 +307,9 @@ export default function HomeContent() {
             </div>
           ))
         : selected.key === "new"
-          ? registrations.map((reg, idx) => (
+          ? students.map((student, idx) => (
               <div
-                key={idx}
+                key={student.id}
                 className="border border-[#E8B600] rounded-xl px-4 py-3 mb-2 bg-white"
               >
                 <div className="flex items-center justify-between mb-1">
@@ -259,11 +317,11 @@ export default function HomeContent() {
                     Name
                   </span>
                   <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    {reg.date}
+                    {new Date(student.created_at).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="text-[#19191F] text-[16px] font-bold mb-2 font-satoshi">
-                  {reg.name}
+                  {student.full_name}
                 </div>
                 <div className="flex gap-8 mb-1">
                   <div>
@@ -271,7 +329,7 @@ export default function HomeContent() {
                       Class
                     </span>
                     <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      {reg.class}
+                      {student.class_name} {student.division}
                     </div>
                   </div>
                   <div>
@@ -279,7 +337,7 @@ export default function HomeContent() {
                       School
                     </span>
                     <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      {reg.school}
+                      School ID: {student.school_id}
                     </div>
                   </div>
                 </div>
@@ -288,25 +346,61 @@ export default function HomeContent() {
                     Address
                   </span>
                   <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {reg.address}
+                    {student.student_address}
                   </div>
                 </div>
                 <div className="mb-2">
                   <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    Estimate Fee
+                    Exact Fee
                   </span>
-                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {reg.fee}
+                  {editingFeeIdx === idx ? (
+                    <input
+                      className="w-full px-3 py-2 border border-[#E8B600] rounded-lg text-[15px] font-satoshi mt-1 text-[#19191F]"
+                      value={feeInput}
+                      onChange={(e) => setFeeInput(e.target.value)}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                      ₹{student.approximate_fees}/month
+                    </div>
+                  )}
+                </div>
+                {editingFeeIdx === idx ? (
+                  <div className="flex gap-4 mt-2">
+                    <button
+                      className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi"
+                      onClick={() => setEditingFeeIdx(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi"
+                      onClick={() => {
+                        // Save logic can be added here
+                        setEditingFeeIdx(null);
+                        // Optionally update the student's fee in state
+                      }}
+                    >
+                      Confirm Fee
+                    </button>
                   </div>
-                </div>
-                <div className="flex gap-4 mt-2">
-                  <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi">
-                    Edit Fee
-                  </button>
-                  <button className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi">
-                    Confirm Fee
-                  </button>
-                </div>
+                ) : (
+                  <div className="flex gap-4 mt-2">
+                    <button
+                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi"
+                      onClick={() => {
+                        setEditingFeeIdx(idx);
+                        setFeeInput(student.approximate_fees.toString());
+                      }}
+                    >
+                      Edit Fee
+                    </button>
+                    <button className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi">
+                      Confirm Fee
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           : null}
