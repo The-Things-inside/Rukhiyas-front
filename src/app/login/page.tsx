@@ -9,7 +9,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showModal, setShowModal] = useState(true);
 
   const handleLogin = async (data: {
     emailOrMobile: string;
@@ -19,16 +18,56 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // Check for parent credentials
-    if (data.emailOrMobile === "test@test.com" && data.password === "test") {
-      // Simulate API call
-      setTimeout(() => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append("grant_type", "");
+      formData.append("username", data.emailOrMobile);
+      formData.append("password", data.password);
+      formData.append("scope", "");
+      formData.append("client_id", "");
+      formData.append("client_secret", "");
+
+      const response = await fetch("https://13.235.104.94/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          accept: "application/json",
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(
+          errorData?.detail?.[0]?.msg ||
+            errorData?.detail ||
+            "Invalid credentials or server error"
+        );
         setLoading(false);
-        router.push("/app");
-      }, 1200);
-    } else {
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.access_token) {
+        // Store token if stay logged in is checked
+        if (data.stayLoggedIn) {
+          localStorage.setItem("access_token", result.access_token);
+        }
+
+        // Handle role-based routing
+        if (result.user.role === "admin" || result.user.is_admin) {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/app");
+        }
+      } else {
+        setError("Login failed: No access token returned");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
       setLoading(false);
-      setError("Invalid credentials");
     }
   };
 
@@ -57,7 +96,7 @@ export default function LoginPage() {
               className="text-[#F2C100] text-3xl font-bold"
               style={{ fontFamily: "Spartan, sans-serif" }}
             >
-              Log in to view your child's
+              Log in to view your child&apos;s
               <br />
               transport details and account info
             </span>
