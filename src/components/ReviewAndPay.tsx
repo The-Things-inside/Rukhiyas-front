@@ -33,6 +33,8 @@ interface ApiStudent {
   created_at: string;
 }
 
+
+
 export default function ReviewAndPay() {
   const [students, setStudents] = useState<StudentCard[]>([]);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
@@ -117,6 +119,17 @@ export default function ReviewAndPay() {
   };
 
   const handleSave = async (updatedStudent: StudentCard) => {
+    if (
+      !updatedStudent.studentName &&
+      !updatedStudent.class &&
+      !updatedStudent.division &&
+      !updatedStudent.school &&
+      !updatedStudent.homeAddress
+    ) {
+      handleRemove(updatedStudent.id);
+      return;
+    }
+
     setSaving(true);
     try {
       const parentId = localStorage.getItem("parent_id");
@@ -126,10 +139,12 @@ export default function ReviewAndPay() {
         throw new Error("Parent ID or access token not found");
       }
 
-      const response = await fetch(
-        `https://13.235.104.94/students/${updatedStudent.id}`,
-        {
-          method: "PUT",
+      const isNewStudent = !updatedStudent.id.match(/^\d+$/);
+
+      let response;
+      if (isNewStudent) {
+        response = await fetch("https://13.235.104.94/register-student", {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             accept: "application/json",
@@ -145,30 +160,88 @@ export default function ReviewAndPay() {
             location_latitude: updatedStudent.location?.lat || 0,
             location_longitude: updatedStudent.location?.lng || 0,
           }),
-        }
-      );
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to update student");
+        if (!response.ok) {
+          throw new Error("Failed to register student");
+        }
+
+        // After successful registration, fetch all students
+        const studentsResponse = await fetch(
+          `https://13.235.104.94/students?parent_id=${parentId}`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!studentsResponse.ok) {
+          throw new Error("Failed to fetch updated students");
+        }
+
+        const apiStudents: ApiStudent[] = await studentsResponse.json();
+        const mappedStudents: StudentCard[] = apiStudents.map((student) => ({
+          id: student.id.toString(),
+          studentName: student.full_name,
+          class: student.class_name,
+          division: student.division,
+          school: student.school_id.toString(),
+          homeAddress: student.student_address,
+          location: {
+            lat: student.location_latitude,
+            lng: student.location_longitude,
+          },
+        }));
+
+        setStudents(mappedStudents);
+      } else {
+        response = await fetch(
+          `https://13.235.104.94/students/${updatedStudent.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              parent_id: parseInt(parentId),
+              school_id: parseInt(updatedStudent.school),
+              full_name: updatedStudent.studentName,
+              class_name: updatedStudent.class,
+              division: updatedStudent.division,
+              student_address: updatedStudent.homeAddress,
+              location_latitude: updatedStudent.location?.lat || 0,
+              location_longitude: updatedStudent.location?.lng || 0,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update student");
+        }
+
+        const updatedApiStudent: ApiStudent = await response.json();
+        const mappedStudent: StudentCard = {
+          id: updatedApiStudent.id.toString(),
+          studentName: updatedApiStudent.full_name,
+          class: updatedApiStudent.class_name,
+          division: updatedApiStudent.division,
+          school: updatedApiStudent.school_id.toString(),
+          homeAddress: updatedApiStudent.student_address,
+          location: {
+            lat: updatedApiStudent.location_latitude,
+            lng: updatedApiStudent.location_longitude,
+          },
+        };
+
+        setStudents((prev) =>
+          prev.map((s) => (s.id === updatedStudent.id ? mappedStudent : s))
+        );
       }
 
-      const updatedApiStudent: ApiStudent = await response.json();
-      const mappedStudent: StudentCard = {
-        id: updatedApiStudent.id.toString(),
-        studentName: updatedApiStudent.full_name,
-        class: updatedApiStudent.class_name,
-        division: updatedApiStudent.division,
-        school: updatedApiStudent.school_id.toString(),
-        homeAddress: updatedApiStudent.student_address,
-        location: {
-          lat: updatedApiStudent.location_latitude,
-          lng: updatedApiStudent.location_longitude,
-        },
-      };
-
-      setStudents((prev) =>
-        prev.map((s) => (s.id === updatedStudent.id ? mappedStudent : s))
-      );
       setEditingStudentId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -219,7 +292,17 @@ export default function ReviewAndPay() {
                 studentNumber={idx + 1}
                 onSave={handleSave}
                 onCancel={() => {
-                  setEditingStudentId(null);
+                  if (
+                    !student.studentName &&
+                    !student.class &&
+                    !student.division &&
+                    !student.school &&
+                    !student.homeAddress
+                  ) {
+                    handleRemove(student.id);
+                  } else {
+                    setEditingStudentId(null);
+                  }
                 }}
                 onRemove={() => handleRemove(student.id)}
                 saving={saving}
