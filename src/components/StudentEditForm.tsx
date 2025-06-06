@@ -15,6 +15,7 @@ interface StudentEditFormProps {
   onCancel: () => void;
   onRemove?: () => void;
   studentNumber?: number;
+  saving?: boolean;
 }
 
 export default function StudentEditForm({
@@ -23,6 +24,7 @@ export default function StudentEditForm({
   onCancel,
   onRemove,
   studentNumber,
+  saving = false,
 }: StudentEditFormProps) {
   const {
     register,
@@ -179,13 +181,19 @@ export default function StudentEditForm({
       <div className="flex w-full gap-4 mt-2">
         <button
           type="submit"
-          className="bg-yellow-400 text-white font-semibold rounded-full py-2 px-8 text-base shadow hover:bg-yellow-500 transition w-1/2"
+          disabled={saving}
+          className="bg-yellow-400 text-white font-semibold rounded-full py-2 px-8 text-base shadow hover:bg-yellow-500 transition w-1/2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          Save
+          {saving ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          ) : (
+            "Save"
+          )}
         </button>
         <button
           type="button"
-          className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2"
+          disabled={saving}
+          className="border border-yellow-400 text-yellow-400 font-semibold rounded-full py-2 px-8 text-base bg-white hover:bg-yellow-50 transition w-1/2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={onCancel}
         >
           Cancel

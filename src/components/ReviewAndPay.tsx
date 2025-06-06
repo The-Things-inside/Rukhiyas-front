@@ -38,6 +38,7 @@ export default function ReviewAndPay() {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -115,6 +116,67 @@ export default function ReviewAndPay() {
     }
   };
 
+  const handleSave = async (updatedStudent: StudentCard) => {
+    setSaving(true);
+    try {
+      const parentId = localStorage.getItem("parent_id");
+      const accessToken = localStorage.getItem("access_token");
+
+      if (!parentId || !accessToken) {
+        throw new Error("Parent ID or access token not found");
+      }
+
+      const response = await fetch(
+        `https://13.235.104.94/students/${updatedStudent.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            parent_id: parseInt(parentId),
+            school_id: parseInt(updatedStudent.school),
+            full_name: updatedStudent.studentName,
+            class_name: updatedStudent.class,
+            division: updatedStudent.division,
+            student_address: updatedStudent.homeAddress,
+            location_latitude: updatedStudent.location?.lat || 0,
+            location_longitude: updatedStudent.location?.lng || 0,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update student");
+      }
+
+      const updatedApiStudent: ApiStudent = await response.json();
+      const mappedStudent: StudentCard = {
+        id: updatedApiStudent.id.toString(),
+        studentName: updatedApiStudent.full_name,
+        class: updatedApiStudent.class_name,
+        division: updatedApiStudent.division,
+        school: updatedApiStudent.school_id.toString(),
+        homeAddress: updatedApiStudent.student_address,
+        location: {
+          lat: updatedApiStudent.location_latitude,
+          lng: updatedApiStudent.location_longitude,
+        },
+      };
+
+      setStudents((prev) =>
+        prev.map((s) => (s.id === updatedStudent.id ? mappedStudent : s))
+      );
+      setEditingStudentId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -155,16 +217,12 @@ export default function ReviewAndPay() {
               <StudentEditForm
                 initialStudent={student}
                 studentNumber={idx + 1}
-                onSave={(updatedStudent) => {
-                  setStudents((prev) =>
-                    prev.map((s) => (s.id === student.id ? updatedStudent : s))
-                  );
-                  setEditingStudentId(null);
-                }}
+                onSave={handleSave}
                 onCancel={() => {
                   setEditingStudentId(null);
                 }}
                 onRemove={() => handleRemove(student.id)}
+                saving={saving}
               />
             ) : (
               <>
