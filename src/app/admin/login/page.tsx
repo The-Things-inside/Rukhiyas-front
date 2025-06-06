@@ -81,8 +81,8 @@ export default function AdminLoginPage() {
           loading={loading}
           headerText="Log in to your admin panel"
           showSocialLogin={false}
-          defaultEmail="admin@test.com"
-          defaultPassword="test"
+          defaultEmail=""
+          defaultPassword=""
           error={error}
           registerLink="/admin/register"
         />

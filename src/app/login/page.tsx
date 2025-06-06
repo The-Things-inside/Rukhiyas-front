@@ -138,6 +138,8 @@ export default function LoginPage() {
               error={error}
               showSocialLogin={true}
               headerText=""
+              defaultEmail=""
+              defaultPassword=""
             />
           </div>
         </div>
@@ -146,7 +148,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md mx-auto md:hidden">
         <LoginHeader onBack={() => router.back()} />
         <div className="mt-2" />
-        <LoginForm onSubmit={handleLogin} loading={loading} error={error} />
+        <LoginForm
+          onSubmit={handleLogin}
+          loading={loading}
+          error={error}
+          defaultEmail=""
+          defaultPassword=""
+        />
       </div>
     </div>
   );
