@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StudentEditForm from "./StudentEditForm";
 import { generateId } from "@/lib/utils";
 
@@ -15,13 +15,80 @@ export interface StudentCard {
   };
 }
 
-export default function ReviewAndPay({
-  students: initialStudents,
-}: {
-  students: StudentCard[];
-}) {
-  const [students, setStudents] = useState<StudentCard[]>(initialStudents);
+interface ApiStudent {
+  id: number;
+  parent_id: number;
+  school_id: number;
+  bus_id: number | null;
+  full_name: string;
+  class_name: string;
+  division: string;
+  student_address: string;
+  location_latitude: number;
+  location_longitude: number;
+  approximate_fees: number;
+  actual_fees: number | null;
+  is_submitted: boolean;
+  is_paid: boolean;
+  created_at: string;
+}
+
+export default function ReviewAndPay() {
+  const [students, setStudents] = useState<StudentCard[]>([]);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const parentId = localStorage.getItem("parent_id");
+        const accessToken = localStorage.getItem("access_token");
+
+        if (!parentId || !accessToken) {
+          setError("Parent ID or access token not found");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `https://13.235.104.94/students?parent_id=${parentId}`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch students");
+        }
+
+        const apiStudents: ApiStudent[] = await response.json();
+        const mappedStudents: StudentCard[] = apiStudents.map((student) => ({
+          id: student.id.toString(),
+          studentName: student.full_name,
+          class: student.class_name,
+          division: student.division,
+          school: student.school_id.toString(),
+          homeAddress: student.student_address,
+          location: {
+            lat: student.location_latitude,
+            lng: student.location_longitude,
+          },
+        }));
+
+        setStudents(mappedStudents);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const handleEdit = (student: StudentCard) => {
     setEditingStudentId(student.id);
@@ -47,6 +114,22 @@ export default function ReviewAndPay({
       setEditingStudentId(null);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <p>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -151,7 +234,7 @@ export default function ReviewAndPay({
         >
           Approximate Price
         </h2>
-        <div className="bg-white border border-gray-200 rounded-[24px] p-4                  max-w-md mx-auto shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-[24px] p-4 max-w-md mx-auto shadow-sm">
           <div
             className="text-black text-lg text-left font-bold mb-2"
             style={{ fontFamily: "Spartan, sans-serif" }}

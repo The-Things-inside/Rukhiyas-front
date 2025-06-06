@@ -25,21 +25,6 @@ export default function PageHeader() {
         <span className="text-white text-[16px] font-medium font-satoshi">
           Aryan
         </span>
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          className="ml-1"
-        >
-          <path
-            d="M7 10l5 5 5-5"
-            stroke="#fff"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
       </div>
       <span className="text-white text-[20px] font-medium font-satoshi">
         {title}
