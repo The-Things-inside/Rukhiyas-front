@@ -124,6 +124,7 @@ export default function ParentRegistration({
                 onContinue={handleContinue}
                 students={students}
                 setStudents={setStudents}
+                parentId={parseInt(localStorage.getItem("parent_id") || "0")}
               />
             ) : (
               <ReviewAndPay students={students} />

@@ -2,9 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 
+interface School {
+  id: string;
+  name: string;
+}
+
 interface SchoolDropdownProps {
   value?: string;
-  onChange: (school: string) => void;
+  onChange: (schoolId: string) => void;
   error?: string;
 }
 
@@ -16,13 +21,15 @@ export default function SchoolDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const schools = [
-    "St. Mary's High School",
-    "Delhi Public School",
-    "Kendriya Vidyalaya",
-    "Modern Public School",
-    "Springdales School",
+  const schools: School[] = [
+    { id: "1", name: "St. Mary's High School" },
+    { id: "2", name: "Delhi Public School" },
+    { id: "3", name: "Kendriya Vidyalaya" },
+    { id: "4", name: "Modern Public School" },
+    { id: "5", name: "Springdales School" },
   ];
+
+  const selectedSchool = schools.find((school) => school.id === value);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -39,7 +46,7 @@ export default function SchoolDropdown({
       <input
         className={`w-full border ${error ? "border-red-500" : "border-gray-300"} rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] cursor-pointer ${value ? "text-gray-900" : "text-gray-400"}`}
         placeholder="Select School"
-        value={value}
+        value={selectedSchool?.name || ""}
         readOnly
         onClick={() => setOpen((o) => !o)}
         onFocus={() => setOpen(true)}
@@ -54,7 +61,7 @@ export default function SchoolDropdown({
       {open && (
         <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-200 z-50">
           {schools.map((school, idx) => (
-            <div key={school}>
+            <div key={school.id}>
               <button
                 className="w-full text-left px-4 py-3 text-gray-900 hover:bg-[#faf9f6] focus:bg-[#faf9f6] rounded-xl transition-colors duration-150"
                 style={{
@@ -66,12 +73,12 @@ export default function SchoolDropdown({
                         : undefined,
                 }}
                 onClick={() => {
-                  onChange(school);
+                  onChange(school.id);
                   setOpen(false);
                 }}
                 type="button"
               >
-                {school}
+                {school.name}
               </button>
               {idx < schools.length - 1 && (
                 <div className="h-px bg-gray-200 mx-4" />

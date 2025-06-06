@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import SchoolDropdown from "./SchoolDropdown";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import useHydrated from "../hooks/useHydrated";
+import axios from "axios";
 
 interface FormValues {
   studentName: string;
@@ -12,6 +12,10 @@ interface FormValues {
   division: string;
   school: string;
   homeAddress: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface StudentCard {
@@ -20,6 +24,7 @@ interface StudentCard {
   class: string;
   division: string;
   school: string;
+  schoolName?: string;
   homeAddress: string;
   location?: {
     lat: number;
@@ -33,15 +38,15 @@ const MapAddressPicker = dynamic(() => import("./MapAddressPicker"), {
 
 interface StudentDetailsFormProps {
   onContinue: (students: StudentCard[]) => void;
-  students: StudentCard[];
-  setStudents: React.Dispatch<React.SetStateAction<StudentCard[]>>;
+  parentId: number;
 }
 
-export default function StudentDetailsForm({
-  onContinue,
-  students,
-  setStudents,
-}: StudentDetailsFormProps) {
+export default function StudentDetailsForm({ onContinue, parentId }: StudentDetailsFormProps) {
+  const [students, setStudents] = useState<StudentCard[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+
+  // Form for the current student being entered
   const {
     register,
     handleSubmit,
@@ -52,84 +57,150 @@ export default function StudentDetailsForm({
   } = useForm<FormValues>();
 
   const schoolValue = watch("school");
-  const [mapOpen, setMapOpen] = useState(false);
   const homeAddress = watch("homeAddress");
-  const hydrated = useHydrated();
 
-  const onSubmit = (data: FormValues) => {
+  // Add current form as a student and clear form
+  const handleAddStudent = (data: FormValues) => {
+    const schools = [
+      { id: "1", name: "St. Mary's High School" },
+      { id: "2", name: "Delhi Public School" },
+      { id: "3", name: "Kendriya Vidyalaya" },
+      { id: "4", name: "Modern Public School" },
+      { id: "5", name: "Springdales School" },
+    ];
+    const selectedSchool = schools.find((school) => school.id === data.school);
     const newStudent: StudentCard = {
-      id: hydrated ? Date.now().toString() : "ssr-id",
+      id: Date.now().toString(),
       ...data,
+      schoolName: selectedSchool?.name,
     };
-    setStudents([...students, newStudent]);
-    reset(); // Reset form after adding student
+    setStudents((prev) => [...prev, newStudent]);
+    reset();
   };
 
-  const handleContinue = () => {
-    if (students.length === 0) {
-      console.log("No students added yet");
+  // Remove a student
+  const handleRemoveStudent = (id: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  // Submit all students
+  const onSubmit = async (data: FormValues) => {
+    // Build the list to submit: all students in array + last form if filled
+    const allStudents = [...students];
+    if (
+      data.studentName &&
+      data.class &&
+      data.division &&
+      data.school &&
+      data.homeAddress
+    ) {
+      const schools = [
+        { id: "1", name: "St. Mary's High School" },
+        { id: "2", name: "Delhi Public School" },
+        { id: "3", name: "Kendriya Vidyalaya" },
+        { id: "4", name: "Modern Public School" },
+        { id: "5", name: "Springdales School" },
+      ];
+      const selectedSchool = schools.find(
+        (school) => school.id === data.school
+      );
+      const newStudent: StudentCard = {
+        id: Date.now().toString(),
+        ...data,
+        schoolName: selectedSchool?.name,
+      };
+      allStudents.push(newStudent);
+    }
+    if (allStudents.length === 0) {
+      alert("Please add at least one student before continuing");
       return;
     }
-    onContinue(students);
+    setIsSubmitting(true);
+    try {
+      for (const student of allStudents) {
+        const studentData = {
+          parent_id: parentId,
+          school_id: parseInt(student.school),
+          full_name: student.studentName,
+          class_name: student.class,
+          division: student.division,
+          student_address: student.homeAddress,
+          location_latitude: student.location?.lat || 0,
+          location_longitude: student.location?.lng || 0,
+        };
+        console.log("Registering student:", studentData);
+        await axios.post(
+          "https://13.235.104.94/register-student",
+          studentData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              accept: "application/json",
+            },
+          }
+        );
+      }
+      onContinue(allStudents);
+    } catch {
+      alert("Error registering students. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const StudentCard = ({ student }: { student: StudentCard }) => (
-    <div className="bg-white rounded-xl p-4 shadow-md mb-4 border border-gray-100">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-lg text-gray-900">
-          {student.studentName}
-        </h3>
-        <button
-          onClick={() =>
-            setStudents(students.filter((s) => s.id !== student.id))
-          }
-          className="text-gray-400 hover:text-red-500"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-        <div>
-          <span className="font-medium">Class:</span> {student.class}
-        </div>
-        <div>
-          <span className="font-medium">Division:</span> {student.division}
-        </div>
-        <div className="col-span-2">
-          <span className="font-medium">School:</span> {student.school}
-        </div>
-        <div className="col-span-2">
-          <span className="font-medium">Address:</span> {student.homeAddress}
-        </div>
-      </div>
-    </div>
-  );
+  // Gold box style
+  const goldBox =
+    "border border-[#EAB308] rounded-xl p-4 mb-4 bg-white shadow-sm relative";
+  const goldLabel = "text-[#EAB308] font-bold text-base";
+  const removeBtn =
+    "absolute right-4 top-4 text-sm text-gray-500 hover:text-red-500 cursor-pointer";
 
   return (
     <div className="px-6 pt-2">
-      {students.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            Added Students
-          </h3>
-          {students.map((student) => (
-            <StudentCard key={student.id} student={student} />
-          ))}
+      {/* Render already added students as gold boxes */}
+      {students.map((student, idx) => (
+        <div className={goldBox + " w-full"} key={student.id}>
+          <div className="flex justify-between items-center mb-2">
+            <span className={goldLabel}>{`Student ${idx + 1}`}</span>
+            <span
+              className={removeBtn}
+              onClick={() => handleRemoveStudent(student.id)}
+            >
+              Remove
+            </span>
+          </div>
+          <div className="mb-2">
+            <input
+              value={student.studentName}
+              disabled
+              className="w-full max-w-full border border-gray-300 rounded-xl px-4 py-2 text-base bg-[#faf9f6] text-black mb-2"
+            />
+            <div className="flex gap-4 mb-2">
+              <input
+                value={student.class}
+                disabled
+                className="w-1/2 border border-gray-300 rounded-xl px-4 py-2 text-base bg-[#faf9f6] text-black"
+              />
+              <input
+                value={student.division}
+                disabled
+                className="w-1/2 border border-gray-300 rounded-xl px-4 py-2 text-base bg-[#faf9f6] text-black"
+              />
+            </div>
+            <input
+              value={student.schoolName || ""}
+              disabled
+              className="w-full max-w-full border border-gray-300 rounded-xl px-4 py-2 text-base bg-[#faf9f6] text-black mb-2"
+            />
+            <input
+              value={student.homeAddress}
+              disabled
+              className="w-full max-w-full border border-gray-300 rounded-xl px-4 py-2 text-base bg-[#faf9f6] text-black"
+            />
+          </div>
         </div>
-      )}
-
+      ))}
+      {/* Only show the form if not submitting */}
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <h2
           className="text-xl font-bold text-black text-center mt-2 mb-1"
@@ -137,7 +208,6 @@ export default function StudentDetailsForm({
         >
           Student Details
         </h2>
-
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-1">
             Full Name
@@ -155,7 +225,6 @@ export default function StudentDetailsForm({
             </span>
           )}
         </div>
-
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -173,7 +242,6 @@ export default function StudentDetailsForm({
               </span>
             )}
           </div>
-
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-900 mb-1">
               Division
@@ -191,7 +259,6 @@ export default function StudentDetailsForm({
             )}
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-1">
             School
@@ -202,7 +269,6 @@ export default function StudentDetailsForm({
             error={errors.school?.message}
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-1">
             Home Address
@@ -242,27 +308,26 @@ export default function StudentDetailsForm({
               onClose={() => setMapOpen(false)}
               onConfirm={(address, latlng) => {
                 setValue("homeAddress", address, { shouldValidate: true });
-                // Store the lat/lng in the current student's data
-                const currentStudent = students[students.length - 1];
-                if (currentStudent) {
-                  currentStudent.location = latlng;
-                }
+                setValue("location", latlng, { shouldValidate: true });
                 setMapOpen(false);
               }}
               initialLatLng={undefined}
             />
           )}
         </div>
-
-        <button className="border font-satoshi border-[#EAB308] text-[#EAB308] font-semibold rounded-full px-8 py-2 text-base bg-transparent shadow-none hover:bg-[#fffbe6] transition-colors duration-200">
+        <button
+          type="button"
+          className="border font-satoshi border-[#EAB308] text-[#EAB308] font-semibold rounded-full px-8 py-2 text-base bg-transparent shadow-none hover:bg-[#fffbe6] transition-colors duration-200"
+          onClick={handleSubmit(handleAddStudent)}
+        >
           Add Another Student
         </button>
         <button
           type="submit"
-          className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2"
-          onClick={handleContinue}
+          disabled={isSubmitting}
+          className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continue
+          {isSubmitting ? "Registering..." : "Continue"}
         </button>
       </form>
     </div>
