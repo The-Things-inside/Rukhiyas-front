@@ -39,10 +39,16 @@ const MapAddressPicker = dynamic(() => import("./MapAddressPicker"), {
 interface StudentDetailsFormProps {
   onContinue: (students: StudentCard[]) => void;
   parentId: number;
+  students: StudentCard[];
+  setStudents: React.Dispatch<React.SetStateAction<StudentCard[]>>;
 }
 
-export default function StudentDetailsForm({ onContinue, parentId }: StudentDetailsFormProps) {
-  const [students, setStudents] = useState<StudentCard[]>([]);
+export default function StudentDetailsForm({
+  onContinue,
+  parentId,
+  students,
+  setStudents,
+}: StudentDetailsFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
 
