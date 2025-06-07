@@ -33,65 +33,23 @@ interface ApiStudent {
   created_at: string;
 }
 
+interface ReviewAndPayProps {
+  students: StudentCard[];
+  onStudentsChange?: (students: StudentCard[]) => void;
+}
 
-
-export default function ReviewAndPay() {
-  const [students, setStudents] = useState<StudentCard[]>([]);
+export default function ReviewAndPay({
+  students,
+  onStudentsChange,
+}: ReviewAndPayProps) {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const parentId = localStorage.getItem("parent_id");
-        const accessToken = localStorage.getItem("access_token");
-
-        if (!parentId || !accessToken) {
-          setError("Parent ID or access token not found");
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          `https://13.235.104.94/students?parent_id=${parentId}`,
-          {
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch students");
-        }
-
-        const apiStudents: ApiStudent[] = await response.json();
-        const mappedStudents: StudentCard[] = apiStudents.map((student) => ({
-          id: student.id.toString(),
-          studentName: student.full_name,
-          class: student.class_name,
-          division: student.division,
-          school: student.school_id.toString(),
-          homeAddress: student.student_address,
-          location: {
-            lat: student.location_latitude,
-            lng: student.location_longitude,
-          },
-        }));
-
-        setStudents(mappedStudents);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudents();
-  }, []);
+    setLoading(false);
+  }, [students]);
 
   const handleEdit = (student: StudentCard) => {
     setEditingStudentId(student.id);
@@ -107,12 +65,12 @@ export default function ReviewAndPay() {
       school: "",
       homeAddress: "",
     };
-    setStudents((prev) => [...prev, newStudent]);
+    onStudentsChange?.([...students, newStudent]);
     setEditingStudentId(newId);
   };
 
   const handleRemove = (id: string) => {
-    setStudents((prev) => prev.filter((student) => student.id !== id));
+    onStudentsChange?.(students.filter((student) => student.id !== id));
     if (editingStudentId === id) {
       setEditingStudentId(null);
     }
@@ -195,7 +153,7 @@ export default function ReviewAndPay() {
           },
         }));
 
-        setStudents(mappedStudents);
+        onStudentsChange?.(mappedStudents);
       } else {
         response = await fetch(
           `https://13.235.104.94/students/${updatedStudent.id}`,
@@ -237,8 +195,8 @@ export default function ReviewAndPay() {
           },
         };
 
-        setStudents((prev) =>
-          prev.map((s) => (s.id === updatedStudent.id ? mappedStudent : s))
+        onStudentsChange?.(
+          students.map((s) => (s.id === updatedStudent.id ? mappedStudent : s))
         );
       }
 

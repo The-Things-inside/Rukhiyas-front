@@ -127,7 +127,10 @@ export default function ParentRegistration({
                 parentId={parseInt(localStorage.getItem("parent_id") || "0")}
               />
             ) : (
-              <ReviewAndPay students={students} />
+              <ReviewAndPay
+                students={students}
+                onStudentsChange={setStudents}
+              />
             )
           ) : (
             <div className="flex flex-col items-center justify-center w-full px-6 pt-4">
