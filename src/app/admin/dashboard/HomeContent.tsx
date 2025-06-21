@@ -107,56 +107,115 @@ export default function HomeContent() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selected, setSelected] = useState(dropdownItems[0]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [unassignedStudents, setUnassignedStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busSelections, setBusSelections] = useState<string[]>([]);
   const [busDropdowns, setBusDropdowns] = useState<boolean[]>([]);
   const [editingFeeIdx, setEditingFeeIdx] = useState<number | null>(null);
   const [feeInput, setFeeInput] = useState<string>("");
+  const [updatingFee, setUpdatingFee] = useState<number | null>(null);
+
+  const [busAssignmentSelections, setBusAssignmentSelections] = useState<
+    string[]
+  >([]);
+  const [busAssignmentDropdowns, setBusAssignmentDropdowns] = useState<
+    boolean[]
+  >([]);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      let url: string;
+      const endpointKey = selected.key;
+
+      if (endpointKey === "new") {
+        url = "https://13.235.104.94/admin/students/no-fees";
+      } else if (endpointKey === "bus") {
+        url = "https://13.235.104.94/admin/students/unassigned";
+      } else {
+        setStudents([]);
+        setUnassignedStudents([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         const token = localStorage.getItem("access_token");
         if (!token) {
           throw new Error("No access token found");
         }
 
-        const response = await axios.get(
-          "https://13.235.104.94/admin/students/no-fees",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              accept: "application/json",
-            },
-          }
-        );
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+        });
 
-        setStudents(response.data);
-        setBusSelections(response.data.map(() => ""));
-        setBusDropdowns(response.data.map(() => false));
+        const data = response.data;
 
-        // Update dropdown counts
-        const newDropdownItems = dropdownItems.map((item) => ({
-          ...item,
-          count: response.data.length,
-        }));
-        setSelected(newDropdownItems[0]);
+        if (endpointKey === "new") {
+          setStudents(data);
+          setBusSelections(data.map(() => ""));
+          setBusDropdowns(data.map(() => false));
+        } else if (endpointKey === "bus") {
+          setUnassignedStudents(data);
+          setBusAssignmentSelections(data.map(() => ""));
+          setBusAssignmentDropdowns(data.map(() => false));
+        }
+        
+        setSelected(prev => ({...prev, count: data.length}));
+
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to fetch students"
+          err instanceof Error ? err.message : "Failed to fetch data"
         );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStudents();
-  }, []);
+    fetchData();
+  }, [selected.key]);
 
   const handleSelect = (item: (typeof dropdownItems)[0]) => {
     setSelected(item);
     setDropdownOpen(false);
+  };
+
+  const handleUpdateFee = async (studentId: number, actualFees: number) => {
+    setUpdatingFee(studentId);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token found");
+      }
+
+      const response = await axios.patch(
+        `https://13.235.104.94/admin/students/${studentId}/update-fees`,
+        {
+          actual_fees: actualFees,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // If successful, reload the page to get updated data
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to update fee:", err);
+      alert("Failed to update fee. Please try again.");
+    } finally {
+      setUpdatingFee(null);
+    }
   };
 
   if (loading) {
@@ -228,10 +287,10 @@ export default function HomeContent() {
       </div>
       {/* Conditional Content */}
       {selected.key === "bus"
-        ? students.map((student, idx) => (
+        ? unassignedStudents.map((student, idx) => (
             <div
               key={student.id}
-              className="border border-[#E8B600] rounded-xl px-4 py-3 mb-4 bg-white"
+              className="border border-[#E8B600] rounded-xl px-4 py-3 mb-2 bg-white"
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
@@ -244,21 +303,21 @@ export default function HomeContent() {
               <div className="text-[#19191F] text-[16px] font-bold mb-2 font-satoshi">
                 {student.full_name}
               </div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex gap-8 mb-1">
+                <div>
+                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                    Class
+                  </span>
+                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                    {student.class_name} {student.division}
+                  </div>
+                </div>
                 <div>
                   <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
                     School
                   </span>
                   <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
                     School ID: {student.school_id}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    ID No.
-                  </span>
-                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {student.id}
                   </div>
                 </div>
               </div>
@@ -277,23 +336,23 @@ export default function HomeContent() {
                 <div className="mt-1">
                   <div
                     className={
-                      busDropdowns[idx]
+                      busAssignmentDropdowns[idx]
                         ? "bg-[#FFF8E1] border border-[#E8B600] rounded-xl shadow-lg transition-all"
                         : ""
                     }
                   >
                     <BusSelect
-                      value={busSelections[idx]}
+                      value={busAssignmentSelections[idx]}
                       onChange={(bus) => {
-                        setBusSelections((prev) => {
+                        setBusAssignmentSelections((prev) => {
                           const copy = [...prev];
                           copy[idx] = bus;
                           return copy;
                         });
                       }}
-                      open={busDropdowns[idx]}
+                      open={busAssignmentDropdowns[idx]}
                       setOpen={(v) =>
-                        setBusDropdowns((prev) =>
+                        setBusAssignmentDropdowns((prev) =>
                           prev.map((open, i) => (i === idx ? v : open))
                         )
                       }
@@ -371,18 +430,23 @@ export default function HomeContent() {
                     <button
                       className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi"
                       onClick={() => setEditingFeeIdx(null)}
+                      disabled={updatingFee === student.id}
                     >
                       Cancel
                     </button>
                     <button
-                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi"
+                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi disabled:opacity-50"
                       onClick={() => {
-                        // Save logic can be added here
-                        setEditingFeeIdx(null);
-                        // Optionally update the student's fee in state
+                        const feeAmount = parseFloat(feeInput);
+                        if (isNaN(feeAmount) || feeAmount <= 0) {
+                          alert("Please enter a valid fee amount");
+                          return;
+                        }
+                        handleUpdateFee(student.id, feeAmount);
                       }}
+                      disabled={updatingFee === student.id}
                     >
-                      Confirm Fee
+                      {updatingFee === student.id ? "Updating..." : "Confirm Fee"}
                     </button>
                   </div>
                 ) : (
