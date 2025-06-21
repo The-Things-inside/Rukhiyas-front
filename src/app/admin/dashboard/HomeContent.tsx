@@ -20,16 +20,23 @@ interface Student {
   created_at: string;
 }
 
+interface Bus {
+  id: number;
+  route: string;
+  reg_no: string;
+  model: string;
+  capacity: number;
+  driver_name: string;
+  driver_phonenumber: string | null;
+  driver_photo_url: string | null;
+  on_duty: boolean;
+  total_occupancy: number;
+}
+
 const dropdownItems = [
   { key: "new", label: "New Registrations", count: 0 },
   { key: "bus", label: "Bus Assignments", count: 0 },
   { key: "parent", label: "Parent Requests", count: 0 },
-];
-
-const busOptions = [
-  "Bus 1. Peringadi - Mahe",
-  "Bus 2. Azhiyur - Mahe",
-  "Bus 3. Manjakkal - Mahe",
 ];
 
 function BusSelect({
@@ -37,14 +44,17 @@ function BusSelect({
   onChange,
   open,
   setOpen,
+  buses,
 }: {
   value: string;
   onChange: (v: string) => void;
   open: boolean;
   setOpen: (v: boolean) => void;
+  buses: Bus[];
 }) {
   const [search, setSearch] = useState("");
-  const filtered = busOptions.filter((b) =>
+  const formattedBuses = buses.map((b) => `bus ${b.id}, ${b.route}`);
+  const filtered = formattedBuses.filter((b) =>
     b.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -108,6 +118,7 @@ export default function HomeContent() {
   const [selected, setSelected] = useState(dropdownItems[0]);
   const [students, setStudents] = useState<Student[]>([]);
   const [unassignedStudents, setUnassignedStudents] = useState<Student[]>([]);
+  const [buses, setBuses] = useState<Bus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busSelections, setBusSelections] = useState<string[]>([]);
@@ -115,6 +126,8 @@ export default function HomeContent() {
   const [editingFeeIdx, setEditingFeeIdx] = useState<number | null>(null);
   const [feeInput, setFeeInput] = useState<string>("");
   const [updatingFee, setUpdatingFee] = useState<number | null>(null);
+  const [assigningBus, setAssigningBus] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [busAssignmentSelections, setBusAssignmentSelections] = useState<
     string[]
@@ -122,6 +135,31 @@ export default function HomeContent() {
   const [busAssignmentDropdowns, setBusAssignmentDropdowns] = useState<
     boolean[]
   >([]);
+
+  useEffect(() => {
+    const fetchBuses = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          throw new Error("No access token found");
+        }
+
+        const response = await axios.get(
+          "https://13.235.104.94/admin/buses",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              accept: "application/json",
+            },
+          }
+        );
+        setBuses(response.data);
+      } catch (err) {
+        console.error("Failed to fetch buses:", err);
+      }
+    };
+    fetchBuses();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -179,11 +217,53 @@ export default function HomeContent() {
     };
 
     fetchData();
-  }, [selected.key]);
+  }, [selected.key, refreshKey]);
 
   const handleSelect = (item: (typeof dropdownItems)[0]) => {
     setSelected(item);
     setDropdownOpen(false);
+  };
+
+  const handleAssignBus = async (studentId: number, busSelection: string) => {
+    if (!busSelection) {
+      alert("Please select a bus to assign.");
+      return;
+    }
+
+    const busIdString = busSelection.split(",")[0].replace("bus ", "").trim();
+    const busId = parseInt(busIdString, 10);
+
+    if (isNaN(busId)) {
+      alert("Invalid bus selection.");
+      return;
+    }
+
+    setAssigningBus(studentId);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No access token found");
+      }
+
+      await axios.put(
+        `https://13.235.104.94/admin/students/${studentId}/assign-bus/${busId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+        }
+      );
+
+      // Refresh the data by changing the key
+      setRefreshKey((prevKey) => prevKey + 1);
+    } catch (err) {
+      console.error("Failed to assign bus:", err);
+      alert("Failed to assign bus. Please try again.");
+    } finally {
+      setAssigningBus(null);
+    }
   };
 
   const handleUpdateFee = async (studentId: number, actualFees: number) => {
@@ -356,12 +436,19 @@ export default function HomeContent() {
                           prev.map((open, i) => (i === idx ? v : open))
                         )
                       }
+                      buses={buses}
                     />
                   </div>
                 </div>
               </div>
-              <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[18px] font-satoshi mt-2">
-                Assign Bus
+              <button
+                className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[18px] font-satoshi mt-2 disabled:opacity-50"
+                onClick={() =>
+                  handleAssignBus(student.id, busAssignmentSelections[idx])
+                }
+                disabled={assigningBus === student.id}
+              >
+                {assigningBus === student.id ? "Assigning..." : "Assign Bus"}
               </button>
             </div>
           ))
