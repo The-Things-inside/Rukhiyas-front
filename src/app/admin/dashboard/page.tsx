@@ -1,40 +1,38 @@
 "use client";
+import React, { useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import HomeContent from "./HomeContent";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { decodeJWT } from "@/lib/utils";
+import StudentsList from "./StudentsList";
 
-export default function AdminDashboard() {
-  const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
-  const [checked, setChecked] = useState(false);
+const PAGE_TITLES: Record<string, string> = {
+  home: "Urgent Tasks",
+  students: "Students List",
+  fleet: "Fleet",
+  "track-bus": "Track Bus",
+  settings: "Settings & Logs",
+};
 
-  useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("access_token")
-        : null;
-    if (!token) {
-      router.replace("/admin/login");
-      return;
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState("home");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "home":
+        return <HomeContent />;
+      case "students":
+        return <StudentsList />;
+      default:
+        return <HomeContent />;
     }
-    const payload = decodeJWT(token);
-    if (payload && payload.is_admin) {
-      setAuthorized(true);
-    } else {
-      localStorage.removeItem("access_token");
-      router.replace("/admin/login");
-    }
-    setChecked(true);
-  }, [router]);
-
-  if (!checked) return null;
-  if (!authorized) return null;
+  };
 
   return (
-    <AdminLayout>
-      <HomeContent />
+    <AdminLayout
+      pageTitle={PAGE_TITLES[activeTab] || "Dashboard"}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      {renderContent()}
     </AdminLayout>
   );
 }

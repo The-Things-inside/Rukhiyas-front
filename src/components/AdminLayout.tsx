@@ -1,26 +1,38 @@
-import React from "react";
-import AdminPageHeader from "./AdminPageHeader";
+"use client";
+
+import React, { useState } from "react";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminDrawer from "@/components/AdminDrawer";
 
 export default function AdminLayout({
   children,
+  pageTitle,
+  activeTab: initialActiveTab,
+  onTabChange,
 }: {
   children: React.ReactNode;
+  pageTitle: string;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#19191F] relative">
-      <div className="fixed top-0 left-0 right-0 z-50 max-w-md mx-auto">
-        <AdminPageHeader />
-      </div>
-      <div
-        className="absolute left-0 right-0 mx-auto bg-white mt-3 rounded-t-[24px] max-w-md flex flex-col"
-        style={{
-          top: 67, // header height
-          height: "calc(100vh - 67px)",
-          bottom: 0,
+    <div className="flex flex-col h-screen bg-[#FAFAFA]">
+      <AdminPageHeader
+        title={pageTitle}
+        onMenuClick={() => setDrawerOpen(true)}
+      />
+      <AdminDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        activeTab={initialActiveTab}
+        onTabChange={(tab) => {
+          onTabChange(tab);
+          setDrawerOpen(false);
         }}
-      >
-        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
-      </div>
+      />
+      <main className="flex-1 min-h-0 flex flex-col">{children}</main>
     </div>
   );
 }
