@@ -664,9 +664,9 @@ export default function HomeContent() {
                       Deny
                     </button>
                   </div>
-                </div>
-              ))
-            : null}
+              </div>
+            ))
+          : null}
     </div>
   );
 }

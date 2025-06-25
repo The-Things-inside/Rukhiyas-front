@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import axios from "axios";
+import StudentDetails from "./StudentDetails";
 
 interface Student {
   id: number;
@@ -12,6 +13,12 @@ interface Student {
 interface StudentWithPending {
   student: Student;
   pending_request_count: number;
+}
+
+interface StudentsListProps {
+  onStudentSelect: (studentId: number) => void;
+  selectedStudentId: number | null;
+  onBackToList: () => void;
 }
 
 const CheckIcon = () => (
@@ -59,7 +66,7 @@ const CrossIcon = () => (
   </svg>
 );
 
-export default function StudentsList() {
+export default function StudentsList({ onStudentSelect, selectedStudentId, onBackToList }: StudentsListProps) {
   const [students, setStudents] = useState<StudentWithPending[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +95,15 @@ export default function StudentsList() {
   const handleAddStudent = () => {
     window.open("https://192.168.29.198:3000/register", "_blank");
   };
+
+  const handleStudentClick = (studentId: number) => {
+    onStudentSelect(studentId);
+  };
+
+  // Show student details if a student is selected
+  if (selectedStudentId) {
+    return <StudentDetails studentId={selectedStudentId} onBack={onBackToList} />;
+  }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-4 p-4 bg-white">
@@ -127,7 +143,8 @@ export default function StudentsList() {
               {students.map((item) => (
                 <tr
                   key={item.student.id}
-                  className="border-b border-[#E8B600] last:border-b-0"
+                  className="border-b border-[#E8B600] last:border-b-0 cursor-pointer hover:bg-[#FFF8E1] transition-colors"
+                  onClick={() => handleStudentClick(item.student.id)}
                 >
                   <td className="p-3 text-base font-medium text-[#19191F]">
                     {item.student.id}
