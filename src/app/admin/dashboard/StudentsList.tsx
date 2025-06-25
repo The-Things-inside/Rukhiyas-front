@@ -1,21 +1,18 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import axios from "axios";
 
-const dummyStudents = [
-  { id: 456, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-  { id: 457, name: "Aryan Sharma", tasks: 1, feesPaid: true },
-  { id: 458, name: "Aryan Sharma", tasks: 0, feesPaid: false },
-  { id: 459, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-  { id: 460, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-  { id: 461, name: "Aryan Sharma", tasks: 1, feesPaid: true },
-  { id: 462, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-  { id: 463, name: "Aryan Sharma", tasks: 1, feesPaid: false },
-  { id: 464, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-  { id: 465, name: "Aryan Sharma", tasks: 0, feesPaid: false },
-  { id: 466, name: "Aryan Sharma", tasks: 1, feesPaid: true },
-  { id: 467, name: "Aryan Sharma", tasks: 0, feesPaid: true },
-];
+interface Student {
+  id: number;
+  full_name: string;
+  is_paid: boolean;
+}
+
+interface StudentWithPending {
+  student: Student;
+  pending_request_count: number;
+}
 
 const CheckIcon = () => (
   <svg
@@ -63,6 +60,31 @@ const CrossIcon = () => (
 );
 
 export default function StudentsList() {
+  const [students, setStudents] = useState<StudentWithPending[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("No access token found");
+        const res = await axios.get("https://13.235.104.94/admin/students-with-pending-requests", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: "application/json",
+          },
+        });
+        setStudents(res.data);
+      } catch (err) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleAddStudent = () => {
     window.open("https://192.168.29.198:3000/register", "_blank");
   };
@@ -89,37 +111,41 @@ export default function StudentsList() {
 
       {/* Students Table */}
       <div className="flex-1 overflow-y-auto border border-[#E8B600] rounded-lg">
-        <table className="w-full text-left">
-          <thead className="sticky top-0 bg-white">
-            <tr className="border-b border-[#E8B600]">
-              <th className="p-3 text-sm font-medium text-[#9B9B9B]">ID</th>
-              <th className="p-3 text-sm font-medium text-[#9B9B9B]">Name</th>
-              <th className="p-3 text-sm font-medium text-[#9B9B9B]">Tasks</th>
-              <th className="p-3 text-sm font-medium text-[#9B9B9B]">Fees</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dummyStudents.map((student, index) => (
-              <tr
-                key={student.id}
-                className="border-b border-[#E8B600] last:border-b-0"
-              >
-                <td className="p-3 text-base font-medium text-[#19191F]">
-                  {student.id}
-                </td>
-                <td className="p-3 text-base font-medium text-[#19191F]">
-                  {student.name}
-                </td>
-                <td className="p-3 text-base font-medium text-[#19191F]">
-                  {student.tasks}
-                </td>
-                <td className="p-3">
-                  {student.feesPaid ? <CheckIcon /> : <CrossIcon />}
-                </td>
+        {loading ? (
+          <div className="p-6 text-center text-[#19191F]">Loading...</div>
+        ) : (
+          <table className="w-full text-left">
+            <thead className="sticky top-0 bg-white">
+              <tr className="border-b border-[#E8B600]">
+                <th className="p-3 text-sm font-medium text-[#9B9B9B]">ID</th>
+                <th className="p-3 text-sm font-medium text-[#9B9B9B]">Name</th>
+                <th className="p-3 text-sm font-medium text-[#9B9B9B]">Tasks</th>
+                <th className="p-3 text-sm font-medium text-[#9B9B9B]">Fees</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {students.map((item) => (
+                <tr
+                  key={item.student.id}
+                  className="border-b border-[#E8B600] last:border-b-0"
+                >
+                  <td className="p-3 text-base font-medium text-[#19191F]">
+                    {item.student.id}
+                  </td>
+                  <td className="p-3 text-base font-medium text-[#19191F]">
+                    {item.student.full_name}
+                  </td>
+                  <td className="p-3 text-base font-medium text-[#19191F]">
+                    {item.pending_request_count}
+                  </td>
+                  <td className="p-3">
+                    {item.student.is_paid ? <CheckIcon /> : <CrossIcon />}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

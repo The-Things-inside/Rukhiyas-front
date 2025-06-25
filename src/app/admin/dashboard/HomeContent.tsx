@@ -136,6 +136,8 @@ export default function HomeContent() {
     boolean[]
   >([]);
 
+  const [parentRequests, setParentRequests] = useState<any[]>([]);
+
   useEffect(() => {
     const fetchBuses = async () => {
       try {
@@ -173,6 +175,31 @@ export default function HomeContent() {
         url = "https://13.235.104.94/admin/students/no-fees";
       } else if (endpointKey === "bus") {
         url = "https://13.235.104.94/admin/students/unassigned";
+      } else if (endpointKey === "parent") {
+        const fetchParentRequests = async () => {
+          setLoading(true);
+          setError(null);
+          try {
+            const token = localStorage.getItem("access_token");
+            if (!token) throw new Error("No access token found");
+            const response = await axios.get(
+              "https://13.235.104.94/admin/requests/pending",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  accept: "application/json",
+                },
+              }
+            );
+            setParentRequests(response.data);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to fetch parent requests");
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchParentRequests();
+        return;
       } else {
         setStudents([]);
         setUnassignedStudents([]);
@@ -203,6 +230,8 @@ export default function HomeContent() {
           setUnassignedStudents(data);
           setBusAssignmentSelections(data.map(() => ""));
           setBusAssignmentDropdowns(data.map(() => false));
+        } else if (endpointKey === "parent") {
+          setParentRequests(data);
         }
         
         setSelected(prev => ({...prev, count: data.length}));
@@ -554,7 +583,90 @@ export default function HomeContent() {
                 )}
               </div>
             ))
-          : null}
+          : selected.key === "parent"
+            ? parentRequests.filter(r => r.request_type === "temporary_address").map((req) => (
+                <div
+                  key={req.id}
+                  className="border border-[#E8B600] rounded-xl px-4 py-3 mb-4 bg-white max-w-sm mx-auto shadow-sm"
+                  style={{ boxShadow: '0 2px 8px 0 #E8B60022' }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[#E8B600] text-[15px] font-medium font-satoshi">
+                      Temp Address Change
+                    </span>
+                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                      {req.created_at ? new Date(req.created_at).toLocaleDateString() : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[#19191F] text-[16px] font-bold font-satoshi">
+                      Name
+                    </span>
+                    <span className="text-[#19191F] text-[16px] font-bold font-satoshi">
+                      ID No.
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[#19191F] text-[15px] font-satoshi">
+                      {req.student_name || "-"}
+                    </span>
+                    <span className="text-[#19191F] text-[15px] font-satoshi">
+                      {req.student_id}
+                    </span>
+                  </div>
+                  <div className="mb-1">
+                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                      School
+                    </span>
+                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                      {req.school_name || "-"}
+                    </div>
+                  </div>
+                  <div className="mb-1">
+                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                      Address
+                    </span>
+                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                      {req.current_data}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-[#E8B600] bg-[#FAFAFA] p-3 mt-3 mb-3">
+                    <div className="mb-2">
+                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                        New Pick Up
+                      </span>
+                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
+                        {req.requested_data}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                        New Drop Off
+                      </span>
+                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
+                        Same as pick up address
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                        Dates
+                      </span>
+                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
+                        {Array.isArray(req.temp_dates) ? req.temp_dates.map((d: string) => new Date(d).toLocaleDateString()).join(", ") : "-"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 mt-2">
+                    <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi">
+                      Confirm
+                    </button>
+                    <button className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi">
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              ))
+            : null}
     </div>
   );
 }
