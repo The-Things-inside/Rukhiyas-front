@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
@@ -9,6 +10,7 @@ const menuItems = [
     selectedIcon: (
       <img src="/assets/homeselected.svg" alt="Home" className="h-5 w-5" />
     ),
+    route: "/admin/dashboard",
   },
   {
     key: "students",
@@ -21,6 +23,7 @@ const menuItems = [
         className="h-5 w-5"
       />
     ),
+    route: "/admin/studentslist",
   },
   {
     key: "fleet",
@@ -29,6 +32,7 @@ const menuItems = [
     selectedIcon: (
       <img src="/assets/fleetselected.svg" alt="Fleet" className="h-5 w-5" />
     ),
+    route: "/admin/fleets",
   },
   {
     key: "track-bus",
@@ -43,6 +47,7 @@ const menuItems = [
         className="h-5 w-5"
       />
     ),
+    route: "/admin/dashboard",
   },
   {
     key: "settings",
@@ -55,6 +60,7 @@ const menuItems = [
         className="h-5 w-5"
       />
     ),
+    route: "/admin/dashboard",
   },
 ];
 
@@ -69,6 +75,20 @@ export default function AdminDrawer({
   activeTab: string;
   onTabChange: (tab: string) => void;
 }) {
+  const router = useRouter();
+
+  const handleTabChange = (tab: string) => {
+    const menuItem = menuItems.find(item => item.key === tab);
+    if (menuItem) {
+      if (tab === "students" || tab === "fleet" || tab === "home") {
+        router.push(menuItem.route);
+      } else {
+        onTabChange(tab);
+      }
+    }
+    onClose();
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -148,7 +168,7 @@ export default function AdminDrawer({
                   ? "font-bold text-white bg-[#e8b6004f] bg-opacity-80 border-opacity-20"
                   : "font-medium hover:bg-white/10"
               }`}
-              onClick={() => onTabChange(item.key)}
+              onClick={() => handleTabChange(item.key)}
             >
               {activeTab === item.key ? item.selectedIcon : item.icon}
               {item.label}

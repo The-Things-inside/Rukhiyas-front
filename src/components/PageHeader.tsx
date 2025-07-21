@@ -28,7 +28,7 @@ export default function PageHeader() {
         const accessToken = localStorage.getItem("access_token");
         if (!accessToken) return;
 
-        const response = await fetch("https://13.235.104.94/students/me", {
+        const response = await fetch("https://43.205.196.195/students/me", {
           headers: {
             accept: "application/json",
             Authorization: `Bearer ${accessToken}`,

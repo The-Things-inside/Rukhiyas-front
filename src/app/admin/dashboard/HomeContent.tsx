@@ -147,7 +147,7 @@ export default function HomeContent() {
         }
 
         const response = await axios.get(
-          "https://13.235.104.94/admin/buses",
+          "https://43.205.196.195/admin/buses",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -172,9 +172,9 @@ export default function HomeContent() {
       const endpointKey = selected.key;
 
       if (endpointKey === "new") {
-        url = "https://13.235.104.94/admin/students/no-fees";
+        url = "https://43.205.196.195/admin/students/no-fees";
       } else if (endpointKey === "bus") {
-        url = "https://13.235.104.94/admin/students/unassigned";
+        url = "https://43.205.196.195/admin/students/unassigned";
       } else if (endpointKey === "parent") {
         const fetchParentRequests = async () => {
           setLoading(true);
@@ -183,7 +183,7 @@ export default function HomeContent() {
             const token = localStorage.getItem("access_token");
             if (!token) throw new Error("No access token found");
             const response = await axios.get(
-              "https://13.235.104.94/admin/requests/pending",
+              "https://43.205.196.195/admin/requests/pending",
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -275,7 +275,7 @@ export default function HomeContent() {
       }
 
       await axios.put(
-        `https://13.235.104.94/admin/students/${studentId}/assign-bus/${busId}`,
+        `https://43.205.196.195/admin/students/${studentId}/assign-bus/${busId}`,
         {},
         {
           headers: {
@@ -304,7 +304,7 @@ export default function HomeContent() {
       }
 
       const response = await axios.patch(
-        `https://13.235.104.94/admin/students/${studentId}/update-fees`,
+        `https://43.205.196.195/admin/students/${studentId}/update-fees`,
         {
           actual_fees: actualFees,
         },

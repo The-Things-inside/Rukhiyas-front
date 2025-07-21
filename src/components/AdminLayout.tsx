@@ -17,6 +17,11 @@ export default function AdminLayout({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const handleTabChange = (tab: string) => {
+    onTabChange(tab);
+    setDrawerOpen(false);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#FAFAFA]">
       <AdminPageHeader
@@ -27,10 +32,7 @@ export default function AdminLayout({
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         activeTab={initialActiveTab}
-        onTabChange={(tab) => {
-          onTabChange(tab);
-          setDrawerOpen(false);
-        }}
+        onTabChange={handleTabChange}
       />
       <main className="flex-1 min-h-0 flex flex-col">{children}</main>
     </div>

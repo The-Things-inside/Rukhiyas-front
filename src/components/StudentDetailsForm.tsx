@@ -136,7 +136,7 @@ export default function StudentDetailsForm({
         };
         console.log("Registering student:", studentData);
         await axios.post(
-          "https://13.235.104.94/register-student",
+          "https://43.205.196.195/register-student",
           studentData,
           {
             headers: {

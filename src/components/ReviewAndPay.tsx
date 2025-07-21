@@ -101,7 +101,7 @@ export default function ReviewAndPay({
 
       let response;
       if (isNewStudent) {
-        response = await fetch("https://13.235.104.94/register-student", {
+        response = await fetch("https://43.205.196.195/register-student", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -126,7 +126,7 @@ export default function ReviewAndPay({
 
         // After successful registration, fetch all students
         const studentsResponse = await fetch(
-          `https://13.235.104.94/students?parent_id=${parentId}`,
+          `https://43.205.196.195/students?parent_id=${parentId}`,
           {
             headers: {
               accept: "application/json",
@@ -156,7 +156,7 @@ export default function ReviewAndPay({
         onStudentsChange?.(mappedStudents);
       } else {
         response = await fetch(
-          `https://13.235.104.94/students/${updatedStudent.id}`,
+          `https://43.205.196.195/students/${updatedStudent.id}`,
           {
             method: "PUT",
             headers: {

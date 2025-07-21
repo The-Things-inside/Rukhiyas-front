@@ -25,7 +25,7 @@ export default function AdminRegisterPage() {
     // Basic validation
 
     try {
-      const response = await fetch("https://13.235.104.94/admin/register", {
+      const response = await fetch("https://43.205.196.195/admin/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

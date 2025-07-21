@@ -27,7 +27,7 @@ export default function LoginPage() {
       formData.append("client_id", "");
       formData.append("client_secret", "");
 
-      const response = await fetch("https://13.235.104.94/login", {
+      const response = await fetch("https://43.205.196.195/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

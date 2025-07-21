@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import StudentDetails from "./StudentDetails";
 
 interface Student {
@@ -16,9 +17,9 @@ interface StudentWithPending {
 }
 
 interface StudentsListProps {
-  onStudentSelect: (studentId: number) => void;
-  selectedStudentId: number | null;
-  onBackToList: () => void;
+  onStudentSelect?: (studentId: number) => void;
+  selectedStudentId?: number | null;
+  onBackToList?: () => void;
 }
 
 const CheckIcon = () => (
@@ -69,6 +70,7 @@ const CrossIcon = () => (
 export default function StudentsList({ onStudentSelect, selectedStudentId, onBackToList }: StudentsListProps) {
   const [students, setStudents] = useState<StudentWithPending[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +78,7 @@ export default function StudentsList({ onStudentSelect, selectedStudentId, onBac
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token found");
-        const res = await axios.get("https://13.235.104.94/admin/students-with-pending-requests", {
+        const res = await axios.get("https://43.205.196.195/admin/students-with-pending-requests", {
           headers: {
             Authorization: `Bearer ${token}`,
             accept: "application/json",
@@ -97,11 +99,12 @@ export default function StudentsList({ onStudentSelect, selectedStudentId, onBac
   };
 
   const handleStudentClick = (studentId: number) => {
-    onStudentSelect(studentId);
+    // Navigate to the student profile route
+    router.push(`/admin/student/${studentId}`);
   };
 
-  // Show student details if a student is selected
-  if (selectedStudentId) {
+  // Show student details if a student is selected (for backward compatibility)
+  if (selectedStudentId && onStudentSelect && onBackToList) {
     return <StudentDetails studentId={selectedStudentId} onBack={onBackToList} />;
   }
 
