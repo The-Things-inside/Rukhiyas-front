@@ -123,10 +123,10 @@ function FleetList() {
       {buses.length === 0 ? (
         <div className="text-center text-[#19191F] font-satoshi">No buses found.</div>
       ) : (
-        buses.map((bus) => (
+        buses.map((bus, idx) => (
           <div
             key={bus.id}
-            className="bg-white rounded-2xl border border-[#E8B600] mb-6 p-4 shadow relative"
+            className={`bg-white rounded-2xl border border-[#E8B600] mb-6 p-4 shadow relative${idx === buses.length - 1 ? ' pb-16' : ''}`}
           >
             {editBusId === bus.id ? (
               <>
@@ -262,7 +262,11 @@ function FleetList() {
                     <div className="text-xs text-[#9B9B9B] font-satoshi">Phone Number</div>
                     <div className="text-base text-[#19191F] font-satoshi">{bus.driver_phonenumber || "-"}</div>
                   </div>
-                  <button className="border border-[#E8B600] text-[#E8B600] rounded-full px-6 py-1 font-satoshi font-bold text-base">Call</button>
+                  {bus.driver_phonenumber ? (
+                    <a href={`tel:${bus.driver_phonenumber}`} className="border border-[#E8B600] text-[#E8B600] rounded-full px-6 py-1 font-satoshi font-bold text-base">Call</a>
+                  ) : (
+                    <button className="border border-[#E8B600] text-[#E8B600] rounded-full px-6 py-1 font-satoshi font-bold text-base" disabled>Call</button>
+                  )}
                 </div>
                 {/* Divider */}
                 <div className="border-t border-[#E0E0E0] my-2" />
