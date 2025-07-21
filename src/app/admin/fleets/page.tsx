@@ -73,8 +73,35 @@ function FleetList() {
   };
 
   const handleSave = async (busId: number) => {
-    // TODO: Implement save logic (API call)
-    setEditBusId(null);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const formData = new FormData();
+      formData.append("reg_no", editForm.reg_no);
+      formData.append("capacity", "" + (editForm.capacity || ""));
+      formData.append("driver_name", editForm.driver_name);
+      formData.append("driver_phonenumber", editForm.driver_phonenumber);
+      formData.append("route", editForm.route);
+      formData.append("on_duty", editForm.on_duty === "active" ? "true" : "false");
+      if (editForm.driver_photo_file) {
+        formData.append("driver_photo", editForm.driver_photo_file);
+      }
+      const res = await fetch(`https://api.rukhiyastravels.com/buses/bus/${busId}`, {
+        method: "PUT",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to update bus");
+      const updated = await res.json();
+      setBuses((prev) => prev.map((b) => (b.id === busId ? { ...b, ...updated.bus } : b)));
+      setEditBusId(null);
+      setEditForm({});
+    } catch (err) {
+      alert("Failed to update bus info. Please try again.");
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

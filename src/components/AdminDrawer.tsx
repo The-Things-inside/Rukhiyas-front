@@ -89,6 +89,13 @@ export default function AdminDrawer({
     onClose();
   };
 
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      router.push('/admin/login');
+    }
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -175,7 +182,7 @@ export default function AdminDrawer({
             </button>
           ))}
           {/* Logout */}
-          <button className="flex items-center gap-3 text-[#ebebeb] rounded-xl px-4 py-3 transition font-satoshi text-base font-medium hover:bg-white/10">
+          <button onClick={handleLogout} className="flex items-center gap-3 text-[#ebebeb] rounded-xl px-4 py-3 transition font-satoshi text-base font-medium hover:bg-white/10">
             <img src="/assets/logout.svg" alt="Logout" className="h-5 w-5" />
             Logout
           </button>
