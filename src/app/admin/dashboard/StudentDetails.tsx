@@ -1,26 +1,42 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function StudentDetails({ studentId, onBack }: { studentId: number; onBack: () => void }) {
-  // Dummy data for demonstration
-  const student = {
-    id: 456,
-    name: "Aryan Sharma",
-    class: "2 B",
-    school: "Avila Primary School",
-    address: "32, AB Villa, 1st Cross, Mico Layout, Madiwala, Bangalore.",
-    bus: "Bus 2. Azhiyur - Mahe",
-    emergency: "9988667755",
-    profile: "/assets/DP.svg",
-  };
-  const parent = {
-    name: "Priya Sharma",
-    profile: "/assets/DP.svg",
-    primary: "9988667755",
-    alternate: "9768568754",
-    email: "priyasharma@gmail.com",
-    address: "32, AB Villa, 1st Cross, Mico Layout, Madiwala, Bangalore.",
-  };
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("No access token found");
+        const res = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to fetch student details");
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch student details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [studentId]);
+
+  if (loading) return <div className="flex-1 flex items-center justify-center text-[#19191F] text-lg">Loading...</div>;
+  if (error) return <div className="flex-1 flex items-center justify-center text-red-500 text-lg">{error}</div>;
+  if (!data) return null;
+
+  const student = data.student;
+  const parent = data.parent;
 
   return (
     <div className="min-h-screen bg-[#19191F] flex flex-col">
@@ -46,7 +62,12 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           
       </div>
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center bg-[#F8F8F8] pt-[140px] pb-8 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center bg-[#F8F8F8] pt-0 pb-8 overflow-y-auto">
+        {/* Parent Requests Accordion */}
+        <div className="bg-white rounded-xl shadow px-6 py-3 w-[340px] flex items-center justify-between mb-6 border border-[#E0E0E0] mt-8">
+          <span className="text-[#19191F] text-[17px] font-satoshi font-medium">Parent Requests <span className="text-[#E8B600] font-bold ml-1">{parent.requests ? parent.requests.length : 0}</span></span>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#19191F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
         {/* Student Details Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6 w-[340px] relative mb-6">
           {/* Header */}
@@ -59,34 +80,34 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           {/* Profile */}
           
           <div className="flex items-center gap-3 mb-2">
-            <img src={student.profile} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
-            <span className="text-[16px] font-bold text-[#19191F] font-satoshi">{student.name}</span>
+            <img src={student.profile_picture_url || "/assets/DP.svg"} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+            <span className="text-[16px] font-bold text-[#19191F] font-satoshi">{student.full_name}</span>
           </div>
           {/* Class & School */}
           <div className="flex items-center gap-6 mb-2">
             <div>
               <div className="text-[#9B9B9B] text-[13px] font-satoshi">Class</div>
-              <div className="text-[#19191F] text-[15px] font-satoshi">{student.class}</div>
+              <div className="text-[#19191F] text-[15px] font-satoshi">{student.class_name}{student.division ? ` ${student.division}` : ""}</div>
             </div>
             <div>
               <div className="text-[#9B9B9B] text-[13px] font-satoshi">School</div>
-              <div className="text-[#19191F] text-[15px] font-satoshi">{student.school}</div>
+              <div className="text-[#19191F] text-[15px] font-satoshi">{student.school_id}</div>
             </div>
           </div>
           {/* Address */}
           <div className="mb-2">
             <div className="text-[#9B9B9B] text-[13px] font-satoshi">Address</div>
-            <div className="text-[#19191F] text-[15px] font-satoshi">{student.address}</div>
+            <div className="text-[#19191F] text-[15px] font-satoshi">{student.student_address}</div>
           </div>
           {/* Bus */}
           <div className="mb-2">
             <div className="text-[#9B9B9B] text-[13px] font-satoshi">Assign Bus/Route</div>
-            <div className="text-[#19191F] text-[15px] font-satoshi">{student.bus}</div>
+            <div className="text-[#19191F] text-[15px] font-satoshi">Bus {student.bus_id}</div>
           </div>
           {/* Emergency Contact */}
           <div className="mb-6">
             <div className="text-[#9B9B9B] text-[13px] font-satoshi">Emergency Contact</div>
-            <div className="text-[#19191F] text-[15px] font-satoshi">{student.emergency}</div>
+            <div className="text-[#19191F] text-[15px] font-satoshi">{parent.mobile_no}</div>
           </div>
           {/* Edit Button */}
           <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
@@ -102,18 +123,18 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           </div>
           {/* Profile */}
           <div className="flex items-center gap-3 mb-2">
-            <img src={parent.profile} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
-            <span className="text-[16px] font-bold text-[#19191F] font-satoshi">{parent.name}</span>
+            <img src={parent.profile_picture_url || "/assets/DP.svg"} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+            <span className="text-[16px] font-bold text-[#19191F] font-satoshi">{parent.full_name}</span>
           </div>
           {/* Numbers */}
           <div className="flex items-center gap-6 mb-2">
             <div>
               <div className="text-[#9B9B9B] text-[13px] font-satoshi">Primary Number</div>
-              <div className="text-[#19191F] text-[15px] font-satoshi">{parent.primary}</div>
+              <div className="text-[#19191F] text-[15px] font-satoshi">{parent.mobile_no}</div>
             </div>
             <div>
               <div className="text-[#9B9B9B] text-[13px] font-satoshi">Alternate Number</div>
-              <div className="text-[#19191F] text-[15px] font-satoshi">{parent.alternate}</div>
+              <div className="text-[#19191F] text-[15px] font-satoshi">{parent.alternative_mobile || "-"}</div>
             </div>
           </div>
           {/* Email */}
@@ -124,7 +145,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           {/* Address */}
           <div className="mb-6">
             <div className="text-[#9B9B9B] text-[13px] font-satoshi">Primary Address</div>
-            <div className="text-[#19191F] text-[15px] font-satoshi">{parent.address}</div>
+            <div className="text-[#19191F] text-[15px] font-satoshi">{parent.address || "-"}</div>
           </div>
           {/* Edit Button */}
           <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
