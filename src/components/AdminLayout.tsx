@@ -24,17 +24,19 @@ export default function AdminLayout({
 
   return (
     <div className="flex flex-col h-screen bg-[#FAFAFA]">
-      <AdminPageHeader
-        title={pageTitle}
-        onMenuClick={() => setDrawerOpen(true)}
-      />
+      <div className="fixed top-0 left-0 w-full z-30">
+        <AdminPageHeader
+          title={pageTitle}
+          onMenuClick={() => setDrawerOpen(true)}
+        />
+      </div>
       <AdminDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         activeTab={initialActiveTab}
         onTabChange={handleTabChange}
       />
-      <main className="flex-1 min-h-0 flex flex-col">{children}</main>
+      <main className="flex-1 min-h-0 flex flex-col pt-16">{children}</main>
     </div>
   );
 }

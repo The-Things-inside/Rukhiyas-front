@@ -23,11 +23,12 @@ function FleetList() {
     const fetchBuses = async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("No access token found");
         const res = await fetch("https://api.rukhiyastravels.com/admin/buses", {
           headers: {
             accept: "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJtb2JpbGVfbm8iOiI3ODc4Njc2NTQ1IiwiaXNfYWRtaW4iOnRydWUsImlzX3N1cGVyYWRtaW4iOmZhbHNlLCJleHAiOjE3NTMwOTc0MjB9.U3ONFYjEE-mtvw_VI2cnv8P1ohH7_R6t0-PZ84RMfD8",
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!res.ok) throw new Error("Failed to fetch buses");
@@ -61,7 +62,7 @@ function FleetList() {
             </div>
             {/* Driver Image and Name */}
             <div className="flex items-center gap-3 mb-1">
-              <img src={bus.driver_photo_url || "/assets/DP.svg"} alt="Driver" className="w-10 h-10 rounded-full object-cover" />
+              <img src={bus.driver_photo_url || "/assets/DP.svg"} alt="Driver" className="w-16 h-16 rounded-full object-cover" />
               <div>
                 <div className="text-xs text-[#9B9B9B] font-satoshi">Driver</div>
                 <div className="text-base font-bold text-[#19191F] font-satoshi">{bus.driver_name || "-"}</div>
