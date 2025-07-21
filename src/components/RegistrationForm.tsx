@@ -30,7 +30,7 @@ export default function RegistrationForm({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("https://43.205.196.195/register", {
+      const response = await fetch("https://api.rukhiyastravels.com/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

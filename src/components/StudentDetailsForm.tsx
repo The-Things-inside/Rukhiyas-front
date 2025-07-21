@@ -136,7 +136,7 @@ export default function StudentDetailsForm({
         };
         console.log("Registering student:", studentData);
         await axios.post(
-          "https://43.205.196.195/register-student",
+          "https://api.rukhiyastravels.com/register-student",
           studentData,
           {
             headers: {
