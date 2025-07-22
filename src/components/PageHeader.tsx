@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const TITLES: Record<string, string> = {
   "/app": "Dashboard",
@@ -13,42 +13,19 @@ interface Student {
   id: number;
   full_name: string;
   profile_picture_url: string | null;
+  bus_id: number | null;
 }
 
-export default function PageHeader() {
+interface PageHeaderProps {
+  students: Student[];
+  selectedStudent: Student | null;
+  setSelectedStudent: (student: Student) => void;
+}
+
+export default function PageHeader({ students, selectedStudent, setSelectedStudent }: PageHeaderProps) {
   const pathname = usePathname();
   const title = TITLES[pathname] || "";
-  const [students, setStudents] = useState<Student[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const accessToken = localStorage.getItem("access_token");
-        if (!accessToken) return;
-
-        const response = await fetch("https://api.rukhiyastravels.com/students/me", {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch students");
-
-        const data = await response.json();
-        setStudents(data);
-        if (data.length > 0) {
-          setSelectedStudent(data[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching students:", error);
-      }
-    };
-
-    fetchStudents();
-  }, []);
 
   // Filter out the currently selected student from the dropdown list
   const otherStudents = students.filter(

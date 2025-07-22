@@ -1,19 +1,19 @@
 import { ReactNode } from "react";
 import BottomNavBar from "./BottomNavBar";
-import PageHeader from "./PageHeader";
 
 interface AppLayoutProps {
   children: ReactNode;
+  header?: ReactNode;
 }
 
 // ... existing code ...
-export default function AppLayout({ children }: AppLayoutProps) {
+export default function AppLayout({ children, header }: AppLayoutProps) {
   // Header: 64px, Navbar: 80px
   return (
     <div className="min-h-screen bg-[#19191F]">
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <PageHeader />
+        {header}
       </div>
       {/* Fixed Main White Box */}
       <div
