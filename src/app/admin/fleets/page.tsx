@@ -20,6 +20,12 @@ function FleetList() {
   const [loading, setLoading] = useState(true);
   const [editBusId, setEditBusId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [startLoading, setStartLoading] = useState<number | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string>("");
+  const [arrivedLoading, setArrivedLoading] = useState<number | null>(null);
+  const [arrivedMsg, setArrivedMsg] = useState<string>("");
+  const [departedLoading, setDepartedLoading] = useState<number | null>(null);
+  const [departedMsg, setDepartedMsg] = useState<string>("");
 
   useEffect(() => {
     const fetchBuses = async () => {
@@ -96,7 +102,7 @@ function FleetList() {
       });
       if (!res.ok) throw new Error("Failed to update bus");
       const updated = await res.json();
-      setBuses((prev) => prev.map((b) => (b.id === busId ? { ...b, ...updated.bus } : b)));
+      setBuses((prev: Bus[]) => prev.map((b: Bus) => (b.id === busId ? { ...b, ...updated.bus } : b)));
       setEditBusId(null);
       setEditForm({});
     } catch (err) {
@@ -116,6 +122,72 @@ function FleetList() {
     }
   };
 
+  const handleBusStart = async (busId: number) => {
+    setStartLoading(busId);
+    setSuccessMsg("");
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`https://api.rukhiyastravels.com/buses/${busId}/start`, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to record bus start");
+      setSuccessMsg("Bus started successfully!");
+    } catch (err) {
+      alert("Failed to record bus start. Please try again.");
+    } finally {
+      setStartLoading(null);
+    }
+  };
+
+  const handleBusArrived = async (busId: number) => {
+    setArrivedLoading(busId);
+    setArrivedMsg("");
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`https://api.rukhiyastravels.com/buses/${busId}/arrived-school`, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to record bus arrival");
+      setArrivedMsg("Bus arrived at school successfully!");
+    } catch (err) {
+      alert("Failed to record bus arrival. Please try again.");
+    } finally {
+      setArrivedLoading(null);
+    }
+  };
+
+  const handleBusDeparted = async (busId: number) => {
+    setDepartedLoading(busId);
+    setDepartedMsg("");
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`https://api.rukhiyastravels.com/buses/${busId}/departed-school`, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to record bus departure");
+      setDepartedMsg("Bus departed school successfully!");
+    } catch (err) {
+      alert("Failed to record bus departure. Please try again.");
+    } finally {
+      setDepartedLoading(null);
+    }
+  };
+
   if (loading) return <div className="text-center py-10">Loading...</div>;
 
   return (
@@ -123,9 +195,9 @@ function FleetList() {
       {buses.length === 0 ? (
         <div className="text-center text-[#19191F] font-satoshi">No buses found.</div>
       ) : (
-        buses.map((bus, idx) => (
-          <div
-            key={bus.id}
+        buses.map((bus: Bus, idx: number) => (
+        <div
+          key={bus.id}
             className={`bg-white rounded-2xl border border-[#E8B600] mb-6 p-4 shadow relative${idx === buses.length - 1 ? ' pb-16' : ''}`}
           >
             {editBusId === bus.id ? (
@@ -244,52 +316,85 @@ function FleetList() {
               <>
                 {/* View Card */}
                 {/* Title and Status */}
-                <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-2">
                   <span className="text-lg font-bold text-[#19191F] font-satoshi">Bus {bus.id}</span>
                   <span className={`text-sm font-bold font-satoshi ${bus.on_duty ? "text-[#E8B600]" : "text-[#9B9B9B]"}`}>{bus.on_duty ? "On Duty" : "Off Duty"}</span>
-                </div>
+          </div>
                 {/* Driver Image and Name */}
                 <div className="flex items-center gap-3 mb-1">
                   <img src={bus.driver_photo_url || "/assets/DP.svg"} alt="Driver" className="w-16 h-16 rounded-full object-cover" />
-                  <div>
-                    <div className="text-xs text-[#9B9B9B] font-satoshi">Driver</div>
+            <div>
+              <div className="text-xs text-[#9B9B9B] font-satoshi">Driver</div>
                     <div className="text-base font-bold text-[#19191F] font-satoshi">{bus.driver_name || "-"}</div>
                   </div>
-                </div>
+            </div>
                 {/* Phone and Call Button */}
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="text-xs text-[#9B9B9B] font-satoshi">Phone Number</div>
+              <div className="text-xs text-[#9B9B9B] font-satoshi">Phone Number</div>
                     <div className="text-base text-[#19191F] font-satoshi">{bus.driver_phonenumber || "-"}</div>
-                  </div>
+            </div>
                   {bus.driver_phonenumber ? (
                     <a href={`tel:${bus.driver_phonenumber}`} className="border border-[#E8B600] text-[#E8B600] rounded-full px-6 py-1 font-satoshi font-bold text-base">Call</a>
                   ) : (
                     <button className="border border-[#E8B600] text-[#E8B600] rounded-full px-6 py-1 font-satoshi font-bold text-base" disabled>Call</button>
                   )}
-                </div>
+          </div>
                 {/* Divider */}
                 <div className="border-t border-[#E0E0E0] my-2" />
                 {/* Bus Info */}
                 <div className="flex flex-wrap gap-y-2 mb-2">
                   <div className="w-1/2">
-                    <div className="text-[#9B9B9B] text-xs">Bus Number</div>
+              <div className="text-[#9B9B9B] text-xs">Bus Number</div>
                     <div className="font-medium text-[#19191F]">{bus.reg_no}</div>
-                  </div>
+            </div>
                   <div className="w-1/2">
-                    <div className="text-[#9B9B9B] text-xs">Bus Route</div>
+              <div className="text-[#9B9B9B] text-xs">Bus Route</div>
                     <div className="font-medium text-[#19191F]">{bus.route}</div>
-                  </div>
+            </div>
                   <div className="w-full">
-                    <div className="text-[#9B9B9B] text-xs">Number of Students</div>
+              <div className="text-[#9B9B9B] text-xs">Number of Students</div>
                     <div className="font-medium text-[#19191F]">{bus.total_occupancy}</div>
-                  </div>
-                </div>
+            </div>
+          </div>
                 {/* Action Buttons */}
-                <div className="flex gap-3 mt-2">
-                  <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition">Track Bus</button>
+          <div className="flex gap-3 mt-2">
+            <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition">Track Bus</button>
                   <button onClick={() => handleEdit(bus)} className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition">Update Info</button>
                 </div>
+         {/* Bus Status Buttons */}
+         <div className="flex gap-2 mt-3">
+           <button
+             className="flex-1 bg-green-500 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
+             disabled={startLoading === bus.id}
+             onClick={() => handleBusStart(bus.id)}
+           >
+             🟢 {startLoading === bus.id ? "Starting..." : "Start"}
+           </button>
+           <button
+             className="flex-1 bg-blue-500 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
+             disabled={arrivedLoading === bus.id}
+             onClick={() => handleBusArrived(bus.id)}
+           >
+             🚌 {arrivedLoading === bus.id ? "Arriving..." : "Arrived"}
+           </button>
+           <button
+             className="flex-1 bg-gray-400 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
+             disabled={departedLoading === bus.id}
+             onClick={() => handleBusDeparted(bus.id)}
+           >
+             🏁 {departedLoading === bus.id ? "Departing..." : "Departed"}
+           </button>
+         </div>
+         {successMsg && startLoading === null && (
+           <div className="text-green-600 text-center font-satoshi font-medium mt-2">{successMsg}</div>
+         )}
+         {arrivedMsg && arrivedLoading === null && (
+           <div className="text-blue-600 text-center font-satoshi font-medium mt-2">{arrivedMsg}</div>
+         )}
+         {departedMsg && departedLoading === null && (
+           <div className="text-gray-600 text-center font-satoshi font-medium mt-2">{departedMsg}</div>
+         )}
               </>
             )}
           </div>

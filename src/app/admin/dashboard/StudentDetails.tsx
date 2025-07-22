@@ -5,6 +5,9 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requestsOpen, setRequestsOpen] = useState(false);
+  const [approveLoading, setApproveLoading] = useState<number | null>(null);
+  const [denyLoading, setDenyLoading] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -31,12 +34,176 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     fetchDetails();
   }, [studentId]);
 
+  async function handleApproveRequest(requestId: number) {
+    setApproveLoading(requestId);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`https://api.rukhiyastravels.com/admin/requests/${requestId}/approve`, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ notes: "set" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve request");
+      // Optionally show a success message
+      // Refresh data
+      const detailsRes = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (detailsRes.ok) {
+        const json = await detailsRes.json();
+        setData(json);
+      }
+    } catch (err) {
+      alert("Failed to approve request. Please try again.");
+    } finally {
+      setApproveLoading(null);
+    }
+  }
+
+  async function handleRejectRequest(requestId: number) {
+    setDenyLoading(requestId);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`https://api.rukhiyastravels.com/admin/requests/${requestId}/reject`, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ notes: "set" }),
+      });
+      if (!res.ok) throw new Error("Failed to reject request");
+      // Refresh data
+      const detailsRes = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (detailsRes.ok) {
+        const json = await detailsRes.json();
+        setData(json);
+      }
+    } catch (err) {
+      alert("Failed to reject request. Please try again.");
+    } finally {
+      setDenyLoading(null);
+    }
+  }
+
   if (loading) return <div className="flex-1 flex items-center justify-center text-[#19191F] text-lg">Loading...</div>;
   if (error) return <div className="flex-1 flex items-center justify-center text-red-500 text-lg">{error}</div>;
   if (!data) return null;
 
   const student = data.student;
   const parent = data.parent;
+  const requests = parent.requests || [];
+
+  function renderRequestCard(req: any) {
+    const date = req.created_at ? new Date(req.created_at).toLocaleDateString() : "";
+    let title = "";
+    let content = null;
+    if (req.request_type === "temporary_address") {
+      title = "Temp Address Change";
+      let pick = req.temp_pick_address || (req.requested_data && typeof req.requested_data === "string" && req.requested_data.startsWith("{") ? (() => { try { return JSON.parse(req.requested_data).pick; } catch { return null; } })() : null);
+      let drop = req.temp_drop_address || (req.requested_data && typeof req.requested_data === "string" && req.requested_data.startsWith("{") ? (() => { try { return JSON.parse(req.requested_data).drop; } catch { return null; } })() : null);
+      content = (
+        <>
+          <div className="mb-2">
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3 mb-2">
+              <div className="text-[#9B9B9B] text-xs mb-1">New Pick Up</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{pick || req.current_data || "-"}</div>
+            </div>
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3 mb-2">
+              <div className="text-[#9B9B9B] text-xs mb-1">New Drop Off</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{drop || req.current_data || "Same as pick up address"}</div>
+            </div>
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3">
+              <div className="text-[#9B9B9B] text-xs mb-1">Dates</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{req.temp_dates ? req.temp_dates.join(", ") : "-"}</div>
+            </div>
+          </div>
+        </>
+      );
+    } else if (req.request_type === "pause_service") {
+      title = "Pause Service";
+      content = (
+        <>
+          <div className="mb-2">
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3 mb-2">
+              <div className="text-[#9B9B9B] text-xs mb-1">Dates</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{req.temp_dates ? req.temp_dates.join(", ") : "-"}</div>
+            </div>
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3">
+              <div className="text-[#9B9B9B] text-xs mb-1">Reason</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{req.notes || req.requested_data || "-"}</div>
+            </div>
+          </div>
+        </>
+      );
+    } else if (req.request_type === "permanent_address") {
+      title = "Perm Address Change";
+      content = (
+        <>
+          <div className="mb-2">
+            <div className="bg-[#F8F8F8] border border-[#E0E0E0] rounded-xl p-3">
+              <div className="text-[#9B9B9B] text-xs mb-1">New Address</div>
+              <div className="text-[#19191F] text-sm font-satoshi font-medium">{req.requested_data || "-"}</div>
+            </div>
+          </div>
+        </>
+      );
+    }
+    return (
+      <div key={req.id} className="rounded-2xl border border-[#E8B600] bg-white shadow p-4 min-w-[320px] max-w-[340px] flex flex-col mb-4" style={{ borderWidth: 1 }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[#E8B600] text-[15px] font-bold font-satoshi">{title}</span>
+          <span className="text-[#9B9B9B] text-xs font-satoshi">{date}</span>
+        </div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[#19191F] text-[14px] font-satoshi">Name</span>
+          <span className="text-[#9B9B9B] text-[14px] font-satoshi">ID No. {student.id}</span>
+        </div>
+        <div className="mb-1">
+          <div className="text-[#9B9B9B] text-xs font-satoshi">School</div>
+          <div className="text-[#19191F] text-[14px] font-satoshi">{student.school_id}</div>
+        </div>
+        <div className="mb-1">
+          <div className="text-[#9B9B9B] text-xs font-satoshi">Address</div>
+          <div className="text-[#19191F] text-[14px] font-satoshi">{student.student_address}</div>
+        </div>
+        {content}
+        <div className="flex gap-3 mt-2">
+          <button
+            className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
+            disabled={approveLoading === req.id || denyLoading === req.id}
+            onClick={() => handleApproveRequest(req.id)}
+          >
+            {approveLoading === req.id ? "Approving..." : "Confirm"}
+          </button>
+          {req.request_type !== "pause_service" && (
+            <button
+              className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition bg-white disabled:opacity-60"
+              disabled={approveLoading === req.id || denyLoading === req.id}
+              onClick={() => handleRejectRequest(req.id)}
+            >
+              {denyLoading === req.id ? "Denying..." : "Deny"}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#19191F] flex flex-col">
@@ -64,10 +231,19 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center bg-[#F8F8F8] pt-0 pb-8 overflow-y-auto">
         {/* Parent Requests Accordion */}
-        <div className="bg-white rounded-xl shadow px-6 py-3 w-[340px] flex items-center justify-between mb-6 border border-[#E0E0E0] mt-8">
-          <span className="text-[#19191F] text-[17px] font-satoshi font-medium">Parent Requests <span className="text-[#E8B600] font-bold ml-1">{parent.requests ? parent.requests.length : 0}</span></span>
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#19191F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div className="bg-white rounded-xl shadow px-6 py-3 w-[340px] flex items-center justify-between mb-6 border border-[#E0E0E0] mt-8 cursor-pointer select-none" onClick={() => setRequestsOpen((v) => !v)}>
+          <span className="text-[#19191F] text-[17px] font-satoshi font-medium">Parent Requests <span className="text-[#E8B600] font-bold ml-1">{requests.length}</span></span>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" style={{ transform: requestsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><path d="M6 9l6 6 6-6" stroke="#19191F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
+        {requestsOpen && (
+          <div className="flex flex-wrap gap-4 mb-6 w-full justify-center">
+            {requests.length === 0 ? (
+              <div className="text-[#9B9B9B] text-center w-full">No requests found.</div>
+            ) : (
+              requests.map(renderRequestCard)
+            )}
+          </div>
+        )}
         {/* Student Details Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6 w-[340px] relative mb-6">
           {/* Header */}
@@ -102,7 +278,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           {/* Bus */}
           <div className="mb-2">
             <div className="text-[#9B9B9B] text-[13px] font-satoshi">Assign Bus/Route</div>
-            <div className="text-[#19191F] text-[15px] font-satoshi">Bus {student.bus_id}</div>
+            <div className="text-[#19191F] text-[15px] font-satoshi">Bus {student.bus_id}{student.bus_route ? ` - ${student.bus_route}` : ""}</div>
           </div>
           {/* Emergency Contact */}
           <div className="mb-6">
