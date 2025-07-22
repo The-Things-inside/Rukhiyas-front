@@ -11,6 +11,9 @@ interface Student {
   full_name: string;
   profile_picture_url: string | null;
   bus_id: number | null;
+  student_address: string;
+  temp_address: string | null;
+  temp_dates?: string[];
 }
 
 export default function AppHome() {
@@ -60,7 +63,7 @@ export default function AppHome() {
       <div className="p-4 flex flex-col items-center">
         <RideStatusCard selectedStudent={selectedStudent} />
         <div className="h-6" />
-        <ManagePickupDropoffCard />
+        <ManagePickupDropoffCard selectedStudent={selectedStudent} />
         <div className="h-6" />
         <PaymentsHistoryCard />
         <div className="mt-6" />

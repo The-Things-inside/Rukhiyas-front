@@ -14,12 +14,15 @@ interface Student {
   full_name: string;
   profile_picture_url: string | null;
   bus_id: number | null;
+  student_address: string;
+  temp_address: string | null;
+  temp_dates?: string[];
 }
 
 interface PageHeaderProps {
   students: Student[];
   selectedStudent: Student | null;
-  setSelectedStudent: (student: Student) => void;
+  setSelectedStudent: React.Dispatch<React.SetStateAction<Student | null>>;
 }
 
 export default function PageHeader({ students, selectedStudent, setSelectedStudent }: PageHeaderProps) {
