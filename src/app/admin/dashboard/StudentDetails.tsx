@@ -16,7 +16,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token found");
-        const res = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+        const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/details`, {
           headers: {
             accept: "application/json",
             Authorization: `Bearer ${token}`,
@@ -39,7 +39,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("No access token found");
-      const res = await fetch(`https://api.rukhiyastravels.com/admin/requests/${requestId}/approve`, {
+      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/admin/requests/${requestId}/approve`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -51,7 +51,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       if (!res.ok) throw new Error("Failed to approve request");
       // Optionally show a success message
       // Refresh data
-      const detailsRes = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+      const detailsRes = await fetch(`https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/details`, {
         headers: {
           accept: "application/json",
           Authorization: `Bearer ${token}`,
@@ -73,7 +73,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("No access token found");
-      const res = await fetch(`https://api.rukhiyastravels.com/admin/requests/${requestId}/reject`, {
+      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/admin/requests/${requestId}/reject`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -84,7 +84,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       });
       if (!res.ok) throw new Error("Failed to reject request");
       // Refresh data
-      const detailsRes = await fetch(`https://api.rukhiyastravels.com/admin/students/${studentId}/details`, {
+      const detailsRes = await fetch(`https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/details`, {
         headers: {
           accept: "application/json",
           Authorization: `Bearer ${token}`,

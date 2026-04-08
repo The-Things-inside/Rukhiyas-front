@@ -34,7 +34,7 @@ export default function RideStatusCard({ selectedStudent }: RideStatusCardProps)
     }
     setLoading(true);
     setError(null);
-    fetch(`https://api.rukhiyastravels.com/buses/${selectedStudent.bus_id}/today`, {
+    fetch(`https://backend-rukhiyas-production.up.railway.app/buses/${selectedStudent.bus_id}/today`, {
       headers: {
         accept: "application/json",
       },

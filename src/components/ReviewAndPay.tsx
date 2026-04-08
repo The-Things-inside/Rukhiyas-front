@@ -101,7 +101,7 @@ export default function ReviewAndPay({
 
       let response;
       if (isNewStudent) {
-        response = await fetch("https://api.rukhiyastravels.com/register-student", {
+        response = await fetch("https://backend-rukhiyas-production.up.railway.app/register-student", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -126,7 +126,7 @@ export default function ReviewAndPay({
 
         // After successful registration, fetch all students
         const studentsResponse = await fetch(
-          `https://api.rukhiyastravels.com/students?parent_id=${parentId}`,
+          `https://backend-rukhiyas-production.up.railway.app/students?parent_id=${parentId}`,
           {
             headers: {
               accept: "application/json",
@@ -156,7 +156,7 @@ export default function ReviewAndPay({
         onStudentsChange?.(mappedStudents);
       } else {
         response = await fetch(
-          `https://api.rukhiyastravels.com/students/${updatedStudent.id}`,
+          `https://backend-rukhiyas-production.up.railway.app/students/${updatedStudent.id}`,
           {
             method: "PUT",
             headers: {

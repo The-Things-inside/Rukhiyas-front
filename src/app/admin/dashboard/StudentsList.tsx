@@ -78,7 +78,7 @@ export default function StudentsList({ onStudentSelect, selectedStudentId, onBac
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token found");
-        const res = await axios.get("https://api.rukhiyastravels.com/admin/students-with-pending-requests", {
+        const res = await axios.get("https://backend-rukhiyas-production.up.railway.app/admin/students-with-pending-requests", {
           headers: {
             Authorization: `Bearer ${token}`,
             accept: "application/json",

@@ -147,7 +147,7 @@ export default function HomeContent() {
         }
 
         const response = await axios.get(
-          "https://api.rukhiyastravels.com/admin/buses",
+          "https://backend-rukhiyas-production.up.railway.app/admin/buses",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -172,9 +172,9 @@ export default function HomeContent() {
       const endpointKey = selected.key;
 
       if (endpointKey === "new") {
-        url = "https://api.rukhiyastravels.com/admin/students/no-fees";
+        url = "https://backend-rukhiyas-production.up.railway.app/admin/students/no-fees";
       } else if (endpointKey === "bus") {
-        url = "https://api.rukhiyastravels.com/admin/students/unassigned";
+        url = "https://backend-rukhiyas-production.up.railway.app/admin/students/unassigned";
       } else if (endpointKey === "parent") {
         const fetchParentRequests = async () => {
           setLoading(true);
@@ -183,7 +183,7 @@ export default function HomeContent() {
             const token = localStorage.getItem("access_token");
             if (!token) throw new Error("No access token found");
             const response = await axios.get(
-              "https://api.rukhiyastravels.com/admin/requests/pending",
+              "https://backend-rukhiyas-production.up.railway.app/admin/requests/pending",
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -275,7 +275,7 @@ export default function HomeContent() {
       }
 
       await axios.put(
-        `https://api.rukhiyastravels.com/admin/students/${studentId}/assign-bus/${busId}`,
+        `https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/assign-bus/${busId}`,
         {},
         {
           headers: {
@@ -304,7 +304,7 @@ export default function HomeContent() {
       }
 
       const response = await axios.patch(
-        `https://api.rukhiyastravels.com/admin/students/${studentId}/update-fees`,
+        `https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/update-fees`,
         {
           actual_fees: actualFees,
         },

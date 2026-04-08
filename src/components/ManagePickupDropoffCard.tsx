@@ -105,7 +105,7 @@ function PauseServiceForm({ onCancel, studentId }: { onCancel: () => void; stude
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) throw new Error("No access token found");
       const pause_duration = formatPauseDuration(selectedDates);
-      const response = await fetch(`https://api.rukhiyastravels.com/pause-service/${studentId}`, {
+      const response = await fetch(`https://backend-rukhiyas-production.up.railway.app/pause-service/${studentId}`, {
         method: "POST",
         headers: {
           accept: "application/json",

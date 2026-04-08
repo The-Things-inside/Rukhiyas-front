@@ -26,7 +26,7 @@ export default function AboutSection() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
 
@@ -35,7 +35,7 @@ export default function AboutSection() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
 
@@ -44,7 +44,7 @@ export default function AboutSection() {
     visible: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
 
@@ -61,7 +61,7 @@ export default function AboutSection() {
           <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
             className="font-spartan text-center md:text-left mb-3 mt-2 heading-styles"
           >
             <span className="block md:hidden">About Rukhiyas</span>
@@ -71,7 +71,7 @@ export default function AboutSection() {
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const, delay: 0.2 }}
             className="font-satoshi mt-2 md:mt-6 md:mb-8 paragraph-styles"
           >
             {/* Mobile text */}
@@ -118,7 +118,7 @@ export default function AboutSection() {
         <motion.div
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const, delay: 0.3 }}
           className="hidden md:flex w-1/2 items-center justify-center pr-24 md:mt-0"
         >
           <Image
@@ -296,7 +296,7 @@ function WhyChooseUs() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
   const router = useRouter();

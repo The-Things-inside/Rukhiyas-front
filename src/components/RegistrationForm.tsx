@@ -30,7 +30,7 @@ export default function RegistrationForm({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("https://api.rukhiyastravels.com/register", {
+      const response = await fetch("https://backend-rukhiyas-production.up.railway.app/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

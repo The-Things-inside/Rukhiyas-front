@@ -27,7 +27,7 @@ export default function LoginPage() {
       formData.append("client_id", "");
       formData.append("client_secret", "");
 
-      const response = await fetch("https://api.rukhiyastravels.com/login", {
+      const response = await fetch("https://backend-rukhiyas-production.up.railway.app/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

@@ -25,7 +25,7 @@ export default function AdminRegisterPage() {
     // Basic validation
 
     try {
-      const response = await fetch("https://api.rukhiyastravels.com/admin/register", {
+      const response = await fetch("https://backend-rukhiyas-production.up.railway.app/admin/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
