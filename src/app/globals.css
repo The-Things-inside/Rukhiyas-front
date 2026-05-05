@@ -117,6 +117,30 @@ img {
   }
 }
 
+/* Desktop home: school bus enters from the right (mobile unchanged) */
+@media (min-width: 768px) {
+  @keyframes home-hero-bus-enter {
+    from {
+      transform: translate3d(45%, 0, 0);
+      opacity: 0;
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+      opacity: 1;
+    }
+  }
+
+  .home-hero-bus--desktop {
+    animation: home-hero-bus-enter 1.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero-bus--desktop {
+      animation: none;
+    }
+  }
+}
+
 /* Mobile-specific adjustments */
 @media (max-width: 767px) {
   /* Ensure consistent font sizes across devices */
