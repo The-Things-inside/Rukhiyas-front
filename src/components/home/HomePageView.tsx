@@ -451,19 +451,19 @@ function MobileFooter() {
       </div>
 
       <div className="flex items-center gap-[16px]">
-        <Image
+        <img
           src="/assets/home/mobile/social-linkedin.png"
           alt="LinkedIn"
           width={40}
           height={40}
         />
-        <Image
+        <img
           src="/assets/home/mobile/social-facebook.png"
           alt="Facebook"
           width={40}
           height={40}
         />
-        <Image
+        <img
           src="/assets/home/mobile/social-instagram.png"
           alt="Instagram"
           width={40}
