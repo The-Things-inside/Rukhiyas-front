@@ -13,7 +13,7 @@ export default function AboutPage() {
         <Header />
       </div>
       {/* Scrollable AboutSection below the header */}
-      <main className="flex-1 flex flex-col justify-top pt-[72px] md:pt-0 ">
+      <main className="flex-1 flex flex-col justify-top pt-[72px] md:pt-[128px] ">
         <SchoolTransportation />
       </main>
     </div>

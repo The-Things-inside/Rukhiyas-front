@@ -147,50 +147,40 @@ export default function SchoolTransportation() {
 
   return (
     <>
-      <section className="bg-white rounded-t-3xl pt-8  px-5 md:min-h-screen flex flex-col items-center shadow-lg w-full max-w-md mx-auto md:max-w-full md:rounded-6xl md:pt-0 md:pb-0 md:px-0 md:flex-row md:items-stretch md:shadow-none">
-        {/* Desktop layout: two columns */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center items-center  md:items-start md:pl-64 md:pr-8 md:pt-0.5 md:py-0 py-8">
-          {/* Heading */}
+      {/* Mobile stays unchanged */}
+      <section className="md:hidden bg-white rounded-t-3xl pt-8 px-5 flex flex-col items-center shadow-lg w-full max-w-md mx-auto">
+        <div className="w-full flex flex-col justify-center items-center py-8">
           <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
-            className="font-spartan text-center md:text-left mb-10 md:mb-20 mt-2 heading-styles  "
+            className="font-spartan text-center mb-10 mt-2 heading-styles"
           >
-            <span
-              className="block md:hidden leading-10
-             "
-            >
-              <p>Smart & Secure</p>
-              <p>School Commute</p>
-            </span>
-            <span className="hidden md:block">
-              <p>Smart & Secure</p>
-              <p>School Commute</p>
-            </span>
+            <p>Smart & Secure</p>
+            <p>School Commute</p>
           </motion.div>
-          {/* Paragraph */}
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const, delay: 0.2 }}
-            className="font-satoshi mt-2 md:mt-6 md:mb-8 paragraph-styles"
+            transition={{
+              duration: 0.6,
+              ease: [0.16, 1, 0.3, 1] as const,
+              delay: 0.2,
+            }}
+            className="font-satoshi mt-2 paragraph-styles"
           >
-            {/* Mobile text */}
-            <div className="block ">
-              <p>
-                At Rukhiyas, our student transportation service is engineered
-                for your child&apos;s daily journey. Using cutting-edge GPS
-                tracking, dedicated drivers, and flexible route management, we
-                ensure every ride is punctual, secure, and stress-free.
-              </p>
-            </div>
+            <p>
+              At Rukhiyas, our student transportation service is engineered for
+              your child&apos;s daily journey. Using cutting-edge GPS tracking,
+              dedicated drivers, and flexible route management, we ensure every
+              ride is punctual, secure, and stress-free.
+            </p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex gap-4 mt-6 md:mt-0 mb:0"
+            className="flex gap-4 mt-6"
           >
             <button
               className="bg-[#EAB308] font-satoshi text-white font-semibold rounded-full px-8 py-2 text-base shadow-none hover:bg-[#d1a106] transition-colors duration-200"
@@ -206,66 +196,138 @@ export default function SchoolTransportation() {
             </button>
           </motion.div>
         </div>
-        {/* Desktop image column */}
-        <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const, delay: 0.3 }}
-          className="hidden md:flex w-1/2 items-center justify-center pr-24 md:mt-0"
-        >
-          <Image
-            src="/assets/schooltrans.webp"
-            alt="About Rukhiyas"
-            width={674}
-            height={450}
-            className="rounded-3xl object-cover"
-          />
-        </motion.div>
       </section>
-      {/* Stats Section Inline */}
-      <div className="bg-white " ref={statsRef}>
-        <motion.section
-          className="w-full flex flex-col items-center md:mt-0 mt-[38px] mb-0"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
-          <motion.div
-            className="w-[288px] h-[38px] md:w-[487px] md:h-[64px] font-spartan font-semibold text-[28px] md:text-[48px] leading-[38px] md:leading-[64px] tracking-[1px] md:tracking-[1px] text-black text-center mb-10 mx-auto"
-            variants={titleVariants}
-          >
-            <p>All-In-One</p>
-            <p>Control Center</p>
-          </motion.div>
 
-          <motion.div className="p-2" variants={boxVariants}>
-            <div>
-              <Image
-                src="/assets/Dashboard Anim.png"
-                alt="admin dashboard"
-                width={230}
-                height={0}
-              />
+      {/* Desktop (Figma node 1:18779) */}
+      <section className="hidden md:block bg-white pb-[100px]">
+        <div className="mx-auto max-w-[1920px] px-[240px]">
+          <div className="flex items-center gap-[48px] w-full">
+            <div className="flex flex-1 flex-col gap-[48px] min-w-0">
+              <div className="flex flex-col gap-[24px] text-black">
+                <motion.h1
+                  initial={{ opacity: 0, y: -150 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
+                  className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] w-[498px]"
+                >
+                  <span className="text-[#E8B600]">Smart &amp; Secure</span>
+                  <span>{` School Commute`}</span>
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 80 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.6,
+                    ease: [0.16, 1, 0.3, 1] as const,
+                    delay: 0.2,
+                  }}
+                  className="font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] text-justify w-[718px]"
+                >
+                  At Rukhiyas, our student transportation service is engineered
+                  for your child&apos;s daily journey. Using cutting-edge GPS
+                  tracking, dedicated drivers, and flexible route management, we
+                  ensure every ride is punctual, secure, and stress-free.
+                </motion.p>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1] as const,
+                  delay: 0.35,
+                }}
+                className="flex gap-[10px]"
+              >
+                <button
+                  className="h-[44px] w-[244px] rounded-[22px] bg-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#FAFAFA] capitalize"
+                  onClick={handleRegister}
+                >
+                  register now
+                </button>
+                <button
+                  className="h-[44px] w-[244px] rounded-[22px] border border-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#E8B600] capitalize"
+                  onClick={handleAboutUs}
+                >
+                  About Us
+                </button>
+              </motion.div>
             </div>
-          </motion.div>
-          <div className="font-satoshi  mt-2 md:mt-6 paragraph-styles">
-            <p>
-              Track your child&apos;s bus live, manage pickups and drop-offs,
-              stay updated with real-time ride statuses, and handle payments,
-              all in one place.
-            </p>
+
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                duration: 0.6,
+                ease: [0.16, 1, 0.3, 1] as const,
+                delay: 0.3,
+              }}
+              className="w-[674px] h-[450px] rounded-[32px] overflow-hidden shrink-0"
+            >
+              <Image
+                src="/assets/school-transportation/desktop/hero.jpg"
+                alt=""
+                width={674}
+                height={450}
+                className="h-full w-full object-cover rounded-[32px]"
+                priority
+              />
+            </motion.div>
           </div>
-          <motion.button
-            className=" w-[288px] -mt-9 md:w-[224px] h-[44px] bg-[#EAB308] font-satoshi font-bold text-[18px] text-[#fafafa] rounded-full   text-lg shadow-md hover:bg-[#d1a106] transition-colors duration-200 flex  items-center justify-center"
-            variants={buttonVariants}
-            onClick={handleRegister}
+        </div>
+      </section>
+
+      {/* Desktop-only remaining sections (Figma nodes 1:18882 / 1:18913 / 1:18962 / 1:18987) */}
+      <DesktopSections onRegister={handleRegister} />
+
+      {/* Mobile-only remainder stays unchanged */}
+      <div className="md:hidden">
+        {/* Stats Section Inline */}
+        <div className="bg-white " ref={statsRef}>
+          <motion.section
+            className="w-full flex flex-col items-center md:mt-0 mt-[38px] mb-0"
+            variants={containerVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
           >
-            Register Now
-          </motion.button>
-        </motion.section>
+            <motion.div
+              className="w-[288px] h-[38px] md:w-[487px] md:h-[64px] font-spartan font-semibold text-[28px] md:text-[48px] leading-[38px] md:leading-[64px] tracking-[1px] md:tracking-[1px] text-black text-center mb-10 mx-auto"
+              variants={titleVariants}
+            >
+              <p>All-In-One</p>
+              <p>Control Center</p>
+            </motion.div>
+
+            <motion.div className="p-2" variants={boxVariants}>
+              <div>
+                <Image
+                  src="/assets/Dashboard Anim.png"
+                  alt="admin dashboard"
+                  width={230}
+                  height={0}
+                />
+              </div>
+            </motion.div>
+            <div className="font-satoshi  mt-2 md:mt-6 paragraph-styles">
+              <p>
+                Track your child&apos;s bus live, manage pickups and drop-offs,
+                stay updated with real-time ride statuses, and handle payments,
+                all in one place.
+              </p>
+            </div>
+            <motion.button
+              className=" w-[288px] -mt-9 md:w-[224px] h-[44px] bg-[#EAB308] font-satoshi font-bold text-[18px] text-[#fafafa] rounded-full   text-lg shadow-md hover:bg-[#d1a106] transition-colors duration-200 flex  items-center justify-center"
+              variants={buttonVariants}
+              onClick={handleRegister}
+            >
+              Register Now
+            </motion.button>
+          </motion.section>
+        </div>
+        {/* Why Choose Us Section */}
+        <WhyChooseUs />
       </div>
-      {/* Why Choose Us Section */}
-      <WhyChooseUs />
     </>
   );
 }
@@ -393,6 +455,304 @@ function WhyChooseUs() {
 
       <BottomFooter />
     </>
+  );
+}
+
+function DesktopSections({ onRegister }: { onRegister: () => void }) {
+  const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
+  const [stepsTab, setStepsTab] = useState<"online" | "call">("online");
+
+  return (
+    <section className="hidden md:block bg-[#FFFCF1]">
+      {/* Control center (1:18882) */}
+      <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+        <div className="flex items-center justify-center gap-[124px]">
+          <motion.div
+            initial={{ opacity: 0, x: -80 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+            className="relative h-[487px] w-[224px] shrink-0 drop-shadow-[0px_6.686px_11.144px_rgba(0,0,0,0.25)]"
+          >
+            <div className="absolute inset-[14px_12px_14px_12px] rounded-[18px] overflow-hidden bg-[#14141B]">
+              <Image
+                src="/assets/school-transportation/desktop/dashboard-screen.png"
+                alt=""
+                fill
+                className="object-cover"
+                sizes="224px"
+                priority={false}
+              />
+            </div>
+            <Image
+              src="/assets/school-transportation/desktop/iphone-bezel.png"
+              alt=""
+              fill
+              className="object-cover pointer-events-none"
+              sizes="224px"
+              priority={false}
+            />
+          </motion.div>
+
+          <div className="flex flex-col items-center gap-[48px] text-black">
+            <div className="flex flex-col gap-[24px] w-[681px]">
+              <motion.h2
+                initial={{ opacity: 0, y: -40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.7 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+                className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px]"
+              >
+                <span className="text-[#E8B600]">All-In-One</span>
+                <span>{` Control Center`}</span>
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.7 }}
+                transition={{
+                  duration: 0.7,
+                  ease: [0.16, 1, 0.3, 1] as const,
+                  delay: 0.05,
+                }}
+                className="font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px]"
+              >
+                Track your child’s bus live, manage pickups and drop-offs, stay
+                updated with real-time ride statuses, and handle payments, all in
+                one place.
+              </motion.p>
+            </div>
+
+            <motion.button
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.7 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
+              className="h-[44px] w-[244px] rounded-[22px] bg-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#FAFAFA] capitalize"
+              onClick={onRegister}
+            >
+              Register Now
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Area & schools (1:18913) */}
+      <div className="bg-white">
+        <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+            className="flex flex-col items-center"
+          >
+            <h2 className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-black text-center">
+              <span className="text-[#E8B600]">Area &amp; Schools</span>
+              <span>{` We Cover`}</span>
+            </h2>
+            <p className="mt-[12px] font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] text-black text-center">
+              Search for your school or area to see if our service is available
+              to you.
+            </p>
+
+            <div className="mt-[32px] w-full max-w-[1440px]">
+              {/* keep existing component (functionality) but sized to desktop */}
+              <div className="mx-auto w-full max-w-[560px]">
+                <SearchBar onSchoolSelect={setSelectedSchool} />
+              </div>
+
+              <div className="mt-[24px]">
+                <DynamicMapComponent
+                  selectedSchool={selectedSchool}
+                  containerClassName="w-full h-[638px] rounded-[38px] overflow-hidden shadow-[0px_108.696px_29.931px_rgba(0,0,0,0),0px_69.314px_28.356px_rgba(0,0,0,0.01),0px_39.383px_23.63px_rgba(0,0,0,0.02),0px_17.328px_17.328px_rgba(0,0,0,0.03),0px_4.726px_9.452px_rgba(0,0,0,0.04)]"
+                  mapClassName="h-full w-full"
+                />
+              </div>
+
+              <div className="mt-[28px] flex justify-center">
+                <button
+                  className="h-[44px] w-[244px] rounded-[22px] bg-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#FAFAFA] capitalize"
+                  onClick={onRegister}
+                >
+                  Register Now
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Fee estimate (1:18962) */}
+      <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+          className="mx-auto w-full max-w-[570px] flex flex-col items-center gap-[48px]"
+        >
+          <div className="w-full text-black">
+            <h2 className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px]">
+              <span>{`Get Your `}</span>
+              <span className="text-[#E8B600]">Fee Estimate</span>
+            </h2>
+            <p className="mt-[24px] font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px]">
+              Simply select your school and enter your home address to instantly
+              reveal your personalized fee estimate.
+            </p>
+          </div>
+
+          <div className="w-full flex flex-col items-center gap-[16px]">
+            <div className="w-full flex flex-col gap-[16px]">
+              <div className="w-full">
+                <label className="block font-[Satoshi] font-medium text-[16px] leading-[1.4] text-black mb-[4px]">
+                  School
+                </label>
+                <SchoolDropdown schools={allSchools} onSelect={() => {}} />
+              </div>
+              <div className="w-full">
+                <label className="block font-[Satoshi] font-medium text-[16px] leading-[1.4] text-black mb-[4px]">
+                  Student Address
+                </label>
+                <input
+                  className="w-full border border-[#AAA] rounded-[12px] px-[16px] py-[20px] text-[16px] leading-none bg-white placeholder-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#E8B600]"
+                  placeholder="Enter student address"
+                />
+              </div>
+            </div>
+
+            <button
+              className="h-[44px] w-[244px] rounded-[22px] bg-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#FAFAFA] capitalize"
+              type="button"
+            >
+              Get Quote
+            </button>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Simple steps to join (1:18987) */}
+      <div className="bg-[#14141B]">
+        <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+            className="mx-auto w-full max-w-[1440px] text-white"
+          >
+            <h2 className="text-center font-semibold font-[var(--font-spartan)] text-[48px] leading-[64px]">
+              Simple Steps to Join
+            </h2>
+
+            <div className="mt-[36px] flex items-center justify-center gap-[80px] text-[18px] font-[Satoshi]">
+              <button
+                className={`pb-[10px] border-b-2 ${stepsTab === "online" ? "text-[#E8B600] border-[#E8B600]" : "text-[#7C7C7C] border-transparent"}`}
+                onClick={() => setStepsTab("online")}
+              >
+                Register Online
+              </button>
+              <button
+                className={`pb-[10px] border-b-2 ${stepsTab === "call" ? "text-[#E8B600] border-[#E8B600]" : "text-[#7C7C7C] border-transparent"}`}
+                onClick={() => setStepsTab("call")}
+              >
+                Register Via Call
+              </button>
+            </div>
+
+            <div className="mt-[52px] grid grid-cols-2 gap-x-[120px] gap-y-[56px]">
+              {(stepsTab === "online"
+                ? [
+                    {
+                      n: 1,
+                      title: "Sign Up",
+                      desc: 'Click "Register now" and create an account.',
+                      img: "/assets/step1.svg",
+                    },
+                    {
+                      n: 2,
+                      title: "Enroll Student",
+                      desc: "Fill all the required details of the student.",
+                      img: "/assets/step2.svg",
+                    },
+                    {
+                      n: 3,
+                      title: "Review & Pay",
+                      desc: "Confirm details and make a payment online.",
+                      img: "/assets/step3.svg",
+                    },
+                    {
+                      n: 4,
+                      title: "Booking Confirmation",
+                      desc: "Receive confirmation via SMS or WhatsApp after payment.",
+                      img: "/assets/step4.svg",
+                    },
+                  ]
+                : [
+                    {
+                      n: 1,
+                      title: "Call Us",
+                      desc: "Call our support team to begin registration.",
+                      img: "/assets/step1.svg",
+                    },
+                    {
+                      n: 2,
+                      title: "Share Details",
+                      desc: "Provide student and pickup details over the call.",
+                      img: "/assets/step2.svg",
+                    },
+                    {
+                      n: 3,
+                      title: "Confirm Plan",
+                      desc: "We confirm route availability and fees.",
+                      img: "/assets/step3.svg",
+                    },
+                    {
+                      n: 4,
+                      title: "Activation",
+                      desc: "Get confirmation via SMS/WhatsApp once activated.",
+                      img: "/assets/step4.svg",
+                    },
+                  ]
+              ).map((s) => (
+                <div key={`${stepsTab}-${s.n}`} className="flex items-start gap-[28px]">
+                  <div className="relative h-[156px] w-[160px] shrink-0">
+                    <Image src={s.img} alt="" fill className="object-contain" />
+                  </div>
+                  <div className="pt-[10px]">
+                    <div className="mb-[12px] inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border-2 border-[#E8B600] text-[#E8B600] font-bold font-[Satoshi]">
+                      {s.n}
+                    </div>
+                    <div className="font-bold font-[Satoshi] text-[20px] leading-[28px]">
+                      {s.title}
+                    </div>
+                    <div className="mt-[8px] font-[Satoshi] text-[18px] leading-[26px] text-[#D1D1D1]">
+                      {s.desc}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-[56px] flex items-center justify-center gap-[32px]">
+              <button
+                className="h-[44px] w-[244px] rounded-[22px] bg-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#FAFAFA] capitalize"
+                onClick={onRegister}
+              >
+                Register Online
+              </button>
+              <button
+                className="h-[44px] w-[244px] rounded-[22px] border border-[#E8B600] px-[24px] py-[10px] font-bold font-[Satoshi] text-[18px] text-[#E8B600] capitalize"
+                type="button"
+              >
+                Register Via Call
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
   );
 }
 
