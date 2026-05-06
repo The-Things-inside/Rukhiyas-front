@@ -9,6 +9,417 @@ import Header from "@/components/Header";
 import MenuOverlay from "@/components/MenuOverlay";
 
 const BRAND_YELLOW = "#E8B600";
+const EASE_OUT_QUINT: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+function DesktopButton({
+  variant = "fill",
+  children,
+  onClick,
+  className,
+}: {
+  variant?: "fill" | "outline";
+  children: string;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const base =
+    "h-[44px] rounded-[22px] px-[24px] text-[18px] font-bold font-[Satoshi] leading-[normal] capitalize flex items-center justify-center gap-[10px]";
+  const styles =
+    variant === "fill"
+      ? `bg-[${BRAND_YELLOW}] text-[#FAFAFA]`
+      : `border border-[${BRAND_YELLOW}] text-[${BRAND_YELLOW}] bg-transparent`;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${base} ${styles} ${className ?? ""}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DesktopHero() {
+  const router = useRouter();
+
+  return (
+    <section className="relative h-[916px] bg-[#14141B] overflow-hidden">
+      <div className="mx-auto w-full max-w-[1920px] px-[60px] pt-[240px]">
+        <div className="relative">
+          <motion.div
+            initial={{ opacity: 0, y: -150 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-white whitespace-nowrap"
+          >
+            <div className="text-[#E8B600]">Safe &amp; Reliable</div>
+            <div>Student Transportation</div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 120 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 0.1 }}
+            className="mt-[24px] w-[512px] flex flex-col gap-[48px]"
+          >
+            <p className="font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] text-white">
+              We deliver safe, efficient, and reliable student transportation so
+              you can focus on what matters most—your child’s well-being.
+            </p>
+            <div className="flex gap-[24px] w-[512px]">
+              <DesktopButton
+                variant="fill"
+                className="flex-1"
+                onClick={() => router.push("/register")}
+              >
+                Register now
+              </DesktopButton>
+              <DesktopButton
+                variant="outline"
+                className="flex-1"
+                onClick={() => router.push("/about")}
+              >
+                Learn more
+              </DesktopButton>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 220 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.05, ease: EASE_OUT_QUINT, delay: 0.05 }}
+        className="absolute right-[60px] top-[240px] h-[567px] w-[758px] relative z-[1] pointer-events-none"
+      >
+        <Image
+          src="/assets/home/desktop/hero-bus.png"
+          alt=""
+          fill
+          priority
+          className="object-contain"
+          sizes="758px"
+        />
+      </motion.div>
+    </section>
+  );
+}
+
+function DesktopFeatures() {
+  const router = useRouter();
+  return (
+    <section className="bg-white rounded-tl-[48px] rounded-tr-[48px] overflow-hidden">
+      <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+        <div className="flex flex-col gap-[48px]">
+          <motion.div
+            initial={{ opacity: 0, y: -60 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.75, ease: EASE_OUT_QUINT }}
+            className="text-black"
+          >
+            <div className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] whitespace-nowrap">
+              <span>Your Child’s Journey, </span>
+              <span className="text-[#E8B600]">Our Commitment</span>
+            </div>
+            <p className="mt-[24px] font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] w-[1017px]">
+              We take the responsibility of student transport seriously. With
+              timely pickups, real-time updates, and a strong focus on safety,
+              you can count on us every single day.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 80 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            className="w-[1128px] h-[512px] relative"
+          >
+            <div className="absolute left-0 top-[25px] w-[338px]">
+              <div className="h-[338px] w-[338px] rounded-[24px] overflow-hidden">
+                <Image
+                  src="/assets/home/desktop/feature-card-left.jpg"
+                  alt=""
+                  width={338}
+                  height={338}
+                  className="object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="absolute left-[370px] top-0 w-[388px]">
+              <div className="h-[388px] w-[388px] rounded-[24px] overflow-hidden">
+                <Image
+                  src="/assets/home/desktop/feature-card-center.jpg"
+                  alt=""
+                  width={388}
+                  height={388}
+                  className="object-cover"
+                />
+              </div>
+              <div className="px-[16px] py-[24px] text-center">
+                <div className="font-extrabold font-[var(--font-spartan)] text-[16px] leading-[22px] text-[#E8B600]">
+                  Safe Rides
+                </div>
+                <div className="mt-[8px] font-normal font-[var(--font-spartan)] text-[16px] leading-[22px] text-black">
+                  Experienced, background-checked drivers at your service.
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute left-[790px] top-[25px] w-[338px]">
+              <div className="h-[338px] w-[338px] rounded-[24px] overflow-hidden">
+                <Image
+                  src="/assets/home/desktop/feature-card-right.jpg"
+                  alt=""
+                  width={338}
+                  height={338}
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.6, ease: EASE_OUT_QUINT }}
+            className="flex justify-center gap-[24px]"
+          >
+            <DesktopButton variant="fill" onClick={() => router.push("/register")} className="w-[244px]">
+              Register now
+            </DesktopButton>
+            <DesktopButton variant="outline" onClick={() => router.push("/about")} className="w-[244px]">
+              Learn more
+            </DesktopButton>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DesktopShowcase() {
+  const router = useRouter();
+  return (
+    <section className="bg-[#FFFCF1]">
+      <div className="mx-auto max-w-[1920px] px-[240px] py-[100px]">
+        <div className="flex items-center gap-[124px]">
+          <div className="w-[512px] flex flex-col gap-[48px]">
+            <motion.div
+              initial={{ opacity: 0, y: -150 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+              className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-black whitespace-nowrap"
+            >
+              <span>Made for </span>
+              <span className="text-[#E8B600]">Parents</span>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 60 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.8, ease: EASE_OUT_QUINT, delay: 0.05 }}
+              className="font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] text-black"
+            >
+              A service built with the latest technology and tailored
+              convenience. Designed to keep parents informed and students safe,
+              every single day.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.6, ease: EASE_OUT_QUINT }}
+              className="flex gap-[24px]"
+            >
+              <DesktopButton variant="fill" onClick={() => router.push("/register")} className="w-[244px]">
+                Register now
+              </DesktopButton>
+              <DesktopButton variant="outline" onClick={() => router.push("/about")} className="w-[244px]">
+                Learn more
+              </DesktopButton>
+            </motion.div>
+          </div>
+
+          {/* Figma has detailed phone mockups; we render a simplified paired mockup using existing mobile screenshot as base */}
+          <motion.div
+            initial={{ opacity: 0, x: 120 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.85, ease: EASE_OUT_QUINT }}
+            className="h-[472px] w-[474px] rounded-[14px] shadow-[0px_6px_10px_rgba(0,0,0,0.25)] bg-[#14141B] overflow-hidden grid place-items-center"
+          >
+            <Image
+              src="/assets/home/mobile/figma-home.png"
+              alt=""
+              width={474}
+              height={472}
+              className="object-cover opacity-80"
+            />
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DesktopRegistrationMethods() {
+  const router = useRouter();
+  return (
+    <section className="bg-[#FFFCF1]">
+      <div className="mx-auto max-w-[1920px] px-[396px] pt-[100px] pb-[160px]">
+        <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -86 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.8, ease: EASE_OUT_QUINT }}
+            className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-black"
+          >
+            <span>Get Started </span>
+            <span className="text-[#E8B600]">Your Way</span>
+          </motion.div>
+        </div>
+
+        <div className="mt-[112px] flex justify-between items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -120 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.85, ease: EASE_OUT_QUINT }}
+            className="w-[240px] flex flex-col items-center gap-[16px]"
+          >
+            <div className="w-[240px] h-[234px] rounded-[16px] bg-white shadow-sm overflow-hidden" />
+            <div className="font-semibold font-[var(--font-spartan)] text-[20px] text-black">
+              Register Online
+            </div>
+            <div className="font-[Satoshi] text-[18px] text-black text-center w-[458px]">
+              Create an account, enter your student’s details, and finalize your
+              payment in a few quick and easy steps.
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 120 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.85, ease: EASE_OUT_QUINT }}
+            className="w-[240px] flex flex-col items-center gap-[16px]"
+          >
+            <div className="w-[240px] h-[237px] rounded-[16px] bg-white shadow-sm overflow-hidden" />
+            <div className="font-semibold font-[var(--font-spartan)] text-[20px] text-black">
+              Register by Call
+            </div>
+            <div className="font-[Satoshi] text-[18px] text-black text-justify w-[458px]">
+              Just give us a call and our caring agent will take care of every
+              step, making registration stress-free.
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.75, ease: EASE_OUT_QUINT }}
+          className="mt-[194px] flex justify-center items-center gap-[92px]"
+        >
+          <DesktopButton variant="fill" className="w-[244px]" onClick={() => router.push("/register")}>
+            Register online
+          </DesktopButton>
+          <DesktopButton
+            variant="outline"
+            onClick={() => router.push("/register")}
+            className="border border-[#E8B600]"
+          >
+            show registration steps
+          </DesktopButton>
+          <DesktopButton variant="fill" className="w-[244px]" onClick={() => router.push("/register")}>
+            Register by call
+          </DesktopButton>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function DesktopFooter() {
+  const router = useRouter();
+  return (
+    <footer className="bg-white rounded-tl-[48px] rounded-tr-[48px]">
+      <div className="relative mx-auto max-w-[1920px] pt-[160px] pb-[60px]">
+        <button
+          type="button"
+          aria-label="Back to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="absolute left-1/2 top-[48px] -translate-x-1/2 h-[52px] w-[52px] rounded-[30px] bg-[#F0F0F0] grid place-items-center"
+        >
+          <span className="text-[20px] leading-none">↑</span>
+        </button>
+
+        <div className="flex flex-col items-center gap-[80px]">
+          <div className="w-full px-[160px] flex items-center justify-center gap-[160px]">
+            <Image src="/assets/Rukhiyas-desktop.svg" alt="RUKHIYAS" width={98} height={64} />
+
+            <nav className="flex-1">
+              <div className="flex items-center justify-between">
+                {[
+                  { label: "About", href: "/about" },
+                  { label: "Student Transport", href: "/school-transportation" },
+                  { label: "Bus Rentals/Hire", href: "/rentals-hire" },
+                  { label: "Contact Us", href: "/contact" },
+                  { label: "Terms & Policies", href: "/terms" },
+                ].map((x) => (
+                  <button
+                    key={x.label}
+                    type="button"
+                    onClick={() => router.push(x.href)}
+                    className="py-[16px] font-bold font-[Satoshi] text-[16px] text-black"
+                  >
+                    {x.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            <div className="flex items-center gap-[16px]">
+              <img src="/assets/home/desktop/footer-linkedin.svg" alt="LinkedIn" width={40} height={40} />
+              <img src="/assets/home/desktop/footer-facebook.svg" alt="Facebook" width={40} height={40} />
+              <img src="/assets/home/desktop/footer-instagram.svg" alt="Instagram" width={40} height={40} />
+            </div>
+          </div>
+
+          <div className="font-bold font-[var(--font-spartan)] text-[12px] text-[#5E5E5E]">
+            © 2025. All Right Reserved
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function DesktopHome() {
+  return (
+    <div className="min-h-screen" style={{ background: "#FFFCF1" }}>
+      <div className="fixed top-0 left-0 w-full z-50 md:bg-amber-50">
+        <Header />
+      </div>
+      <main className="pt-[128px]">
+        <DesktopHero />
+        <DesktopFeatures />
+        <DesktopShowcase />
+        <DesktopRegistrationMethods />
+        <DesktopFooter />
+      </main>
+    </div>
+  );
+}
 
 function MobileButton({
   variant = "fill",
@@ -499,12 +910,7 @@ export default function HomePageView() {
 
       {/* Desktop stays as-is */}
       <div className="hidden md:block">
-        <div className="min-h-screen" style={{ background: "#FFFCF1" }}>
-          <div className="fixed top-0 left-0 w-full z-50 md:bg-amber-50">
-            <Header />
-          </div>
-          <main className="pt-[128px]">{/* existing desktop layout */}</main>
-        </div>
+        <DesktopHome />
       </div>
     </div>
   );
