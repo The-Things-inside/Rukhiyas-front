@@ -4,6 +4,7 @@ import "./globals.css";
 import { Roboto } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import { League_Spartan } from "next/font/google";
+import Toaster from "@/components/Toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +53,10 @@ export default function RootLayout({
           content="telephone=no, date=no, email=no, address=no"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }
