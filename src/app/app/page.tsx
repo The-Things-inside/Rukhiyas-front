@@ -71,11 +71,9 @@ export default function AppHome() {
   }
 
   if (noStudents) {
-    return (
-      <AppLayout header={null}>
-        <NoStudentsView />
-      </AppLayout>
-    );
+    // Render outside AppLayout so we don't reserve the fixed header space
+    // (prevents the extra black strip + avoids scroll issues on mobile).
+    return <NoStudentsView />;
   }
 
   return (

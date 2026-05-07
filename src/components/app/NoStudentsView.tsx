@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -14,17 +14,8 @@ type StudentDraft = {
 };
 
 function MobileTopBar({ title }: { title: string }) {
-  const router = useRouter();
   return (
-    <div className="w-full bg-[#19191F] px-4 pt-4 pb-3 flex items-center gap-3 max-w-md mx-auto">
-      <button
-        type="button"
-        aria-label="Go back"
-        onClick={() => router.back()}
-        className="text-white text-xl leading-none"
-      >
-        ‹
-      </button>
+    <div className="w-full bg-[#14141B] h-[62px] flex items-center px-[24px] max-w-md mx-auto">
       <div
         className="text-white text-[20px] font-semibold"
         style={{ fontFamily: "Spartan, sans-serif" }}
@@ -214,10 +205,13 @@ export function NoStudentsMobile({
   const canAddAnother = drafts.length < 5;
 
   return (
-    <div className="max-w-md mx-auto">
-      <MobileTopBar title="Add Student" />
+    <div className="max-w-md mx-auto min-h-screen bg-[#14141B]">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <MobileTopBar title="Add Student" />
+      </div>
 
-      <div className="bg-white rounded-tl-[24px] rounded-tr-[24px] px-[24px] pt-[24px] pb-[40px]">
+      <div className="pt-[116px]">
+        <div className="bg-white rounded-tl-[24px] rounded-tr-[24px] px-[24px] pt-[24px] pb-[40px]">
         <div className="w-full flex flex-col items-center gap-[24px]">
           <MobileProgress step={step} />
           <div
@@ -290,6 +284,7 @@ export function NoStudentsMobile({
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
