@@ -3,15 +3,22 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import SchoolDropdown from "@/components/SchoolDropdown";
 
 type StudentDraft = {
   id: string;
   fullName: string;
   className: string;
   division: string;
-  school: string;
-  address: string;
+  schoolId: string;
+  addressLabel: string;
+  location?: { lat: number; lng: number };
 };
+
+const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
+  ssr: false,
+});
 
 function MobileTopBar({ title }: { title: string }) {
   return (
@@ -123,12 +130,14 @@ function MobileStudentCard({
   onChange,
   onRemove,
   removable,
+  onPickLocation,
 }: {
   index: number;
   draft: StudentDraft;
   onChange: (next: StudentDraft) => void;
   onRemove?: () => void;
   removable: boolean;
+  onPickLocation: () => void;
 }) {
   return (
     <div className="w-full border border-[#E8B600] rounded-[12px] px-[16px] py-[24px] flex flex-col gap-[16px]">
@@ -174,19 +183,39 @@ function MobileStudentCard({
         </div>
       </div>
 
-      <TextInput
-        label="School"
-        value={draft.school}
-        onChange={(v) => onChange({ ...draft, school: v })}
-        placeholder="Select School"
-      />
+      <div className="w-full flex flex-col gap-[4px]">
+        <div
+          className="text-[16px] text-black"
+          style={{ fontFamily: "Satoshi, sans-serif", fontWeight: 500 }}
+        >
+          School
+        </div>
+        <SchoolDropdown
+          value={draft.schoolId}
+          onChange={(schoolId) => onChange({ ...draft, schoolId })}
+        />
+      </div>
 
-      <TextInput
-        label="Student Address"
-        value={draft.address}
-        onChange={(v) => onChange({ ...draft, address: v })}
-        placeholder="Enter student address"
-      />
+      <div className="w-full flex flex-col gap-[4px]">
+        <div
+          className="text-[16px] text-black"
+          style={{ fontFamily: "Satoshi, sans-serif", fontWeight: 500 }}
+        >
+          Student Address
+        </div>
+        <button
+          type="button"
+          onClick={onPickLocation}
+          className="w-full border border-[#AAA] rounded-[12px] px-[16px] py-[18px] text-left text-[16px] focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white"
+        >
+          <span
+            className={draft.addressLabel ? "text-black" : "text-[#B3B3B3]"}
+            style={{ fontFamily: "Satoshi, sans-serif" }}
+          >
+            {draft.addressLabel || "Select location on map"}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -199,8 +228,19 @@ export function NoStudentsMobile({
   const router = useRouter();
   const [step] = useState<2>(2);
   const [drafts, setDrafts] = useState<StudentDraft[]>([
-    { id: "s1", fullName: "", className: "", division: "", school: "", address: "" },
+    {
+      id: "s1",
+      fullName: "",
+      className: "",
+      division: "",
+      schoolId: "",
+      addressLabel: "",
+      location: undefined,
+    },
   ]);
+  const [mapOpenFor, setMapOpenFor] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const canAddAnother = drafts.length < 5;
 
@@ -234,6 +274,7 @@ export function NoStudentsMobile({
                 onChange={(next) =>
                   setDrafts((prev) => prev.map((x) => (x.id === d.id ? next : x)))
                 }
+                onPickLocation={() => setMapOpenFor(d.id)}
               />
             ))}
           </div>
@@ -250,8 +291,9 @@ export function NoStudentsMobile({
                     fullName: "",
                     className: "",
                     division: "",
-                    school: "",
-                    address: "",
+                    schoolId: "",
+                    addressLabel: "",
+                    location: undefined,
                   },
                 ]);
               }}
@@ -261,17 +303,86 @@ export function NoStudentsMobile({
               Add Another Student
             </button>
 
+            {submitError && (
+              <div
+                className="text-red-500 text-sm text-center"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                {submitError}
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => {
-                onAddAnother?.(drafts);
-                // until the add-student API is provided, keep user here
-                // (we’ll wire the real submission next chat)
+                // Validate + submit to backend using:
+                // 1) GET /parent-details -> parent_id
+                // 2) POST /register-student (one per student draft)
+                (async () => {
+                  setSubmitting(true);
+                  setSubmitError(null);
+                  try {
+                    const token = localStorage.getItem("access_token");
+                    if (!token) throw new Error("Missing access token");
+
+                    const parentRes = await fetch("/api/backend/parent-details", {
+                      headers: { accept: "application/json", Authorization: `Bearer ${token}` },
+                    });
+                    if (!parentRes.ok) throw new Error("Failed to fetch parent details");
+                    const parent = (await parentRes.json()) as { id: number };
+
+                    const validDrafts = drafts.filter(
+                      (d) =>
+                        d.fullName.trim() &&
+                        d.className.trim() &&
+                        d.division.trim() &&
+                        d.schoolId &&
+                        d.location,
+                    );
+                    if (validDrafts.length === 0) {
+                      throw new Error("Please fill all details and pick location on map.");
+                    }
+
+                    for (const d of validDrafts) {
+                      const res = await fetch("/api/backend/register-student", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          accept: "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                          parent_id: parent.id,
+                          school_id: Number(d.schoolId),
+                          full_name: d.fullName,
+                          class_name: d.className,
+                          division: d.division,
+                          student_address: d.addressLabel || "Selected from map",
+                          location_latitude: d.location!.lat,
+                          location_longitude: d.location!.lng,
+                        }),
+                      });
+                      if (!res.ok) {
+                        const body = await res.json().catch(() => null);
+                        throw new Error(body?.detail?.[0]?.msg || body?.detail || "Failed to register student");
+                      }
+                    }
+
+                    onAddAnother?.(drafts);
+                    // Reload `/app` so it re-checks `/students/me` and shows dashboard.
+                    window.location.reload();
+                  } catch (e) {
+                    setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+                  } finally {
+                    setSubmitting(false);
+                  }
+                })();
               }}
-              className="w-full h-[52px] rounded-[26px] bg-[#E8B600] text-white text-[18px] font-bold"
+              disabled={submitting}
+              className="w-full h-[52px] rounded-[26px] bg-[#E8B600] text-white text-[18px] font-bold disabled:opacity-60"
               style={{ fontFamily: "Satoshi, sans-serif" }}
             >
-              Continue
+              {submitting ? "Submitting..." : "Continue"}
             </button>
 
             <button
@@ -286,7 +397,46 @@ export function NoStudentsMobile({
         </div>
       </div>
       </div>
+
+      <MapPickerModal
+        openForId={mapOpenFor}
+        drafts={drafts}
+        onClose={() => setMapOpenFor(null)}
+        onConfirm={(id, address, latlng) => {
+          setDrafts((prev) =>
+            prev.map((d) =>
+              d.id === id
+                ? { ...d, addressLabel: address, location: { lat: latlng.lat, lng: latlng.lng } }
+                : d,
+            ),
+          );
+          setMapOpenFor(null);
+        }}
+      />
     </div>
+  );
+}
+
+function MapPickerModal({
+  openForId,
+  drafts,
+  onClose,
+  onConfirm,
+}: {
+  openForId: string | null;
+  drafts: StudentDraft[];
+  onClose: () => void;
+  onConfirm: (id: string, address: string, latlng: { lat: number; lng: number }) => void;
+}) {
+  const draft = drafts.find((d) => d.id === openForId) || null;
+  if (!draft || !openForId) return null;
+  return (
+    <MapAddressPicker
+      open={true}
+      onClose={onClose}
+      initialLatLng={draft.location}
+      onConfirm={(address, latlng) => onConfirm(openForId, address, latlng)}
+    />
   );
 }
 

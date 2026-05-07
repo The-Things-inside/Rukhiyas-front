@@ -207,6 +207,21 @@ export default function MapAddressPicker({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-end bg-gray-100">
+      {/* Top bar (close) */}
+      <div className="absolute top-0 left-0 right-0 z-20 h-14 bg-[#14141B]/80 backdrop-blur flex items-center justify-between px-4">
+        <div className="text-white font-semibold" style={{ fontFamily: "Spartan, sans-serif" }}>
+          Set Location
+        </div>
+        <button
+          type="button"
+          aria-label="Close map"
+          onClick={onClose}
+          className="h-9 w-9 rounded-full bg-white/10 text-white grid place-items-center"
+        >
+          <span className="text-2xl leading-none">&times;</span>
+        </button>
+      </div>
+
       <div
         id="map"
         className="absolute top-0 left-0 right-0 bottom-40 z-0"
@@ -313,6 +328,14 @@ export default function MapAddressPicker({
           onClick={() => onConfirm(address, mapCenter)}
         >
           Confirm Address
+        </button>
+
+        <button
+          type="button"
+          className="mt-3 w-full py-3 rounded-full border border-gray-300 text-gray-700 font-semibold"
+          onClick={onClose}
+        >
+          Cancel
         </button>
       </div>
     </div>
