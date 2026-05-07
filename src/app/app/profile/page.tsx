@@ -931,9 +931,9 @@ export default function ProfilePage() {
                           )
                         }
                       />
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full">
                         <input
-                          className="flex-1 border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                          className="flex-1 min-w-0 border border-[#AAA] rounded-xl px-3 py-2 text-black"
                           placeholder="Class"
                           value={d.class_name}
                           onChange={(e) =>
@@ -945,7 +945,7 @@ export default function ProfilePage() {
                           }
                         />
                         <input
-                          className="flex-1 border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                          className="flex-1 min-w-0 border border-[#AAA] rounded-xl px-3 py-2 text-black"
                           placeholder="Division"
                           value={d.division}
                           onChange={(e) =>
@@ -1067,6 +1067,19 @@ export default function ProfilePage() {
                   }}
                 >
                   {mobileAdding ? "Submitting..." : "Continue"}
+                </button>
+
+                <button
+                  type="button"
+                  className="w-full border border-[#e8b600] text-[#e8b600] font-semibold rounded-full py-2"
+                  onClick={() => {
+                    setMobileAddOpen(false);
+                    setMobileAddDrafts([]);
+                    setMobileAddMapFor(null);
+                    toast.info("Cancelled");
+                  }}
+                >
+                  Cancel
                 </button>
               </div>
             )}
