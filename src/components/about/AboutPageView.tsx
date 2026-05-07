@@ -123,7 +123,7 @@ function DesktopStats() {
             <div className="bg-white w-[288px] rounded-[24px] px-[48px] py-[40px] border-2 border-transparent shadow-[0px_3px_6px_rgba(0,0,0,0.04),0px_11px_11px_rgba(0,0,0,0.03),0px_25px_15px_rgba(0,0,0,0.02),0px_44px_18px_rgba(0,0,0,0.01)]">
               <div className="flex items-center justify-center gap-[12px]">
                 <img
-                  src="/assets/about/desktop/icon-winner.png"
+                  src="/assets/about/mobile/icon-winner.svg"
                   alt=""
                   width={40}
                   height={40}
@@ -174,7 +174,7 @@ function DesktopStats() {
             <div className="bg-white w-[288px] rounded-[24px] px-[48px] py-[40px] border-2 border-[#E8B600] shadow-[0px_3px_6px_rgba(0,0,0,0.04),0px_11px_11px_rgba(0,0,0,0.03),0px_25px_15px_rgba(0,0,0,0.02),0px_44px_18px_rgba(0,0,0,0.01)]">
               <div className="flex items-center justify-center gap-[12px]">
                 <img
-                  src="/assets/about/desktop/icon-school.png"
+                  src="/assets/school.svg"
                   alt=""
                   width={40}
                   height={40}
@@ -280,7 +280,7 @@ function DesktopWhyChooseUs() {
                       src={
                         isOpen
                           ? "/assets/about/desktop/accordion-remove.png"
-                          : "/assets/about/desktop/accordion-add.png"
+                          : "/add.svg"
                       }
                       alt=""
                       width={52}
