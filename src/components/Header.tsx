@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MenuOverlay from "./MenuOverlay";
 
@@ -16,6 +16,13 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
 
+  useEffect(() => {
+    // Prefetch common routes to make navigation feel instant.
+    for (const tab of TABS) router.prefetch(tab.route);
+    router.prefetch("/login");
+    router.prefetch("/register");
+  }, [router]);
+
   const handleLogin = () => {
     router.push("/login");
   };
@@ -30,7 +37,12 @@ export default function Header() {
   return (
     <header className="relative flex items-center justify-between px-4 py-3 bg-[#13131a] md:bg-white md:py-0 md:h-[128px]">
       {/* Logo */}
-      <div className="flex items-center gap-2">
+      <button
+        type="button"
+        aria-label="Go to home"
+        onClick={() => router.push("/")}
+        className="flex items-center gap-2"
+      >
         {/* Mobile logo */}
         <Image
           src="/assets/logo.svg"
@@ -47,7 +59,7 @@ export default function Header() {
           height={64}
           className="hidden md:block ml-10"
         />
-      </div>
+      </button>
       {/* Centered Tabs (Desktop only) */}
       <nav
         className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"

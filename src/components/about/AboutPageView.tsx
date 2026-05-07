@@ -2,6 +2,7 @@
 
 import Header from "@/components/Header";
 import MenuOverlay from "@/components/MenuOverlay";
+import { DesktopSiteFooter, MobileSiteFooter } from "@/components/SiteFooter";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -658,12 +659,16 @@ export default function AboutPageView() {
           <DesktopAboutHero />
           <DesktopStats />
           <DesktopWhyChooseUs />
+          <DesktopSiteFooter />
         </main>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
-        <MobileAbout />
+        <div>
+          <MobileAbout />
+          <MobileSiteFooter />
+        </div>
       </div>
     </div>
   );

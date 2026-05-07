@@ -22,6 +22,11 @@ export default function MenuOverlay({ isOpen, onClose }: MenuOverlayProps) {
     router.push("/school-transportation");
   };
 
+  const handleRentalsHire = () => {
+    onClose();
+    router.push("/rentals-hire");
+  };
+
   const handleRegister = () => {
     onClose();
     router.push("/register");
@@ -39,12 +44,21 @@ export default function MenuOverlay({ isOpen, onClose }: MenuOverlayProps) {
       {/* Menu Header */}
       <div className="flex items-center justify-between px-4 h-14">
         {/* Logo */}
-        <img
-          src="/assets/logo.png"
-          alt="Logo"
-          className="h-8"
-          style={{ objectFit: "contain" }}
-        />
+        <button
+          type="button"
+          aria-label="Go to home"
+          onClick={() => {
+            onClose();
+            router.push("/");
+          }}
+        >
+          <img
+            src="/assets/logo.svg"
+            alt="Logo"
+            className="h-8"
+            style={{ objectFit: "contain" }}
+          />
+        </button>
         {/* Close Button */}
         <button
           aria-label="Close"
@@ -70,7 +84,10 @@ export default function MenuOverlay({ isOpen, onClose }: MenuOverlayProps) {
           >
             School Transportation
           </button>
-          <button className="text-white text-lg font-medium text-left py-3 border-b border-[#3A3A3A]">
+          <button
+            onClick={handleRentalsHire}
+            className="text-white text-lg font-medium text-left py-3 border-b border-[#3A3A3A]"
+          >
             Bus Rentals/Hire
           </button>
           {/* Contact Us Dropdown */}

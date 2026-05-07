@@ -4,14 +4,15 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Avoid dev-server cross-origin HMR issues when accessing via LAN IP.
-  allowedDevOrigins: (() => {
-    const hosts = ["localhost", "172.20.10.8"];
-    const ports = Array.from({ length: 11 }, (_, i) => 3000 + i); // 3000-3010
-    const protocols = ["http", "https"];
-    return protocols.flatMap((proto) =>
-      hosts.flatMap((host) => ports.map((port) => `${proto}://${host}:${port}`)),
-    );
-  })(),
+  // Next expects host patterns (not full origin URLs).
+  allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "172.20.10.8",
+    "192.168.29.100",
+    "*.local",
+  ],
   // Prevent dev-server cache corruption (.next/cache/webpack/*.pack.gz ENOENT)
   // which can trigger Fast Refresh full reloads and runtime module errors.
   webpack: (config, { dev }) => {
