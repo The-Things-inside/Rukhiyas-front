@@ -442,6 +442,19 @@ function MapPickerModal({
 
 export function NoStudentsDesktop() {
   const router = useRouter();
+  const [draft, setDraft] = useState<StudentDraft>({
+    id: "d1",
+    fullName: "",
+    className: "",
+    division: "",
+    schoolId: "",
+    addressLabel: "",
+    location: undefined,
+  });
+  const [mapOpen, setMapOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   return (
     <div className="hidden md:block min-h-screen bg-white">
       <div className="h-[128px] bg-[#14141B] px-[60px] flex items-center justify-between">
@@ -503,52 +516,157 @@ export function NoStudentsDesktop() {
           <div className="w-full flex flex-col gap-[16px]">
             <TextInput
               label="Full Name"
-              value=""
-              onChange={() => {}}
+              value={draft.fullName}
+              onChange={(v) => setDraft((p) => ({ ...p, fullName: v }))}
               placeholder="Enter student's full name"
             />
             <div className="w-full flex gap-[10px]">
               <div className="flex-1">
                 <TextInput
                   label="Class"
-                  value=""
-                  onChange={() => {}}
+                  value={draft.className}
+                  onChange={(v) => setDraft((p) => ({ ...p, className: v }))}
                   placeholder="Enter class"
                 />
               </div>
               <div className="flex-1">
                 <TextInput
                   label="Division"
-                  value=""
-                  onChange={() => {}}
+                  value={draft.division}
+                  onChange={(v) => setDraft((p) => ({ ...p, division: v }))}
                   placeholder="Enter division"
                 />
               </div>
             </div>
-            <TextInput
-              label="School"
-              value=""
-              onChange={() => {}}
-              placeholder="Select School"
-            />
-            <TextInput
-              label="Student Address"
-              value=""
-              onChange={() => {}}
-              placeholder="Enter student address"
-            />
+            <div className="w-full flex flex-col gap-[4px]">
+              <div
+                className="text-[16px] text-black"
+                style={{ fontFamily: "Satoshi, sans-serif", fontWeight: 500 }}
+              >
+                School
+              </div>
+              <SchoolDropdown
+                value={draft.schoolId}
+                onChange={(schoolId) => setDraft((p) => ({ ...p, schoolId }))}
+              />
+            </div>
+
+            <div className="w-full flex flex-col gap-[4px]">
+              <div
+                className="text-[16px] text-black"
+                style={{ fontFamily: "Satoshi, sans-serif", fontWeight: 500 }}
+              >
+                Student Address
+              </div>
+              <button
+                type="button"
+                onClick={() => setMapOpen(true)}
+                className="w-full border border-[#AAA] rounded-[12px] px-[16px] py-[18px] text-left text-[16px] focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white"
+              >
+                <span
+                  className={draft.addressLabel ? "text-black" : "text-[#B3B3B3]"}
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {draft.addressLabel || "Select location on map"}
+                </span>
+              </button>
+            </div>
           </div>
+
+          {submitError && (
+            <div
+              className="text-red-500 text-sm text-center"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              {submitError}
+            </div>
+          )}
 
           <button
             type="button"
             className="w-full h-[52px] rounded-[26px] bg-[#E8B600] text-white text-[18px] font-bold"
             style={{ fontFamily: "Satoshi, sans-serif" }}
-            onClick={() => router.push("/register")}
+            disabled={submitting}
+            onClick={() => {
+              (async () => {
+                setSubmitting(true);
+                setSubmitError(null);
+                try {
+                  const token = localStorage.getItem("access_token");
+                  if (!token) throw new Error("Missing access token");
+
+                  const parentRes = await fetch("/api/backend/parent-details", {
+                    headers: {
+                      accept: "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                  });
+                  if (!parentRes.ok) throw new Error("Failed to fetch parent details");
+                  const parent = (await parentRes.json()) as { id: number };
+
+                  if (
+                    !draft.fullName.trim() ||
+                    !draft.className.trim() ||
+                    !draft.division.trim() ||
+                    !draft.schoolId ||
+                    !draft.location
+                  ) {
+                    throw new Error("Please fill all details and pick location on map.");
+                  }
+
+                  const res = await fetch("/api/backend/register-student", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      accept: "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      parent_id: parent.id,
+                      school_id: Number(draft.schoolId),
+                      full_name: draft.fullName,
+                      class_name: draft.className,
+                      division: draft.division,
+                      student_address: draft.addressLabel || "Selected from map",
+                      location_latitude: draft.location.lat,
+                      location_longitude: draft.location.lng,
+                    }),
+                  });
+
+                  if (!res.ok) {
+                    const body = await res.json().catch(() => null);
+                    throw new Error(
+                      body?.detail?.[0]?.msg || body?.detail || "Failed to register student",
+                    );
+                  }
+
+                  window.location.reload();
+                } catch (e) {
+                  setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+                } finally {
+                  setSubmitting(false);
+                }
+              })();
+            }}
           >
-            Continue
+            {submitting ? "Submitting..." : "Continue"}
           </button>
         </div>
       </div>
+
+      <MapAddressPicker
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        initialLatLng={draft.location}
+        onConfirm={(address, latlng) => {
+          setDraft((p) => ({
+            ...p,
+            addressLabel: address,
+            location: { lat: latlng.lat, lng: latlng.lng },
+          }));
+          setMapOpen(false);
+        }}
+      />
     </div>
   );
 }
