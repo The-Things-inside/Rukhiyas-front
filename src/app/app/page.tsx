@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import RideStatusCard from "@/components/RideStatusCard";
 import ManagePickupDropoffCard from "@/components/ManagePickupDropoffCard";
@@ -36,6 +36,8 @@ export default function AppHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noStudents, setNoStudents] = useState(false);
+  const [desktopStudentMenuOpen, setDesktopStudentMenuOpen] = useState(false);
+  const studentMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -92,6 +94,22 @@ export default function AppHome() {
     return name ? name.split(" ")[0] : "there";
   }, [parent?.full_name]);
 
+  const otherStudents = useMemo(() => {
+    return students.filter((s) => s.id !== selectedStudent?.id);
+  }, [students, selectedStudent?.id]);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      if (!desktopStudentMenuOpen) return;
+      const el = studentMenuRef.current;
+      if (el && e.target instanceof Node && !el.contains(e.target)) {
+        setDesktopStudentMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [desktopStudentMenuOpen]);
+
   if (loading) {
     return (
       <AppLayout header={null}>
@@ -123,18 +141,63 @@ export default function AppHome() {
               <div className="mt-[10px] text-[16px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
                 {parent?.full_name || "Nil"}
               </div>
-              <div className="mt-[10px] flex items-center gap-2">
-                <div className="h-[28px] w-[28px] rounded-full overflow-hidden border border-white/20">
-                  <img
-                    src={selectedStudent?.profile_picture_url || "/assets/DP.svg"}
-                    alt={selectedStudent?.full_name || "Student"}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  {selectedStudent?.full_name || "Nil"}{" "}
-                  <span className="opacity-60">▼</span>
-                </div>
+              <div className="mt-[10px] relative w-full" ref={studentMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (otherStudents.length === 0) return;
+                    setDesktopStudentMenuOpen((v) => !v);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-[12px] ${
+                    otherStudents.length > 0 ? "hover:bg-white/5" : ""
+                  }`}
+                >
+                  <div className="h-[28px] w-[28px] rounded-full overflow-hidden border border-white/20">
+                    <img
+                      src={selectedStudent?.profile_picture_url || "/assets/DP.svg"}
+                      alt={selectedStudent?.full_name || "Student"}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div
+                    className="flex-1 text-left truncate"
+                    style={{ fontFamily: "Satoshi, sans-serif" }}
+                  >
+                    {selectedStudent?.full_name || "Nil"}
+                  </div>
+                  {otherStudents.length > 0 && (
+                    <span className={`opacity-60 transition-transform ${desktopStudentMenuOpen ? "rotate-180" : ""}`}>
+                      ▼
+                    </span>
+                  )}
+                </button>
+
+                {desktopStudentMenuOpen && otherStudents.length > 0 && (
+                  <div className="absolute left-0 right-0 mt-2 bg-[#19191F] rounded-[12px] border border-white/10 overflow-hidden shadow-xl z-50">
+                    {otherStudents.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className="w-full px-3 py-2 flex items-center gap-2 hover:bg-white/5 text-left"
+                        onClick={() => {
+                          setSelectedStudent(s);
+                          setDesktopStudentMenuOpen(false);
+                        }}
+                      >
+                        <div className="h-[24px] w-[24px] rounded-full overflow-hidden border border-white/10">
+                          <img
+                            src={s.profile_picture_url || "/assets/DP.svg"}
+                            alt={s.full_name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="truncate" style={{ fontFamily: "Satoshi, sans-serif" }}>
+                          {s.full_name}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
