@@ -12,10 +12,12 @@ interface FormValues {
 
 interface RegistrationFormProps {
   onContinue: () => void;
+  variant?: "mobile" | "desktop";
 }
 
 export default function RegistrationForm({
   onContinue,
+  variant = "mobile",
 }: RegistrationFormProps) {
   const {
     register,
@@ -72,17 +74,38 @@ export default function RegistrationForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="px-6 pt-2 flex flex-col gap-3"
+      className={
+        variant === "desktop"
+          ? "w-full flex flex-col gap-4"
+          : "px-6 pt-2 flex flex-col gap-3"
+      }
     >
       <h2
-        className="text-xl font-bold text-black text-center mt-2 mb-1"
+        className={
+          variant === "desktop"
+            ? "text-[20px] font-semibold text-black text-center"
+            : "text-xl font-bold text-black text-center mt-2 mb-1"
+        }
         style={{ fontFamily: "Spartan, sans-serif" }}
       >
         Create An Account
       </h2>
-      <div className="text-center text-gray-500 text-base mb-2">
+      <div
+        className={
+          variant === "desktop"
+            ? "text-center text-[#5C5C5C] text-[18px] leading-[22px]"
+            : "text-center text-gray-500 text-base mb-2"
+        }
+      >
         Already have an account?{" "}
-        <a href="/login" className="text-[#d4a200] font-medium hover:underline">
+        <a
+          href="/login"
+          className={
+            variant === "desktop"
+              ? "text-[#E8B600] font-normal hover:underline"
+              : "text-[#d4a200] font-medium hover:underline"
+          }
+        >
           Log In
         </a>
       </div>
@@ -95,7 +118,11 @@ export default function RegistrationForm({
         </label>
         <input
           {...register("fullName", { required: "Full name is required" })}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          className={
+            variant === "desktop"
+              ? "w-full border border-[#AAA] rounded-[12px] px-4 py-[20px] text-[16px] leading-none focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white placeholder-[#B3B3B3] text-black"
+              : "w-full border border-gray-300 rounded-xl px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          }
           placeholder="Enter your full name"
         />
         {errors.fullName && (
@@ -113,7 +140,11 @@ export default function RegistrationForm({
           type="tel"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          className={
+            variant === "desktop"
+              ? "w-full border border-[#AAA] rounded-[12px] px-4 py-[20px] text-[16px] leading-none focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white placeholder-[#B3B3B3] text-black"
+              : "w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          }
           placeholder="Enter your mobile number"
         />
         {errors.mobile && (
@@ -130,7 +161,11 @@ export default function RegistrationForm({
           inputMode="email"
           autoCapitalize="none"
           autoComplete="email"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          className={
+            variant === "desktop"
+              ? "w-full border border-[#AAA] rounded-[12px] px-4 py-[20px] text-[16px] leading-none focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white placeholder-[#B3B3B3] text-black"
+              : "w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+          }
           placeholder="Enter your email"
         />
         {errors.email && (
@@ -145,7 +180,11 @@ export default function RegistrationForm({
           <input
             {...register("password", { required: "Password is required" })}
             type={showPassword ? "text" : "password"}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+            className={
+              variant === "desktop"
+                ? "w-full border border-[#AAA] rounded-[12px] px-4 py-[18px] text-[16px] leading-none focus:outline-none focus:ring-2 focus:ring-[#E8B600] bg-white placeholder-[#B3B3B3] text-black"
+                : "w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
+            }
             placeholder="Enter your password"
           />
           <button
@@ -198,7 +237,11 @@ export default function RegistrationForm({
       </div>
       <button
         type="submit"
-        className="w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2 disabled:opacity-60"
+        className={
+          variant === "desktop"
+            ? "w-full h-[56px] bg-[#E8B600] text-white font-bold rounded-[28px] text-[18px] shadow hover:brightness-95 transition disabled:opacity-60"
+            : "w-full bg-[#d4a200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#c49c00] transition mt-2 disabled:opacity-60"
+        }
         disabled={loading}
       >
         {loading ? "Registering..." : "Continue"}
