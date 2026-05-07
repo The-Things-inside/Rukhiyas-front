@@ -25,8 +25,8 @@ function DesktopCTA({
       onClick={onClick}
       className={`h-[44px] w-[244px] rounded-[22px] px-[24px] text-[18px] font-bold font-[Satoshi] capitalize ${
         variant === "fill"
-          ? `bg-[${BRAND_YELLOW}] text-[#FAFAFA]`
-          : `border border-[${BRAND_YELLOW}] text-[${BRAND_YELLOW}]`
+          ? "bg-[#E8B600] text-[#FAFAFA]"
+          : "border border-[#E8B600] text-[#E8B600]"
       }`}
     >
       {children}
@@ -37,7 +37,7 @@ function DesktopCTA({
 function DesktopAboutHero() {
   const router = useRouter();
   return (
-    <section className="bg-white flex items-center justify-center px-[60px] gap-[76px] pt-[56px] pb-[76px]">
+    <section className="bg-white flex items-center justify-center px-[60px] gap-[76px] py-[100px]">
       <div className="w-[668px] flex flex-col gap-[48px]">
         <div className="flex flex-col gap-[24px]">
           <motion.h1
@@ -85,13 +85,228 @@ function DesktopAboutHero() {
         className="w-[674px] h-[450px] rounded-[32px] overflow-hidden relative"
       >
         <Image
-          src="/assets/about/desktop/about-hero.jpg"
+          src="/assets/about/desktop/about-hero.png"
           alt="About Rukhiyas"
           fill
           className="object-cover"
           priority
         />
       </motion.div>
+    </section>
+  );
+}
+
+function DesktopStats() {
+  const router = useRouter();
+
+  return (
+    <section className="bg-[#FFFCF1] py-[100px]">
+      <div className="mx-auto max-w-[1920px] px-[240px]">
+        <div className="flex flex-col items-center gap-[48px]">
+          <motion.h2
+            initial={{ opacity: 0, y: -32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-black"
+          >
+            Numbers Say It All
+          </motion.h2>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="flex items-center gap-[24px]"
+          >
+            <div className="bg-white w-[288px] rounded-[24px] px-[48px] py-[40px] border-2 border-transparent shadow-[0px_3px_6px_rgba(0,0,0,0.04),0px_11px_11px_rgba(0,0,0,0.03),0px_25px_15px_rgba(0,0,0,0.02),0px_44px_18px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center justify-center gap-[12px]">
+                <img
+                  src="/assets/about/desktop/icon-winner.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                />
+                <div className="font-bold font-[Satoshi] text-[40px] text-[#E8B600]">
+                  23+
+                </div>
+              </div>
+              <div className="mt-[8px] text-center font-light font-[Satoshi] text-[20px] text-black">
+                Years of Experience
+              </div>
+            </div>
+
+            <div className="bg-white w-[288px] rounded-[24px] px-[48px] py-[40px] border-2 border-transparent shadow-[0px_3px_6px_rgba(0,0,0,0.04),0px_11px_11px_rgba(0,0,0,0.03),0px_25px_15px_rgba(0,0,0,0.02),0px_44px_18px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center justify-center gap-[14px]">
+                <div className="flex items-center">
+                  <img
+                    src="/assets/about/desktop/avatar-main.jpg"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-white -mr-[12px] object-cover"
+                  />
+                  <img
+                    src="/assets/about/desktop/avatar-teen.jpg"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-white -mr-[12px] object-cover"
+                  />
+                  <img
+                    src="/assets/about/desktop/avatar-boy.jpg"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-white object-cover"
+                  />
+                </div>
+                <div className="font-bold font-[Satoshi] text-[40px] text-[#E8B600]">
+                  450+
+                </div>
+              </div>
+              <div className="mt-[8px] text-center font-light font-[Satoshi] text-[20px] text-black">
+                Students on Board
+              </div>
+            </div>
+
+            <div className="bg-white w-[288px] rounded-[24px] px-[48px] py-[40px] border-2 border-[#E8B600] shadow-[0px_3px_6px_rgba(0,0,0,0.04),0px_11px_11px_rgba(0,0,0,0.03),0px_25px_15px_rgba(0,0,0,0.02),0px_44px_18px_rgba(0,0,0,0.01)]">
+              <div className="flex items-center justify-center gap-[12px]">
+                <img
+                  src="/assets/about/desktop/icon-school.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                />
+                <div className="font-light font-[Satoshi] text-[40px] text-[#E8B600]">
+                  Up to
+                </div>
+                <div className="font-bold font-[Satoshi] text-[40px] text-[#E8B600]">
+                  7
+                </div>
+              </div>
+              <div className="mt-[8px] text-center font-light font-[Satoshi] text-[20px] text-black">
+                Schools Covered
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.65, ease: EASE }}
+          >
+            <DesktopCTA variant="fill" onClick={() => router.push("/register")}>
+              Register now
+            </DesktopCTA>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type DesktopWhyItem = { title: string; body: string };
+
+function DesktopWhyChooseUs() {
+  const router = useRouter();
+  const [open, setOpen] = useState(0);
+
+  const items = useMemo<DesktopWhyItem[]>(
+    () => [
+      {
+        title: "Built on Trust",
+        body: "For over 20 years, families in Mahe have trusted us to get their children to and from school safely and on time. That trust is what drives us, every single day.",
+      },
+      {
+        title: "Safety Comes First",
+        body: "From well-maintained vehicles to trained and background-checked drivers, safety isn't just a feature—it's our foundation.",
+      },
+      {
+        title: "Real-Time Updates",
+        body: "Stay in the loop with live tracking and instant alerts. Know exactly when your child is picked up, dropped off, or if there's a delay.",
+      },
+      {
+        title: "Community-Centered Service",
+        body: "We're not just a transport provider—we're part of the neighborhood. Our strong ties with local schools and families help us serve you better.",
+      },
+      {
+        title: "Always On Time",
+        body: "We take punctuality seriously. With carefully planned routes and experienced staff, we keep delays to a minimum and routines on track.",
+      },
+      {
+        title: "Personal Support When You Need It",
+        body: "Have a question or need to make a change? Our caring support team is just a call away and always ready to help.",
+      },
+    ],
+    [],
+  );
+
+  return (
+    <section className="bg-white py-[100px]">
+      <div className="mx-auto max-w-[1920px] px-[240px]">
+        <div className="flex flex-col items-center gap-[48px]">
+          <motion.h2
+            initial={{ opacity: 0, y: -32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="font-bold font-[var(--font-spartan)] text-[48px] leading-[64px] text-black"
+          >
+            Why Choose Us?
+          </motion.h2>
+
+          <div className="w-[1112px] flex flex-col gap-[14px]">
+            {items.map((it, idx) => {
+              const isOpen = idx === open;
+              return (
+                <div
+                  key={it.title}
+                  className={`rounded-[20px] ${
+                    isOpen ? "bg-[#FFFCF1]" : "bg-[#FFFCF1]"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpen(isOpen ? -1 : idx)}
+                    className={`w-full flex items-center justify-between px-[64px] py-[48px] rounded-[20px]`}
+                  >
+                    <span className="font-[Satoshi] font-medium text-[24px] tracking-[1.44px] text-black">
+                      {it.title}
+                    </span>
+                    <img
+                      src={
+                        isOpen
+                          ? "/assets/about/desktop/accordion-remove.png"
+                          : "/assets/about/desktop/accordion-add.png"
+                      }
+                      alt=""
+                      width={52}
+                      height={52}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-[64px] pb-[48px] font-[Satoshi] text-[18px] leading-[26px] tracking-[0.36px] text-black">
+                      {it.body}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-[10px]">
+            <DesktopCTA variant="fill" onClick={() => router.push("/register")}>
+              Register now
+            </DesktopCTA>
+            <DesktopCTA variant="outline" onClick={() => router.push("/about")}>
+              Learn more
+            </DesktopCTA>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -441,6 +656,8 @@ export default function AboutPageView() {
         </div>
         <main className="pt-[128px]">
           <DesktopAboutHero />
+          <DesktopStats />
+          <DesktopWhyChooseUs />
         </main>
       </div>
 
