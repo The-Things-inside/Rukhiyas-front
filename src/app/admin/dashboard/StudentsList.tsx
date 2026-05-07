@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Plus, Search, SlidersHorizontal } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 import StudentDetails from "./StudentDetails";
 
@@ -78,13 +78,10 @@ export default function StudentsList({ onStudentSelect, selectedStudentId, onBac
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token found");
-        const res = await axios.get("https://backend-rukhiyas-production.up.railway.app/admin/students-with-pending-requests", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: "application/json",
-          },
+        const res = await api.get("/admin/students-with-pending-requests", {
+          headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
         });
-        setStudents(res.data);
+        setStudents(res.data as any);
       } catch (err) {
         // Optionally handle error
       } finally {
@@ -95,7 +92,7 @@ export default function StudentsList({ onStudentSelect, selectedStudentId, onBac
   }, []);
 
   const handleAddStudent = () => {
-    window.open("https://192.168.29.198:3000/register", "_blank");
+    window.open("/register", "_blank");
   };
 
   const handleStudentClick = (studentId: number) => {

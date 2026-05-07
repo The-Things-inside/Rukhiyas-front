@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import SchoolDropdown from "./SchoolDropdown";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import axios from "axios";
+import api from "@/lib/api";
 
 interface FormValues {
   studentName: string;
@@ -135,16 +135,9 @@ export default function StudentDetailsForm({
           location_longitude: student.location?.lng || 0,
         };
         console.log("Registering student:", studentData);
-        await axios.post(
-          "https://backend-rukhiyas-production.up.railway.app/register-student",
-          studentData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              accept: "application/json",
-            },
-          }
-        );
+        await api.post("/register-student", studentData, {
+          headers: { "Content-Type": "application/json", accept: "application/json" },
+        });
       }
       onContinue(allStudents);
     } catch {

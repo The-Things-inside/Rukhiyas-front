@@ -29,7 +29,7 @@ export default function AppHome() {
       try {
         const accessToken = localStorage.getItem("access_token");
         if (!accessToken) throw new Error("No access token found");
-        const response = await fetch("https://backend-rukhiyas-production.up.railway.app/students/me", {
+        const response = await fetch("/api/backend/students/me", {
           headers: {
             accept: "application/json",
             Authorization: `Bearer ${accessToken}`,

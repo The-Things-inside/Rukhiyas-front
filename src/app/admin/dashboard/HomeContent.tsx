@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 interface Student {
   id: number;
@@ -146,16 +146,10 @@ export default function HomeContent() {
           throw new Error("No access token found");
         }
 
-        const response = await axios.get(
-          "https://backend-rukhiyas-production.up.railway.app/admin/buses",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              accept: "application/json",
-            },
-          }
-        );
-        setBuses(response.data);
+        const response = await api.get("/admin/buses", {
+          headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+        });
+        setBuses(response.data as any);
       } catch (err) {
         console.error("Failed to fetch buses:", err);
       }
@@ -172,9 +166,9 @@ export default function HomeContent() {
       const endpointKey = selected.key;
 
       if (endpointKey === "new") {
-        url = "https://backend-rukhiyas-production.up.railway.app/admin/students/no-fees";
+        url = "/admin/students/no-fees";
       } else if (endpointKey === "bus") {
-        url = "https://backend-rukhiyas-production.up.railway.app/admin/students/unassigned";
+        url = "/admin/students/unassigned";
       } else if (endpointKey === "parent") {
         const fetchParentRequests = async () => {
           setLoading(true);
@@ -182,16 +176,10 @@ export default function HomeContent() {
           try {
             const token = localStorage.getItem("access_token");
             if (!token) throw new Error("No access token found");
-            const response = await axios.get(
-              "https://backend-rukhiyas-production.up.railway.app/admin/requests/pending",
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  accept: "application/json",
-                },
-              }
-            );
-            setParentRequests(response.data);
+            const response = await api.get("/admin/requests/pending", {
+              headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+            });
+            setParentRequests(response.data as any);
           } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to fetch parent requests");
           } finally {
@@ -213,7 +201,7 @@ export default function HomeContent() {
           throw new Error("No access token found");
         }
 
-        const response = await axios.get(url, {
+        const response = await api.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
             accept: "application/json",
@@ -274,16 +262,9 @@ export default function HomeContent() {
         throw new Error("No access token found");
       }
 
-      await axios.put(
-        `https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/assign-bus/${busId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: "application/json",
-          },
-        }
-      );
+      await api.put(`/admin/students/${studentId}/assign-bus/${busId}`, {}, {
+        headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+      });
 
       // Refresh the data by changing the key
       setRefreshKey((prevKey) => prevKey + 1);
@@ -303,18 +284,16 @@ export default function HomeContent() {
         throw new Error("No access token found");
       }
 
-      const response = await axios.patch(
-        `https://backend-rukhiyas-production.up.railway.app/admin/students/${studentId}/update-fees`,
-        {
-          actual_fees: actualFees,
-        },
+      await api.patch(
+        `/admin/students/${studentId}/update-fees`,
+        { actual_fees: actualFees },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             accept: "application/json",
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // If successful, reload the page to get updated data

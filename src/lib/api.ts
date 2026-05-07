@@ -1,9 +1,9 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const DEFAULT_API_BASE_URL = "https://backend-rukhiyas-production.up.railway.app";
-
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE_URL,
+  // Production-grade: never expose backend base URL to the browser.
+  // All requests go through the Next.js proxy route at `/api/backend/*`.
+  baseURL: "/api/backend",
   headers: {
     'Content-Type': 'application/json',
   },

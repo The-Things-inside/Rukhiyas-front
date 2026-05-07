@@ -33,7 +33,7 @@ function FleetList() {
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("No access token found");
-        const res = await fetch("https://backend-rukhiyas-production.up.railway.app/admin/buses", {
+        const res = await fetch("/api/backend/admin/buses", {
           headers: {
             accept: "application/json",
             Authorization: `Bearer ${token}`,
@@ -92,7 +92,7 @@ function FleetList() {
       if (editForm.driver_photo_file) {
         formData.append("driver_photo", editForm.driver_photo_file);
       }
-      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/buses/bus/${busId}`, {
+      const res = await fetch(`/api/backend/buses/bus/${busId}`, {
         method: "PUT",
         headers: {
           accept: "application/json",
@@ -128,7 +128,7 @@ function FleetList() {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("No access token found");
-      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/buses/${busId}/start`, {
+      const res = await fetch(`/api/backend/buses/${busId}/start`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -150,7 +150,7 @@ function FleetList() {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("No access token found");
-      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/buses/${busId}/arrived-school`, {
+      const res = await fetch(`/api/backend/buses/${busId}/arrived-school`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -172,7 +172,7 @@ function FleetList() {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("No access token found");
-      const res = await fetch(`https://backend-rukhiyas-production.up.railway.app/buses/${busId}/departed-school`, {
+      const res = await fetch(`/api/backend/buses/${busId}/departed-school`, {
         method: "POST",
         headers: {
           accept: "application/json",
