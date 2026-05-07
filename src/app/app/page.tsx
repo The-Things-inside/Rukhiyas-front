@@ -5,6 +5,7 @@ import RideStatusCard from "@/components/RideStatusCard";
 import ManagePickupDropoffCard from "@/components/ManagePickupDropoffCard";
 import PaymentsHistoryCard from "@/components/PaymentsHistoryCard";
 import PageHeader from "@/components/PageHeader";
+import NoStudentsView from "@/components/app/NoStudentsView";
 
 interface Student {
   id: number;
@@ -21,11 +22,13 @@ export default function AppHome() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noStudents, setNoStudents] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
       setError(null);
+      setNoStudents(false);
       try {
         const accessToken = localStorage.getItem("access_token");
         if (!accessToken) throw new Error("No access token found");
@@ -35,6 +38,15 @@ export default function AppHome() {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        if (response.status === 404) {
+          const body = await response.json().catch(() => null);
+          if (body?.detail === "No students found for this parent") {
+            setStudents([]);
+            setSelectedStudent(null);
+            setNoStudents(true);
+            return;
+          }
+        }
         if (!response.ok) throw new Error("Failed to fetch students");
         const data = await response.json();
         setStudents(data);
@@ -49,6 +61,22 @@ export default function AppHome() {
     };
     fetchStudents();
   }, []);
+
+  if (loading) {
+    return (
+      <AppLayout header={null}>
+        <div className="p-6 text-center text-[#19191F]">Loading...</div>
+      </AppLayout>
+    );
+  }
+
+  if (noStudents) {
+    return (
+      <AppLayout header={null}>
+        <NoStudentsView />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout
