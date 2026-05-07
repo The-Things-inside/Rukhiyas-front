@@ -71,6 +71,31 @@ export default function ProfilePage() {
   } | null>(null);
   const [editMapOpen, setEditMapOpen] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [mobileEditingId, setMobileEditingId] = useState<number | null>(null);
+  const [mobileEditDraft, setMobileEditDraft] = useState<{
+    full_name: string;
+    class_name: string;
+    division: string;
+    school_id: string;
+    student_address: string;
+    location?: { lat: number; lng: number };
+  } | null>(null);
+  const [mobileEditMapOpen, setMobileEditMapOpen] = useState(false);
+  const [mobileSaving, setMobileSaving] = useState(false);
+  const [mobileAddOpen, setMobileAddOpen] = useState(false);
+  const [mobileAddDrafts, setMobileAddDrafts] = useState<
+    {
+      id: string;
+      full_name: string;
+      class_name: string;
+      division: string;
+      school_id: string;
+      addressLabel: string;
+      location?: { lat: number; lng: number };
+    }[]
+  >([]);
+  const [mobileAddMapFor, setMobileAddMapFor] = useState<string | null>(null);
+  const [mobileAdding, setMobileAdding] = useState(false);
 
   const schoolNameById = useMemo(() => {
     // Keep in sync with `SchoolDropdown` list.
@@ -204,6 +229,61 @@ export default function ProfilePage() {
     }
   }
 
+  function startMobileEdit(s: Student) {
+    setMobileEditingId(s.id);
+    setMobileEditDraft({
+      full_name: s.full_name ?? "",
+      class_name: s.class_name ?? "",
+      division: s.division ?? "",
+      school_id: String(s.school_id ?? ""),
+      student_address: s.student_address ?? "",
+      location: { lat: s.location_latitude, lng: s.location_longitude },
+    });
+  }
+
+  async function saveMobileEdit(studentId: number) {
+    if (!parent || !mobileEditDraft) return;
+    try {
+      setMobileSaving(true);
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      if (!mobileEditDraft.location) throw new Error("Please set location on map");
+
+      const res = await fetch(`/api/backend/students/${studentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          parent_id: parent.id,
+          school_id: Number(mobileEditDraft.school_id),
+          full_name: mobileEditDraft.full_name,
+          class_name: mobileEditDraft.class_name,
+          division: mobileEditDraft.division,
+          student_address: mobileEditDraft.student_address || "Selected from map",
+          location_latitude: mobileEditDraft.location.lat,
+          location_longitude: mobileEditDraft.location.lng,
+        }),
+      });
+
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(body?.detail?.[0]?.msg || body?.detail || "Failed to update student");
+        return;
+      }
+      toast.success("Student updated");
+      setStudents((prev) => prev.map((x) => (x.id === studentId ? (body as Student) : x)));
+      setMobileEditingId(null);
+      setMobileEditDraft(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update student");
+    } finally {
+      setMobileSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center text-[#19191F]">
@@ -220,9 +300,10 @@ export default function ProfilePage() {
     );
   }
 
+  // Desktop add-student overlay only. Mobile add is inline in the Profile section.
   if (showAddStudent) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white hidden md:block">
         <button
           type="button"
           onClick={() => setShowAddStudent(false)}
@@ -685,39 +766,330 @@ export default function ProfilePage() {
           {/* Student Details */}
           <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
             <h2 className="font-bold text-lg mb-3 text-black">Student Details</h2>
-            {students.map((s) => (
-              <div key={s.id} className="border rounded-xl p-3 mb-3 border-[#e8b600]">
-                <div className="flex items-center mb-2">
-                  <Image
-                    src={s.profile_picture_url || "/assets/DP.svg"}
-                    alt={s.full_name}
-                    width={32}
-                    height={32}
-                    className="rounded-full mr-2"
-                  />
-                  <span className="font-semibold text-black">{s.full_name}</span>
+            {students.map((s) => {
+              const isEditing = mobileEditingId === s.id && !!mobileEditDraft;
+              return (
+                <div key={s.id} className="border rounded-xl p-3 mb-3 border-[#e8b600]">
+                  <div className="flex items-center mb-2">
+                    <Image
+                      src={s.profile_picture_url || "/assets/DP.svg"}
+                      alt={s.full_name}
+                      width={32}
+                      height={32}
+                      className="rounded-full mr-2"
+                    />
+                    <span className="font-semibold text-black">
+                      {s.full_name || "Nil"}
+                    </span>
+                  </div>
+
+                  {!isEditing ? (
+                    <>
+                      <div className="text-xs mb-1 text-black">
+                        <span className="font-medium text-gray-500">Class</span>{" "}
+                        {`${s.class_name || "Nil"} ${s.division || ""}`.trim()}{" "}
+                        &nbsp; <span className="font-medium text-gray-500">School</span>{" "}
+                        {schoolNameById.get(s.school_id) || `School ${s.school_id}`}
+                      </div>
+                      <div className="text-xs mb-1 text-black">
+                        <span className="font-medium text-gray-500">Address</span>{" "}
+                        {s.student_address || "Nil"}
+                      </div>
+                      <div className="text-xs mb-1 text-black">
+                        <span className="font-medium text-gray-500">
+                          Emergency Contact
+                        </span>{" "}
+                        {parent?.mobile_no || "Nil"} &nbsp;{" "}
+                        <span className="font-medium text-gray-500">ID No.</span>{" "}
+                        {s.id}
+                      </div>
+                      <button
+                        className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1 mt-2"
+                        onClick={() => startMobileEdit(s)}
+                      >
+                        Edit
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Full Name</div>
+                          <input
+                            className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                            value={mobileEditDraft!.full_name}
+                            onChange={(e) =>
+                              setMobileEditDraft((p) =>
+                                p ? { ...p, full_name: e.target.value } : p,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <div className="text-xs text-gray-500 mb-1">Class</div>
+                            <input
+                              className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                              value={mobileEditDraft!.class_name}
+                              onChange={(e) =>
+                                setMobileEditDraft((p) =>
+                                  p ? { ...p, class_name: e.target.value } : p,
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs text-gray-500 mb-1">Division</div>
+                            <input
+                              className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                              value={mobileEditDraft!.division}
+                              onChange={(e) =>
+                                setMobileEditDraft((p) =>
+                                  p ? { ...p, division: e.target.value } : p,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">School</div>
+                          <SchoolDropdown
+                            value={mobileEditDraft!.school_id}
+                            onChange={(v) =>
+                              setMobileEditDraft((p) =>
+                                p ? { ...p, school_id: v } : p,
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Address</div>
+                          <button
+                            type="button"
+                            className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-left text-black"
+                            onClick={() => setMobileEditMapOpen(true)}
+                          >
+                            {mobileEditDraft!.student_address || "Select location on map"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="flex-1 bg-[#e8b600] text-white font-semibold rounded-full py-2 disabled:opacity-60"
+                          disabled={mobileSaving}
+                          onClick={() => saveMobileEdit(s.id)}
+                        >
+                          {mobileSaving ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          className="flex-1 border border-[#e8b600] text-[#e8b600] font-semibold rounded-full py-2"
+                          onClick={() => {
+                            setMobileEditingId(null);
+                            setMobileEditDraft(null);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="text-xs mb-1 text-black">
-                  <span className="font-medium text-gray-500">Class</span>{" "}
-                  {`${s.class_name} ${s.division}`} &nbsp;{" "}
-                  <span className="font-medium text-gray-500">School</span>{" "}
-                  {schoolNameById.get(s.school_id) || `School ${s.school_id}`}
-                </div>
-                <div className="text-xs mb-1 text-black">
-                  <span className="font-medium text-gray-500">Address</span>{" "}
-                  {s.student_address}
-                </div>
-                <div className="text-xs mb-1 text-black">
-                  <span className="font-medium text-gray-500">Emergency Contact</span>{" "}
-                  {parent?.mobile_no || "-"} &nbsp;{" "}
-                  <span className="font-medium text-gray-500">ID No.</span> {s.id}
-                </div>
-                <button className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1 mt-2">
-                  Edit
+              );
+            })}
+
+            {/* Inline add student forms (below existing students) */}
+            {mobileAddOpen && (
+              <div className="mt-2 flex flex-col gap-3">
+                {mobileAddDrafts.map((d) => (
+                  <div key={d.id} className="border rounded-xl p-3 border-[#e8b600]">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold text-[#e8b600]">{`Student ${mobileAddDrafts.indexOf(d) + 1}`}</div>
+                      {mobileAddDrafts.length > 1 && (
+                        <button
+                          type="button"
+                          className="text-black underline text-sm"
+                          onClick={() =>
+                            setMobileAddDrafts((prev) => prev.filter((x) => x.id !== d.id))
+                          }
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <input
+                        className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                        placeholder="Full Name"
+                        value={d.full_name}
+                        onChange={(e) =>
+                          setMobileAddDrafts((prev) =>
+                            prev.map((x) =>
+                              x.id === d.id ? { ...x, full_name: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          className="flex-1 border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                          placeholder="Class"
+                          value={d.class_name}
+                          onChange={(e) =>
+                            setMobileAddDrafts((prev) =>
+                              prev.map((x) =>
+                                x.id === d.id ? { ...x, class_name: e.target.value } : x,
+                              ),
+                            )
+                          }
+                        />
+                        <input
+                          className="flex-1 border border-[#AAA] rounded-xl px-3 py-2 text-black"
+                          placeholder="Division"
+                          value={d.division}
+                          onChange={(e) =>
+                            setMobileAddDrafts((prev) =>
+                              prev.map((x) =>
+                                x.id === d.id ? { ...x, division: e.target.value } : x,
+                              ),
+                            )
+                          }
+                        />
+                      </div>
+                      <SchoolDropdown
+                        value={d.school_id}
+                        onChange={(v) =>
+                          setMobileAddDrafts((prev) =>
+                            prev.map((x) => (x.id === d.id ? { ...x, school_id: v } : x)),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="w-full border border-[#AAA] rounded-xl px-3 py-2 text-left text-black"
+                        onClick={() => setMobileAddMapFor(d.id)}
+                      >
+                        {d.addressLabel || "Select location on map"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="w-full border border-[#e8b600] text-[#e8b600] font-semibold rounded-full py-2"
+                  onClick={() =>
+                    setMobileAddDrafts((prev) => [
+                      ...prev,
+                      {
+                        id: `a${Date.now()}`,
+                        full_name: "",
+                        class_name: "",
+                        division: "",
+                        school_id: "",
+                        addressLabel: "",
+                        location: undefined,
+                      },
+                    ])
+                  }
+                >
+                  Add Another Student
+                </button>
+
+                <button
+                  type="button"
+                  className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-2 disabled:opacity-60"
+                  disabled={mobileAdding}
+                  onClick={() => {
+                    (async () => {
+                      if (!parent) return;
+                      setMobileAdding(true);
+                      try {
+                        const token = localStorage.getItem("access_token");
+                        if (!token) throw new Error("No access token found");
+
+                        const valid = mobileAddDrafts.filter(
+                          (x) =>
+                            x.full_name.trim() &&
+                            x.class_name.trim() &&
+                            x.division.trim() &&
+                            x.school_id &&
+                            x.location,
+                        );
+                        if (valid.length === 0) throw new Error("Fill all fields and pick location");
+
+                        for (const x of valid) {
+                          const res = await fetch("/api/backend/register-student", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              accept: "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                              parent_id: parent.id,
+                              school_id: Number(x.school_id),
+                              full_name: x.full_name,
+                              class_name: x.class_name,
+                              division: x.division,
+                              student_address: x.addressLabel || "Selected from map",
+                              location_latitude: x.location!.lat,
+                              location_longitude: x.location!.lng,
+                            }),
+                          });
+                          const body = await res.json().catch(() => null);
+                          if (!res.ok) {
+                            toast.error(body?.detail?.[0]?.msg || body?.detail || "Failed to add student");
+                            return;
+                          }
+                        }
+
+                        toast.success("Student added");
+                        // Refresh list
+                        const token2 = localStorage.getItem("access_token");
+                        const studentsRes = await fetch(
+                          `/api/backend/students?parent_id=${encodeURIComponent(parent.id)}`,
+                          {
+                            headers: { accept: "application/json", Authorization: `Bearer ${token2}` },
+                          },
+                        );
+                        const studentsJson = (await studentsRes.json()) as Student[];
+                        setStudents(studentsJson);
+                        setMobileAddOpen(false);
+                        setMobileAddDrafts([]);
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Failed to add student");
+                      } finally {
+                        setMobileAdding(false);
+                      }
+                    })();
+                  }}
+                >
+                  {mobileAdding ? "Submitting..." : "Continue"}
                 </button>
               </div>
-            ))}
-            <button className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-2">
+            )}
+
+            <button
+              className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-2"
+              onClick={() => {
+                setMobileAddOpen(true);
+                if (mobileAddDrafts.length === 0) {
+                  setMobileAddDrafts([
+                    {
+                      id: `a${Date.now()}`,
+                      full_name: "",
+                      class_name: "",
+                      division: "",
+                      school_id: "",
+                      addressLabel: "",
+                      location: undefined,
+                    },
+                  ]);
+                }
+              }}
+            >
               Add Another Student
             </button>
           </section>
@@ -805,6 +1177,49 @@ export default function ProfilePage() {
               : p,
           );
           setEditMapOpen(false);
+        }}
+      />
+
+      {/* Mobile edit map picker */}
+      <MapAddressPicker
+        open={mobileEditMapOpen}
+        onClose={() => setMobileEditMapOpen(false)}
+        initialLatLng={mobileEditDraft?.location}
+        onConfirm={(address: string, latlng: { lat: number; lng: number }) => {
+          setMobileEditDraft((p) =>
+            p
+              ? {
+                  ...p,
+                  student_address: address,
+                  location: { lat: latlng.lat, lng: latlng.lng },
+                }
+              : p,
+          );
+          setMobileEditMapOpen(false);
+        }}
+      />
+
+      {/* Mobile add map picker */}
+      <MapAddressPicker
+        open={!!mobileAddMapFor}
+        onClose={() => setMobileAddMapFor(null)}
+        initialLatLng={
+          mobileAddDrafts.find((d) => d.id === mobileAddMapFor)?.location
+        }
+        onConfirm={(address: string, latlng: { lat: number; lng: number }) => {
+          if (!mobileAddMapFor) return;
+          setMobileAddDrafts((prev) =>
+            prev.map((d) =>
+              d.id === mobileAddMapFor
+                ? {
+                    ...d,
+                    addressLabel: address,
+                    location: { lat: latlng.lat, lng: latlng.lng },
+                  }
+                : d,
+            ),
+          );
+          setMobileAddMapFor(null);
         }}
       />
     </div>
