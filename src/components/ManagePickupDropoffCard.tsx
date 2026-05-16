@@ -1,289 +1,545 @@
 "use client";
 
-import React, { useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import DateRangePicker from "@/components/DateRangePicker";
+import {
+  datesToIsoStrings,
+  formatDatesFromStrings,
+  formatPauseDuration,
+  formatSelectedDatesLabel,
+  requestPauseService,
+  requestTemporaryAddressChange,
+  type ParentServiceRequest,
+} from "@/lib/parent-requests";
+import { isSessionExpiredError } from "@/lib/auth-token";
+import { toast } from "react-toastify";
 
-interface Student {
+const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
+  ssr: false,
+});
+
+export interface ManagePickupStudent {
   id: number;
   full_name: string;
-  profile_picture_url: string | null;
   student_address: string;
-  temp_address: string | null;
-  temp_dates?: string[];
+  temp_pick_address?: string | null;
+  temp_drop_address?: string | null;
+  temp_dates?: string[] | null;
 }
+
+type Mode = "default" | "edit-address" | "pause-service";
 
 interface ManagePickupDropoffCardProps {
-  selectedStudent: Student | null;
+  selectedStudent: ManagePickupStudent | null;
 }
 
-function formatSelectedDates(dates: Date[]): string {
-  if (!dates.length) return "Select dates";
-  const options: Intl.DateTimeFormatOptions = {
-    month: "short",
-    day: "numeric",
-  };
-  return dates
-    .map((date) => date.toLocaleDateString("en-US", options))
-    .join(", ");
-}
-
-function formatPauseDuration(dates: Date[]): string {
-  if (!dates.length) return "";
-  // Format as 'jul1 ,2' for July 1,2
-  // Group by month, then join days with comma
-  const months: { [key: string]: number[] } = {};
-  dates.forEach((date) => {
-    const month = date.toLocaleString("en-US", { month: "short" }).toLowerCase();
-    if (!months[month]) months[month] = [];
-    months[month].push(date.getDate());
-  });
-  return Object.entries(months)
-    .map(([month, days]) => month + days.join(" ,"))
-    .join(" ,");
-}
-
-function PauseServiceForm({ onCancel, studentId }: { onCancel: () => void; studentId: number }) {
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Simple calendar for current month (reuse from previous code)
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDay = new Date(year, month, 1).getDay();
-  const weeks: (number | null)[][] = [[]];
-  let week = 0;
-  for (let i = 0; i < firstDay; i++) weeks[week].push(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    if (weeks[week].length === 7) {
-      week++;
-      weeks[week] = [];
-    }
-    weeks[week].push(d);
-  }
-  while (weeks[week].length < 7) weeks[week].push(null);
-
-  function isSelected(day: number) {
-    return selectedDates.some(
-      (date) =>
-        date.getDate() === day &&
-        date.getMonth() === month &&
-        date.getFullYear() === year
-    );
-  }
-
-  function handleDateSelect(date: Date) {
-    setSelectedDates((prev) => {
-      const exists = prev.some(
-        (d) =>
-          d.getDate() === date.getDate() &&
-          d.getMonth() === date.getMonth() &&
-          d.getFullYear() === date.getFullYear()
-      );
-      if (exists) {
-        return prev.filter(
-          (d) =>
-            !(
-              d.getDate() === date.getDate() &&
-              d.getMonth() === date.getMonth() &&
-              d.getFullYear() === date.getFullYear()
-            )
-        );
-      } else {
-        return [...prev, date];
-      }
-    });
-  }
-
-  async function handleSave() {
-    setLoading(true);
-    setError(null);
-    try {
-      const accessToken = localStorage.getItem("access_token");
-      if (!accessToken) throw new Error("No access token found");
-      const pause_duration = formatPauseDuration(selectedDates);
-      const response = await fetch(`/api/backend/pause-service/${studentId}`, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ pause_duration }),
-      });
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail?.[0]?.msg || "Failed to pause service");
-      }
-      onCancel();
-    } catch (err: any) {
-      setError(err.message || "Failed to pause service");
-    } finally {
-      setLoading(false);
-    }
-  }
-
+function AgentNote() {
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 w-full max-w-sm mx-auto">
-      <div className="font-bold text-black text-[20px] mb-2" style={{ fontFamily: "Satoshi, sans-serif" }}>Pause Service</div>
-      <div className="text-[14px] text-black mb-3" style={{ fontFamily: "Satoshi, sans-serif" }}>
-        For any changes within the next 2 days,<br className="sm:hidden" /> please <a href="#" className="underline text-black font-medium">call our agent</a>.
-      </div>
-      <div className="mb-2">
-        <div className="text-black text-[15px] font-medium mb-1" style={{ fontFamily: "Satoshi, sans-serif" }}>Dates</div>
-        <button
-          type="button"
-          className={`flex items-center bg-gray-100 rounded-xl px-3 py-2 text-[15px] font-medium border border-gray-200 w-full text-left ${selectedDates.length === 0 ? "text-gray-400" : "text-gray-500"}`}
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-          onClick={() => setCalendarOpen((v) => !v)}
-        >
-          <span className="flex-1">{formatSelectedDates(selectedDates)}</span>
-          <span className="ml-2">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-              <rect x="3" y="5" width="18" height="16" rx="3" stroke="#BDBDBD" strokeWidth="1.5" />
-              <path d="M16 3v4M8 3v4" stroke="#BDBDBD" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M3 9h18" stroke="#BDBDBD" strokeWidth="1.5" />
-            </svg>
-          </span>
-        </button>
-        {calendarOpen && (
-          <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-4">
-            <div className="grid grid-cols-7 gap-2 mb-2 text-center text-gray-400 text-base" style={{ fontFamily: "Satoshi, sans-serif" }}>
-              {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
-                <div key={d}>{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-2 text-center">
-              {weeks.flat().map((day, i) =>
-                day ? (
-                  <button
-                    key={i}
-                    className={`rounded-full w-8 h-8 text-[16px] font-bold transition-colors ${isSelected(day) ? "bg-[#E8B600] text-white" : "text-gray-800 hover:bg-gray-100"}`}
-                    style={{ fontFamily: "Satoshi, sans-serif" }}
-                    onClick={() => handleDateSelect(new Date(year, month, day))}
-                  >
-                    {day}
-                  </button>
-                ) : (
-                  <div key={i} />
-                )
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="mb-2">
-        <div className="text-black text-[15px] font-medium mb-1" style={{ fontFamily: "Satoshi, sans-serif" }}>Reason <span className="text-gray-400">(Optional)</span></div>
-        <textarea
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-black"
-          placeholder="Reason"
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-          rows={2}
-        />
-      </div>
-      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      <div className="text-[13px] text-black mb-4 mt-2" style={{ fontFamily: "Satoshi, sans-serif" }}>
-        Service will be paused only on selected dates, regular service will resumes on all other days.
-      </div>
-      <div className="flex gap-3 mt-2">
-        <button
-          className="flex-1 bg-[#E8B600] text-white font-bold text-[16px] rounded-full py-2 transition"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-          onClick={handleSave}
-          disabled={loading}
-        >
-          {loading ? "Saving..." : "Save"}
-        </button>
-        <button
-          className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold text-[16px] rounded-full py-2 bg-white transition"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
-      </div>
+    <p
+      className="text-[16px] text-black"
+      style={{ fontFamily: "Satoshi, sans-serif" }}
+    >
+      For any changes within the next 2 days, please{" "}
+      <a href="tel:+919876543210" className="font-medium underline">
+        call our agent
+      </a>
+      .
+    </p>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="text-[16px] font-medium text-black"
+      style={{ fontFamily: "Satoshi, sans-serif" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function ReadonlyBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-full rounded-[12px] bg-[#EBEBEB] p-4 text-[16px] font-medium text-[#5E5E5E] whitespace-pre-wrap">
+      {children}
     </div>
   );
 }
 
-export default function ManagePickupDropoffCard({ selectedStudent }: ManagePickupDropoffCardProps) {
-  const [pauseOpen, setPauseOpen] = useState(false);
+function DatesTrigger({
+  label,
+  dates,
+  onClick,
+}: {
+  label: string;
+  dates: Date[];
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-1">
+      <FieldLabel>{label}</FieldLabel>
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full items-center justify-between rounded-[12px] border border-[#AAAAAA] bg-white p-4 text-left"
+      >
+        <span
+          className={`text-[16px] font-medium ${dates.length ? "text-[#5E5E5E]" : "text-[#A4A4A4]"}`}
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          {formatSelectedDatesLabel(dates)}
+        </span>
+        <span className="flex items-center gap-1 text-[#5E5E5E]">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <rect x="3" y="5" width="18" height="16" rx="3" stroke="#5E5E5E" strokeWidth="1.5" />
+            <path d="M16 3v4M8 3v4M3 9h18" stroke="#5E5E5E" strokeWidth="1.5" />
+          </svg>
+          <span className="text-lg">›</span>
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function PendingBox({
+  title,
+  datesLabel,
+  detailLabel,
+  detailValue,
+  dropOffLabel,
+  dropOffValue,
+  footer,
+}: {
+  title: string;
+  datesLabel: string;
+  detailLabel: string;
+  detailValue: string;
+  dropOffLabel?: string;
+  dropOffValue?: string;
+  footer?: string;
+}) {
+  return (
+    <div className="w-full rounded-[16px] border border-[#E8B600] p-4 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <span
+          className="text-[16px] font-medium text-[#E8B600]"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          {title}
+        </span>
+        <span
+          className="text-[16px] text-[#5E5E5E]"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          Pending Approval
+        </span>
+      </div>
+      <p
+        className="text-[16px] text-black"
+        style={{ fontFamily: "Satoshi, sans-serif" }}
+      >
+        Changes saved! Our agents will verify and approve your updated locations
+        within 24 hours.
+      </p>
+      <div className="flex flex-col gap-1">
+        <FieldLabel>Dates</FieldLabel>
+        <ReadonlyBox>{datesLabel}</ReadonlyBox>
+      </div>
+      <div className="flex flex-col gap-1">
+        <FieldLabel>{detailLabel}</FieldLabel>
+        <ReadonlyBox>{detailValue}</ReadonlyBox>
+      </div>
+      {dropOffLabel && dropOffValue ? (
+        <div className="flex flex-col gap-1">
+          <FieldLabel>{dropOffLabel}</FieldLabel>
+          <ReadonlyBox>{dropOffValue}</ReadonlyBox>
+        </div>
+      ) : null}
+      {footer ? (
+        <p
+          className="text-[16px] text-black"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          {footer}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export default function ManagePickupDropoffCard({
+  selectedStudent,
+}: ManagePickupDropoffCardProps) {
+  const [mode, setMode] = useState<Mode>("default");
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [pickUp, setPickUp] = useState("");
+  const [dropOff, setDropOff] = useState("");
+  const [sameAsPickup, setSameAsPickup] = useState(true);
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [pendingAddress, setPendingAddress] =
+    useState<ParentServiceRequest | null>(null);
+  const [pendingPause, setPendingPause] = useState<ParentServiceRequest | null>(
+    null,
+  );
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapTarget, setMapTarget] = useState<"pickup" | "dropoff">("pickup");
+
+  const primaryAddress = selectedStudent?.student_address ?? "—";
+
+  const hasStudentPendingAddress = Boolean(
+    selectedStudent?.temp_pick_address ||
+      (selectedStudent?.temp_dates && selectedStudent.temp_dates.length > 0),
+  );
+
+  useEffect(() => {
+    if (!selectedStudent) return;
+    setMode("default");
+    setSelectedDates([]);
+    setPickUp(selectedStudent.student_address);
+    setDropOff(selectedStudent.student_address);
+    setSameAsPickup(true);
+    setReason("");
+    setPendingAddress(null);
+    setPendingPause(null);
+  }, [selectedStudent?.id, selectedStudent?.student_address]);
+
+  const dropoffDisplay = useMemo(() => {
+    if (sameAsPickup) return "Same as pick up address";
+    return dropOff || "—";
+  }, [sameAsPickup, dropOff]);
+
+  const resetForms = useCallback(() => {
+    setMode("default");
+    setSelectedDates([]);
+    if (selectedStudent) {
+      setPickUp(selectedStudent.student_address);
+      setDropOff(selectedStudent.student_address);
+    }
+    setSameAsPickup(true);
+    setReason("");
+  }, [selectedStudent]);
+
+  const openMap = (target: "pickup" | "dropoff") => {
+    setMapTarget(target);
+    setMapOpen(true);
+  };
+
+  const handleMapConfirm = (address: string) => {
+    if (mapTarget === "pickup") {
+      setPickUp(address);
+      if (sameAsPickup) setDropOff(address);
+    } else {
+      setDropOff(address);
+      setSameAsPickup(false);
+    }
+    setMapOpen(false);
+  };
+
+  const handleSaveAddress = async () => {
+    if (!selectedStudent) return;
+    const pickUpAddress = pickUp.trim();
+    if (!pickUpAddress) {
+      toast.error("Please enter a pick up address");
+      return;
+    }
+    if (selectedDates.length === 0) {
+      toast.error("Please select at least one date");
+      return;
+    }
+    const dropOffAddress = sameAsPickup
+      ? pickUpAddress
+      : dropOff.trim() || pickUpAddress;
+    setLoading(true);
+    try {
+      const res = await requestTemporaryAddressChange(selectedStudent.id, {
+        temp_pick_address: pickUpAddress,
+        temp_drop_address: dropOffAddress,
+        temp_dates: datesToIsoStrings(selectedDates),
+      });
+      setPendingAddress(res);
+      resetForms();
+      toast.success("Temporary address change submitted");
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      toast.error(
+        e instanceof Error ? e.message : "Failed to submit address change",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSavePause = async () => {
+    if (!selectedStudent) return;
+    if (selectedDates.length === 0) {
+      toast.error("Please select at least one date");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await requestPauseService(
+        selectedStudent.id,
+        formatPauseDuration(selectedDates),
+      );
+      setPendingPause(res);
+      resetForms();
+      toast.success("Pause service request submitted");
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      toast.error(
+        e instanceof Error ? e.message : "Failed to submit pause request",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!selectedStudent) {
     return (
-      <div className="bg-white rounded-[20px] shadow-lg p-4 w-full mx-auto border border-gray-200 text-center text-gray-500">
+      <div className="w-full rounded-[24px] border border-[#EAEAEA] bg-white p-6 text-center text-[#5E5E5E] shadow-sm">
         No student selected.
       </div>
     );
   }
 
-  // If temp_address and temp_dates are present, show them for those dates (not implemented here for brevity)
-  // For now, just show student_address for both
-  const pickupAddress = selectedStudent.student_address || "-";
-  const dropoffAddress = selectedStudent.student_address || "-";
+  const cardClass =
+    "w-full rounded-[24px] border border-[#EAEAEA] bg-white px-4 py-6 shadow-sm md:px-6 flex flex-col gap-4";
 
-  if (pauseOpen) {
-    return <PauseServiceForm onCancel={() => setPauseOpen(false)} studentId={selectedStudent.id} />;
-  }
+  const title =
+    mode === "edit-address"
+      ? "Edit Address"
+      : mode === "pause-service"
+        ? "Pause Service"
+        : "Manage Pickup & Drop Off";
 
   return (
-    <div
-      className="bg-white rounded-[20px] shadow-lg p-4 w-full mx-auto border border-gray-200"
-      style={{ boxShadow: "0 8px 32px 0 rgba(0,0,0,0.12)" }}
-    >
-      <div
-        className="text-black text-[18px] font-semibold pt-2 pb-2"
-        style={{ fontFamily: "Spartan, sans-serif" }}
-      >
-        Manage Pickup & Drop Off
+    <>
+      <DateRangePicker
+        open={calendarOpen}
+        onClose={() => setCalendarOpen(false)}
+        selected={selectedDates}
+        onChange={setSelectedDates}
+      />
+      <MapAddressPicker
+        open={mapOpen}
+        onClose={() => setMapOpen(false)}
+        onConfirm={(address) => handleMapConfirm(address)}
+      />
+
+      <div className={cardClass}>
+        <h2
+          className="text-[18px] font-semibold text-black"
+          style={{ fontFamily: "Spartan, sans-serif" }}
+        >
+          {title}
+        </h2>
+
+        {mode !== "default" && <AgentNote />}
+
+        {mode === "default" && (
+          <>
+            <div className="flex flex-col gap-1">
+              <FieldLabel>Pick Up</FieldLabel>
+              <ReadonlyBox>{primaryAddress}</ReadonlyBox>
+            </div>
+            <div className="flex flex-col gap-1">
+              <FieldLabel>Drop Off</FieldLabel>
+              <ReadonlyBox>Same as pick up address</ReadonlyBox>
+            </div>
+            <div className="flex flex-col gap-2.5 md:flex-row md:gap-2.5">
+              <button
+                type="button"
+                onClick={() => setMode("edit-address")}
+                className="flex-1 rounded-[22px] bg-[#E8B600] py-2.5 text-[18px] font-bold capitalize text-[#FAFAFA]"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                Edit Address
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDates([]);
+                  setMode("pause-service");
+                }}
+                className="flex-1 rounded-[22px] border border-[#E8B600] bg-white py-2.5 text-[18px] font-bold capitalize text-[#E8B600]"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                Pause Service
+              </button>
+            </div>
+
+            {(pendingAddress || hasStudentPendingAddress) && (
+              <PendingBox
+                title="Temporary Change"
+                datesLabel={
+                  pendingAddress?.temp_dates
+                    ? formatDatesFromStrings(pendingAddress.temp_dates)
+                    : formatDatesFromStrings(selectedStudent.temp_dates)
+                }
+                detailLabel="New Pick Up"
+                detailValue={
+                  pendingAddress?.temp_pick_address ??
+                  selectedStudent.temp_pick_address ??
+                  "—"
+                }
+                dropOffLabel="New Drop Off"
+                dropOffValue={
+                  pendingAddress?.temp_drop_address ??
+                  selectedStudent.temp_drop_address ??
+                  "Same as pick up address"
+                }
+                footer="Your location will revert to primary address on days not selected."
+              />
+            )}
+
+            {pendingPause && (
+              <PendingBox
+                title="Service Paused"
+                datesLabel={formatDatesFromStrings(pendingPause.temp_dates)}
+                detailLabel="Reason"
+                detailValue={
+                  pendingPause.notes ??
+                  pendingPause.requested_data ??
+                  (reason || "—")
+                }
+                footer="Service will be paused only on selected dates, regular service will resumes on all other days."
+              />
+            )}
+          </>
+        )}
+
+        {mode === "edit-address" && (
+          <>
+            <DatesTrigger
+              label="Dates"
+              dates={selectedDates}
+              onClick={() => setCalendarOpen(true)}
+            />
+            <div className="flex flex-col gap-1">
+              <FieldLabel>Pick Up</FieldLabel>
+              <button
+                type="button"
+                onClick={() => openMap("pickup")}
+                className="flex w-full items-center justify-between rounded-[12px] border border-[#AAAAAA] bg-white p-4 text-left"
+              >
+                <span
+                  className="line-clamp-2 flex-1 text-[16px] font-medium text-[#5E5E5E] pr-2"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {pickUp || "Address"}
+                </span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M4 20h4l10-10-4-4L4 16v4z" stroke="#5E5E5E" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <FieldLabel>Drop Off</FieldLabel>
+              <button
+                type="button"
+                onClick={() => {
+                  if (sameAsPickup) {
+                    setSameAsPickup(false);
+                    setDropOff(pickUp);
+                  }
+                  openMap("dropoff");
+                }}
+                className="flex w-full items-center justify-between rounded-[12px] border border-[#AAAAAA] bg-white p-4 text-left"
+              >
+                <span
+                  className="line-clamp-2 flex-1 text-[16px] font-medium text-[#5E5E5E] pr-2"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {dropoffDisplay}
+                </span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M4 20h4l10-10-4-4L4 16v4z" stroke="#5E5E5E" strokeWidth="1.5" />
+                </svg>
+              </button>
+            </div>
+            <p
+              className="text-[16px] text-black"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              Your location will revert to{" "}
+              <span className="font-medium underline">primary address</span> on
+              days not selected.
+            </p>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleSaveAddress}
+                className="flex-1 rounded-[22px] bg-[#E8B600] py-2.5 text-[18px] font-bold text-[#FAFAFA] disabled:opacity-60"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                {loading ? "Saving…" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForms}
+                className="flex-1 rounded-[22px] border border-[#E8B600] bg-white py-2.5 text-[18px] font-bold text-[#E8B600]"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+
+        {mode === "pause-service" && (
+          <>
+            <DatesTrigger
+              label="Dates"
+              dates={selectedDates}
+              onClick={() => setCalendarOpen(true)}
+            />
+            <div className="flex flex-col gap-1">
+              <FieldLabel>
+                Reason <span className="font-light text-[#5E5E5E]">(Optional)</span>
+              </FieldLabel>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Reason"
+                rows={2}
+                className="w-full resize-none rounded-[12px] border border-[#AAAAAA] bg-white p-4 text-[16px] text-[#5E5E5E] outline-none focus:ring-2 focus:ring-[#E8B600]/40"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              />
+            </div>
+            <p
+              className="text-[16px] text-black"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              Service will be paused only on selected dates, regular service will
+              resumes on all other days.
+            </p>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleSavePause}
+                className="flex-1 rounded-[22px] bg-[#E8B600] py-2.5 text-[18px] font-bold text-[#FAFAFA] disabled:opacity-60"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                {loading ? "Saving…" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForms}
+                className="flex-1 rounded-[22px] border border-[#E8B600] bg-white py-2.5 text-[18px] font-bold text-[#E8B600]"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
       </div>
-      <div className="mb-2">
-        <div
-          className="text-black text-[15px] font-medium mb-1"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-        >
-          Pick Up
-        </div>
-        <div
-          className="bg-gray-100 rounded-xl px-3 py-2 text-gray-500 text-[15px] font-medium"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-        >
-          {pickupAddress}
-        </div>
-      </div>
-      <div className="mb-4">
-        <div
-          className="text-black text-[15px] font-medium mb-1"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-        >
-          Drop Off
-        </div>
-        <div
-          className="bg-gray-100 rounded-xl px-3 py-2 text-gray-500 text-[15px] font-medium"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-        >
-          {dropoffAddress}
-        </div>
-      </div>
-      <div className="flex gap-3">
-        <button
-          className="flex-1 bg-[#E8B600] text-white font-bold text-[16px] rounded-full py-2 transition"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-          // onClick={() => {}}
-        >
-          Edit Address
-        </button>
-        <button
-          className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold text-[16px] rounded-full py-2 bg-white transition"
-          style={{ fontFamily: "Satoshi, sans-serif" }}
-          onClick={() => setPauseOpen(true)}
-        >
-          Pause Service
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

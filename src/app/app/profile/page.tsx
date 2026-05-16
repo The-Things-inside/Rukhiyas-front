@@ -853,7 +853,7 @@ export default function ProfilePage() {
           className="w-full flex items-center justify-between px-5 py-4 bg-[#19191F]"
           style={{ maxWidth: 400 }}
         >
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <Image
               src={parent?.profile_picture_url || "/assets/DP.svg"}
               alt={helloName}
@@ -867,20 +867,20 @@ export default function ProfilePage() {
             >
               {`Hello, ${helloName}`}
             </span>
-          </div>
+        </div>
           <span
             className="text-white text-lg font-bold"
             style={{ fontFamily: "Satoshi, sans-serif" }}
           >
             Profile
           </span>
-        </header>
+      </header>
 
-        <div className="flex flex-col items-center w-full" style={{ maxWidth: 400 }}>
-          {/* Parent Details */}
-          <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4 mt-2">
-            <h2 className="font-bold text-lg mb-3 text-black">Parent Details</h2>
-            <div className="flex items-center mb-2">
+      <div className="flex flex-col items-center w-full" style={{ maxWidth: 400 }}>
+        {/* Parent Details */}
+        <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4 mt-2">
+          <h2 className="font-bold text-lg mb-3 text-black">Parent Details</h2>
+          <div className="flex items-center mb-2">
               <Image
                 src={parent?.profile_picture_url || "/assets/DP.svg"}
                 alt={parent?.full_name || "Parent"}
@@ -906,20 +906,20 @@ export default function ProfilePage() {
               <span className="font-medium text-gray-500">Email</span>
               <br />
               {parent?.email || "-"}
-            </div>
+          </div>
             <button className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-2 text-base">
               Edit
             </button>
-          </section>
+        </section>
 
-          {/* Student Details */}
-          <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
-            <h2 className="font-bold text-lg mb-3 text-black">Student Details</h2>
+        {/* Student Details */}
+        <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
+          <h2 className="font-bold text-lg mb-3 text-black">Student Details</h2>
             {students.map((s) => {
               const isEditing = mobileEditingId === s.id && !!mobileEditDraft;
               return (
                 <div key={s.id} className="border rounded-xl p-3 mb-3 border-[#e8b600]">
-                  <div className="flex items-center mb-2">
+            <div className="flex items-center mb-2">
                     <Image
                       src={s.profile_picture_url || "/assets/DP.svg"}
                       alt={s.full_name}
@@ -1105,7 +1105,7 @@ export default function ProfilePage() {
                             )
                           }
                         />
-                      </div>
+            </div>
                       <SchoolDropdown
                         value={d.school_id}
                         onChange={(v) =>
@@ -1121,8 +1121,8 @@ export default function ProfilePage() {
                       >
                         {d.addressLabel || "Select location on map"}
                       </button>
-                    </div>
-                  </div>
+          </div>
+            </div>
                 ))}
 
                 <button
@@ -1230,7 +1230,7 @@ export default function ProfilePage() {
                 >
                   Cancel
                 </button>
-              </div>
+          </div>
             )}
 
             <button
@@ -1254,14 +1254,14 @@ export default function ProfilePage() {
             >
               Add Another Student
             </button>
-          </section>
+        </section>
 
-          {/* Billing & Payment */}
-          <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
+        {/* Billing & Payment */}
+        <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
             <h2 className="font-bold text-lg mb-3 text-black">Billing &amp; Payment</h2>
-            <div className="mb-3">
-              <div className="text-xs font-semibold mb-1 text-black">Current Subscriptions</div>
-              <div className="border rounded-xl p-2 mb-2 flex flex-col gap-1">
+          <div className="mb-3">
+            <div className="text-xs font-semibold mb-1 text-black">Current Subscriptions</div>
+            <div className="border rounded-xl p-2 mb-2 flex flex-col gap-1">
                 {subscriptions.map((x) => (
                   <div key={x.id} className="flex justify-between items-center text-xs text-black gap-2">
                     <span className="truncate pr-2 flex-1">{x.name}</span>
@@ -1284,9 +1284,9 @@ export default function ProfilePage() {
               </button>
             </div>
             {hasUnpaidStudents && (
-            <div className="mb-3">
-              <div className="border border-red-400 rounded-xl p-3 mb-2">
-                <div className="text-xs text-red-600 font-semibold mb-1">Payment Pending</div>
+          <div className="mb-3">
+            <div className="border border-red-400 rounded-xl p-3 mb-2">
+              <div className="text-xs text-red-600 font-semibold mb-1">Payment Pending</div>
                 <div className="flex justify-between text-xs mb-1 text-black">
                   <span className="font-medium text-gray-500">Due Date</span>
                   <span>{pendingDueDate}</span>
@@ -1303,9 +1303,9 @@ export default function ProfilePage() {
                 >
                   {paying ? "Processing…" : "Pay Now"}
                 </button>
-                <div className="text-[10px] text-gray-500 text-center mt-1">Pay now to avoid late fees*</div>
-              </div>
+              <div className="text-[10px] text-gray-500 text-center mt-1">Pay now to avoid late fees*</div>
             </div>
+          </div>
             )}
 
             {allStudentsPaid && (
@@ -1331,12 +1331,12 @@ export default function ProfilePage() {
               </div>
             </div>
             )}
-          </section>
+        </section>
 
-          {/* Account Settings */}
-          <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
-            <h2 className="font-bold text-lg mb-3 text-black">Account Settings</h2>
-            <ul className="text-sm divide-y">
+        {/* Account Settings */}
+        <section className="bg-white rounded-2xl shadow p-5 w-[340px] mb-4">
+          <h2 className="font-bold text-lg mb-3 text-black">Account Settings</h2>
+          <ul className="text-sm divide-y">
               {[
                 "Notification Preferences",
                 "Change Password",
@@ -1359,8 +1359,8 @@ export default function ProfilePage() {
                   </button>
                 </li>
               ))}
-            </ul>
-          </section>
+          </ul>
+        </section>
 
           <button
             onClick={handleLogout}

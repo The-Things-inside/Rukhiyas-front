@@ -26,6 +26,8 @@ interface Student {
   bus_id: number | null;
   student_address: string;
   temp_address: string | null;
+  temp_pick_address?: string | null;
+  temp_drop_address?: string | null;
   temp_dates?: string[];
   approximate_fees: number | null;
   actual_fees: number | null;
