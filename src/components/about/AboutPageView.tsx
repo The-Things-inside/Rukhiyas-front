@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
-const BRAND_YELLOW = "#E8B600";
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 function DesktopCTA({
@@ -329,8 +328,8 @@ function MobileButton({
       onClick={onClick}
       className={`h-[44px] rounded-[22px] px-[24px] text-[18px] font-bold font-[Satoshi] capitalize ${
         variant === "fill"
-          ? `bg-[${BRAND_YELLOW}] text-[#FAFAFA]`
-          : `border border-[${BRAND_YELLOW}] text-[${BRAND_YELLOW}]`
+          ? "bg-[#E8B600] text-[#FAFAFA]"
+          : "border border-[#E8B600] text-[#E8B600]"
       } ${className ?? ""}`}
     >
       {children}

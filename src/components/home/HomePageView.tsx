@@ -8,7 +8,6 @@ import { useMemo, useState } from "react";
 import Header from "@/components/Header";
 import MenuOverlay from "@/components/MenuOverlay";
 
-const BRAND_YELLOW = "#E8B600";
 const EASE_OUT_QUINT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function DesktopButton({
@@ -26,8 +25,8 @@ function DesktopButton({
     "h-[44px] rounded-[22px] px-[24px] text-[18px] font-bold font-[Satoshi] leading-[normal] capitalize flex items-center justify-center gap-[10px]";
   const styles =
     variant === "fill"
-      ? `bg-[${BRAND_YELLOW}] text-[#FAFAFA]`
-      : `border border-[${BRAND_YELLOW}] text-[${BRAND_YELLOW}] bg-transparent`;
+      ? "bg-[#E8B600] text-[#FAFAFA]"
+      : "border border-[#E8B600] text-[#E8B600] bg-transparent";
   return (
     <button
       type="button"
@@ -90,7 +89,7 @@ function DesktopHero() {
         initial={{ opacity: 0, x: 220 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.05, ease: EASE_OUT_QUINT, delay: 0.05 }}
-        className="absolute right-[60px] top-[240px] h-[567px] w-[758px] relative z-[1] pointer-events-none"
+        className="absolute right-[60px] top-[240px] z-[1] h-[567px] w-[758px] pointer-events-none"
       >
         <Image
           src="/assets/home/desktop/hero-bus.png"
@@ -436,8 +435,8 @@ function MobileButton({
     "h-[44px] rounded-[22px] px-[24px] text-[18px] font-bold font-[Satoshi] leading-[normal] capitalize flex items-center justify-center";
   const styles =
     variant === "fill"
-      ? `bg-[${BRAND_YELLOW}] text-[#FAFAFA]`
-      : `border border-[${BRAND_YELLOW}] text-[${BRAND_YELLOW}] bg-transparent`;
+      ? "bg-[#E8B600] text-[#FAFAFA]"
+      : "border border-[#E8B600] text-[#E8B600] bg-transparent";
   return (
     <button
       type="button"

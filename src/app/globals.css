@@ -24,13 +24,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 /* Base styles for consistent mobile experience */
 html {
   -webkit-text-size-adjust: 100%;
@@ -57,12 +50,12 @@ body {
   padding-bottom: var(--safe-area-inset-bottom);
 }
 
-/* Ensure consistent touch targets */
-button, 
-a {
-  min-height: 44px;
-  min-width: 44px;
-  touch-action: manipulation;
+/* Touch-friendly buttons on mobile only (avoid breaking desktop nav/links) */
+@media (max-width: 767px) {
+  button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
 }
 
 /* Prevent text size adjustment on orientation change */
