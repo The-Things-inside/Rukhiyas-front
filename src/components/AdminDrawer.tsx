@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
 import { useRouter } from "next/navigation";
+import { clearAuthSession, redirectToLogin } from "@/lib/auth-token";
 
 const menuItems = [
   {
@@ -90,9 +91,9 @@ export default function AdminDrawer({
   };
 
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.clear();
-      router.push('/admin/login');
+    if (typeof window !== "undefined") {
+      clearAuthSession();
+      redirectToLogin();
     }
   };
 

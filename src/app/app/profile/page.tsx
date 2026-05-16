@@ -20,6 +20,7 @@ import { earliestFeeExpiry, formatFeeExpiry } from "@/lib/utils";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 import PaymentHistorySheet from "@/components/PaymentHistorySheet";
 import ServiceHistorySheet from "@/components/ServiceHistorySheet";
+import ProfilePendingPayments from "@/components/profile/ProfilePendingPayments";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -187,12 +188,6 @@ export default function ProfilePage() {
     }));
   }, [students]);
 
-  const pendingAmount = useMemo(() => {
-    return subscriptions
-      .filter((x) => x.isPaid === false)
-      .reduce((sum, x) => sum + (x.amount || 0), 0);
-  }, [subscriptions]);
-
   const hasUnpaidStudents = useMemo(
     () => students.some((s) => !s.is_paid),
     [students],
@@ -210,11 +205,6 @@ export default function ProfilePage() {
   const unpaidStudents = useMemo(
     () => students.filter((s) => !s.is_paid),
     [students],
-  );
-
-  const pendingDueDate = useMemo(
-    () => formatFeeExpiry(earliestFeeExpiry(unpaidStudents.map((s) => s.fee_expiry))),
-    [unpaidStudents],
   );
 
   const nextPaymentDueDate = useMemo(
@@ -260,20 +250,15 @@ export default function ProfilePage() {
   );
 
   const handlePayNow = useCallback(
-    (studentId?: number) => {
-      const target = studentId
-        ? students.find((s) => s.id === studentId)
-        : unpaidStudents[0] ?? students[0];
+    (studentId: number) => {
+      const target = students.find((s) => s.id === studentId);
       if (!target) {
         toast.error("No student available for payment");
         return;
       }
-      if (unpaidStudents.length > 1 && !studentId) {
-        toast.info(`Opening payment for ${target.full_name}`);
-      }
       startPayment({ id: target.id, name: target.full_name }, parent);
     },
-    [students, unpaidStudents, parent, startPayment],
+    [students, parent, startPayment],
   );
 
   function handleLogout() {
@@ -749,31 +734,11 @@ export default function ProfilePage() {
 
               {hasUnpaidStudents && (
               <div className="border border-red-300 rounded-[16px] p-[14px]">
-                <div className="text-[12px] font-bold text-red-600" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  Payment Pending
-                </div>
-                <div className="mt-[10px] text-[12px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  <div className="flex justify-between text-black">
-                    <span className="text-[#9B9B9B]">Due Date</span>
-                    <span>{pendingDueDate}</span>
-                  </div>
-                  <div className="flex justify-between text-black mt-[6px]">
-                    <span className="text-[#9B9B9B]">Amount</span>
-                    <span>{pendingAmount ? `₹${pendingAmount}` : "₹0"}</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  disabled={paying}
-                  onClick={() => handlePayNow()}
-                  className="mt-[10px] w-full h-[38px] rounded-[19px] bg-red-600 text-white font-bold text-[14px] disabled:opacity-60"
-                  style={{ fontFamily: "Satoshi, sans-serif" }}
-                >
-                  {paying ? "Processing…" : "Pay Now"}
-                </button>
-                <div className="mt-[6px] text-[10px] text-[#9B9B9B] text-center" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  Pay now to avoid late fees*
-                </div>
+                <ProfilePendingPayments
+                  students={unpaidStudents}
+                  paying={paying}
+                  onPayNow={handlePayNow}
+                />
               </div>
               )}
 
@@ -795,7 +760,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   disabled={paying}
-                  onClick={() => handlePayNow(students[0]?.id)}
+                  onClick={() => students[0] && handlePayNow(students[0].id)}
                   className="mt-[10px] w-full h-[38px] rounded-[19px] bg-[#E8B600] text-white font-bold text-[14px] disabled:opacity-60"
                   style={{ fontFamily: "Satoshi, sans-serif" }}
                 >
@@ -1286,24 +1251,12 @@ export default function ProfilePage() {
             {hasUnpaidStudents && (
           <div className="mb-3">
             <div className="border border-red-400 rounded-xl p-3 mb-2">
-              <div className="text-xs text-red-600 font-semibold mb-1">Payment Pending</div>
-                <div className="flex justify-between text-xs mb-1 text-black">
-                  <span className="font-medium text-gray-500">Due Date</span>
-                  <span>{pendingDueDate}</span>
-                </div>
-                <div className="flex justify-between text-xs mb-2 text-black">
-                  <span className="font-medium text-gray-500">Amount</span>
-                  <span>{pendingAmount ? `₹${pendingAmount}` : "₹0"}</span>
-                </div>
-                <button
-                  type="button"
-                  disabled={paying}
-                  onClick={() => handlePayNow()}
-                  className="w-full bg-red-600 text-white font-semibold rounded-full py-1 disabled:opacity-60"
-                >
-                  {paying ? "Processing…" : "Pay Now"}
-                </button>
-              <div className="text-[10px] text-gray-500 text-center mt-1">Pay now to avoid late fees*</div>
+              <ProfilePendingPayments
+                students={unpaidStudents}
+                paying={paying}
+                onPayNow={handlePayNow}
+                compact
+              />
             </div>
           </div>
             )}
@@ -1323,7 +1276,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   disabled={paying}
-                  onClick={() => handlePayNow(students[0]?.id)}
+                  onClick={() => students[0] && handlePayNow(students[0].id)}
                   className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1 disabled:opacity-60"
                 >
                   {paying ? "Processing…" : "Pay Now"}

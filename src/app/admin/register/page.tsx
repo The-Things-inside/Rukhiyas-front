@@ -106,7 +106,7 @@ export default function AdminRegisterPage() {
               You can now log in with your credentials.
             </p>
             <button
-              onClick={() => router.push("/admin/login")}
+              onClick={() => router.push("/login")}
               className="w-full bg-[#f2c200] text-white font-semibold rounded-full py-3 text-lg shadow hover:bg-[#e6b800] transition flex items-center justify-center mb-1"
             >
               Go to Login
@@ -256,7 +256,7 @@ export default function AdminRegisterPage() {
               <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
                 Already have an account?&nbsp;
                 <button
-                  onClick={() => router.push("/admin/login")}
+                  onClick={() => router.push("/login")}
                   className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
                 >
                   Log in
