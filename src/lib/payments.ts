@@ -1,4 +1,4 @@
-import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { authFetch, parseJsonResponse } from "@/lib/auth-token";
 
 export type StudentPayment = {
   id: number;
@@ -17,17 +17,7 @@ export type StudentPayment = {
 export async function fetchStudentPayments(
   studentId: number,
 ): Promise<StudentPayment[]> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error("No access token found. Please sign in again.");
-  }
-
-  const res = await fetch(`/api/backend/payments/${studentId}`, {
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const res = await authFetch(`/api/backend/payments/${studentId}`);
 
   if (!res.ok) {
     const body = await parseJsonResponse<{ detail?: string }>(res).catch(

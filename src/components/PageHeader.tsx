@@ -4,8 +4,6 @@ import { useState } from "react";
 
 const TITLES: Record<string, string> = {
   "/app": "Dashboard",
-  "/app/track": "Track Bus",
-  "/app/notifications": "Notification",
   "/app/profile": "Profile",
 };
 

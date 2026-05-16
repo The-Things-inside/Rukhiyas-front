@@ -1,4 +1,4 @@
-import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { authFetch, parseJsonResponse } from "@/lib/auth-token";
 
 export type CreateOrderResponse = {
   order_id: string;
@@ -47,18 +47,13 @@ export function loadRazorpayScript(): Promise<boolean> {
 export async function createPaymentOrder(
   studentId: number,
 ): Promise<CreateOrderResponse> {
-  const token = getAccessToken();
-  if (!token) throw new Error("Please sign in again.");
-
   const body = new URLSearchParams();
   body.append("student_id", String(studentId));
 
-  const res = await fetch("/api/backend/create-order", {
+  const res = await authFetch("/api/backend/create-order", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: body.toString(),
   });
@@ -78,20 +73,15 @@ export async function createPaymentOrder(
 export async function verifyPayment(
   payload: VerifyPaymentPayload,
 ): Promise<void> {
-  const token = getAccessToken();
-  if (!token) throw new Error("Please sign in again.");
-
   const body = new URLSearchParams();
   body.append("razorpay_order_id", payload.razorpay_order_id);
   body.append("razorpay_payment_id", payload.razorpay_payment_id);
   body.append("razorpay_signature", payload.razorpay_signature);
 
-  const res = await fetch("/api/backend/verify-payment", {
+  const res = await authFetch("/api/backend/verify-payment", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: body.toString(),
   });

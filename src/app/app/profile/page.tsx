@@ -9,7 +9,13 @@ import { toast } from "react-toastify";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import SchoolDropdown from "@/components/SchoolDropdown";
 import dynamic from "next/dynamic";
-import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import {
+  authFetch,
+  getAccessToken,
+  isSessionExpiredError,
+  parseJsonResponse,
+  requireAccessToken,
+} from "@/lib/auth-token";
 import { earliestFeeExpiry, formatFeeExpiry } from "@/lib/utils";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 import PaymentHistorySheet from "@/components/PaymentHistorySheet";
@@ -108,13 +114,13 @@ export default function ProfilePage() {
   } | null>(null);
 
   const reloadStudents = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) return;
-    const studentsRes = await fetch("/api/backend/students/me", {
-      headers: { accept: "application/json", Authorization: `Bearer ${token}` },
-    });
-    if (studentsRes.ok) {
-      setStudents(await parseJsonResponse<Student[]>(studentsRes));
+    try {
+      const studentsRes = await authFetch("/api/backend/students/me");
+      if (studentsRes.ok) {
+        setStudents(await parseJsonResponse<Student[]>(studentsRes));
+      }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
     }
   }, []);
 
@@ -136,12 +142,9 @@ export default function ProfilePage() {
       setLoading(true);
       setError(null);
       try {
-        const token = getAccessToken();
-        if (!token) throw new Error("No access token found. Please sign in again.");
+        if (!requireAccessToken()) return;
 
-        const parentRes = await fetch("/api/backend/parent-details", {
-          headers: { accept: "application/json", Authorization: `Bearer ${token}` },
-        });
+        const parentRes = await authFetch("/api/backend/parent-details");
         if (!parentRes.ok) {
           toast.error("Failed to fetch parent details");
           throw new Error("Failed to fetch parent details");
@@ -149,9 +152,7 @@ export default function ProfilePage() {
         const parentJson = await parseJsonResponse<ParentDetails>(parentRes);
         setParent(parentJson);
 
-        const studentsRes = await fetch("/api/backend/students/me", {
-          headers: { accept: "application/json", Authorization: `Bearer ${token}` },
-        });
+        const studentsRes = await authFetch("/api/backend/students/me");
         if (!studentsRes.ok) {
           toast.error("Failed to fetch students");
           throw new Error("Failed to fetch students");
@@ -159,6 +160,7 @@ export default function ProfilePage() {
         const studentsJson = await parseJsonResponse<Student[]>(studentsRes);
         setStudents(studentsJson);
       } catch (e) {
+        if (isSessionExpiredError(e)) return;
         setError(e instanceof Error ? e.message : "Failed to load profile");
       } finally {
         setLoading(false);
@@ -425,9 +427,7 @@ export default function ProfilePage() {
             <nav className="mt-[26px] flex flex-col gap-[12px]">
               {[
                 { label: "Home", href: "/app", icon: "/assets/home.svg" },
-                { label: "Track Bus", href: "/app/track", icon: "/assets/trackbus.svg" },
                 { label: "Profile", href: "/app/profile", icon: "/assets/profile.svg", active: true },
-                { label: "Settings & History", href: "/app/profile", icon: "/assets/profile.svg" },
               ].map((x) => (
                 <button
                   key={x.label}

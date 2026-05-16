@@ -1,4 +1,4 @@
-import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { authFetch, parseJsonResponse } from "@/lib/auth-token";
 
 export type StudentDriver = {
   bus_id: number;
@@ -33,26 +33,22 @@ export async function fetchStudentDriver(
   let request = inflight.get(studentId);
   if (!request) {
     request = (async () => {
-      const token = getAccessToken();
-      if (!token) throw new Error("Not signed in");
+      try {
+        const res = await authFetch(`/api/backend/students/${studentId}/driver`);
 
-      const res = await fetch(`/api/backend/students/${studentId}/driver`, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        if (res.status === 404) {
+          return { driver: null, noBus: true };
+        }
 
-      if (res.status === 404) {
+        if (!res.ok) {
+          return { driver: null, noBus: true };
+        }
+
+        const driver = await parseJsonResponse<StudentDriver>(res);
+        return { driver, noBus: false };
+      } catch {
         return { driver: null, noBus: true };
       }
-
-      if (!res.ok) {
-        return { driver: null, noBus: true };
-      }
-
-      const driver = await parseJsonResponse<StudentDriver>(res);
-      return { driver, noBus: false };
     })().finally(() => {
       inflight.delete(studentId);
     });

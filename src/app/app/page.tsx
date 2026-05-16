@@ -10,7 +10,12 @@ import PaymentHistorySheet from "@/components/PaymentHistorySheet";
 import PageHeader from "@/components/PageHeader";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import { useRouter } from "next/navigation";
-import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import {
+  authFetch,
+  isSessionExpiredError,
+  parseJsonResponse,
+  requireAccessToken,
+} from "@/lib/auth-token";
 import { useStudentDriver } from "@/hooks/useStudentDriver";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 
@@ -50,21 +55,18 @@ export default function AppHome() {
   const studentMenuRef = useRef<HTMLDivElement | null>(null);
 
   const reloadStudents = useCallback(async () => {
-    const accessToken = getAccessToken();
-    if (!accessToken) return;
-    const response = await fetch("/api/backend/students/me", {
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    if (!response.ok) return;
-    const data = await parseJsonResponse<Student[]>(response);
-    setStudents(data);
-    setSelectedStudent((prev) => {
-      if (!prev) return data[0] ?? null;
-      return data.find((s) => s.id === prev.id) ?? data[0] ?? null;
-    });
+    try {
+      const response = await authFetch("/api/backend/students/me");
+      if (!response.ok) return;
+      const data = await parseJsonResponse<Student[]>(response);
+      setStudents(data);
+      setSelectedStudent((prev) => {
+        if (!prev) return data[0] ?? null;
+        return data.find((s) => s.id === prev.id) ?? data[0] ?? null;
+      });
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+    }
   }, []);
 
   const { paying, startPayment } = useStudentPayment(reloadStudents);
@@ -75,26 +77,15 @@ export default function AppHome() {
       setError(null);
       setNoStudents(false);
       try {
-        const accessToken = getAccessToken();
-        if (!accessToken) throw new Error("No access token found. Please sign in again.");
+        if (!requireAccessToken()) return;
 
         // Parent details (for desktop greeting/sidebar)
-        const parentRes = await fetch("/api/backend/parent-details", {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const parentRes = await authFetch("/api/backend/parent-details");
         if (parentRes.ok) {
           setParent(await parseJsonResponse<ParentDetails>(parentRes));
         }
 
-        const response = await fetch("/api/backend/students/me", {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await authFetch("/api/backend/students/me");
         if (response.status === 404) {
           const body = await parseJsonResponse<{ detail?: string }>(response).catch(
             () => null,
@@ -112,8 +103,9 @@ export default function AppHome() {
         if (data.length > 0) {
           setSelectedStudent(data[0]);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch students");
+      } catch (err: unknown) {
+        if (isSessionExpiredError(err)) return;
+        setError(err instanceof Error ? err.message : "Failed to fetch students");
       } finally {
         setLoading(false);
       }
@@ -276,9 +268,7 @@ export default function AppHome() {
             <nav className="mt-[26px] flex flex-col gap-[12px]">
               {[
                 { label: "Home", href: "/app", icon: "/assets/home.svg", active: true },
-                { label: "Track Bus", href: "/app/track", icon: "/assets/trackbus.svg" },
                 { label: "Profile", href: "/app/profile", icon: "/assets/profile.svg" },
-                { label: "Settings & History", href: "/app/profile", icon: "/assets/profile.svg" },
               ].map((x) => (
                 <button
                   key={x.label}
