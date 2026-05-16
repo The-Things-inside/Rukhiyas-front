@@ -47,7 +47,9 @@ export default function StudentProfilePage({
       activeTab="students"
       onTabChange={() => {}}
     >
-      <StudentDetails studentId={studentIdNumber} onBack={handleBack} />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <StudentDetails studentId={studentIdNumber} onBack={handleBack} />
+      </div>
     </AdminLayout>
   );
 } 

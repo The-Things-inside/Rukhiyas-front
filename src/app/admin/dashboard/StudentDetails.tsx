@@ -1,5 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import AdminStudentBilling from "@/components/admin/AdminStudentBilling";
+import AdminStudentProfileDesktop from "@/components/admin/AdminStudentProfileDesktop";
+import AdminPaymentHistorySheet from "@/components/admin/AdminPaymentHistorySheet";
+import {
+  fetchStudentFeeDetails,
+  type StudentFeeDetails,
+} from "@/lib/admin-student-fees";
 
 export default function StudentDetails({ studentId, onBack }: { studentId: number; onBack: () => void }) {
   const [data, setData] = useState<any>(null);
@@ -8,6 +15,29 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [approveLoading, setApproveLoading] = useState<number | null>(null);
   const [denyLoading, setDenyLoading] = useState<number | null>(null);
+  const [feeDetails, setFeeDetails] = useState<StudentFeeDetails | null>(null);
+  const [feeLoading, setFeeLoading] = useState(true);
+  const [feeError, setFeeError] = useState<string | null>(null);
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
+
+  const loadFeeDetails = useCallback(async () => {
+    setFeeLoading(true);
+    setFeeError(null);
+    try {
+      const fee = await fetchStudentFeeDetails(studentId);
+      setFeeDetails(fee);
+    } catch (err) {
+      setFeeError(
+        err instanceof Error ? err.message : "Failed to load fee details",
+      );
+    } finally {
+      setFeeLoading(false);
+    }
+  }, [studentId]);
+
+  useEffect(() => {
+    loadFeeDetails();
+  }, [loadFeeDetails]);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -101,13 +131,35 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     }
   }
 
-  if (loading) return <div className="flex-1 flex items-center justify-center text-[#19191F] text-lg">Loading...</div>;
-  if (error) return <div className="flex-1 flex items-center justify-center text-red-500 text-lg">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-[#FAFAFA] text-lg text-[#19191F]">
+        Loading…
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-[#FAFAFA] text-lg text-red-500">
+        {error}
+      </div>
+    );
+  }
   if (!data) return null;
 
   const student = data.student;
   const parent = data.parent;
   const requests = parent.requests || [];
+  const parentId: number | null =
+    parent?.id ?? parent?.parent_id ?? student?.parent_id ?? null;
+
+  const openPaymentHistory = () => {
+    if (!parentId) {
+      alert("Parent ID not available for this student.");
+      return;
+    }
+    setPaymentHistoryOpen(true);
+  };
 
   function renderRequestCard(req: any) {
     const date = req.created_at ? new Date(req.created_at).toLocaleDateString() : "";
@@ -205,8 +257,40 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     );
   }
 
+  const requestsPanel =
+    requests.length === 0 ? (
+      <p className="text-center text-[#9B9B9B]">No requests found.</p>
+    ) : (
+      <div className="flex flex-wrap gap-4">{requests.map(renderRequestCard)}</div>
+    );
+
   return (
-    <div className="min-h-screen bg-[#19191F] flex flex-col">
+    <>
+      <AdminPaymentHistorySheet
+        open={paymentHistoryOpen}
+        onClose={() => setPaymentHistoryOpen(false)}
+        parentId={parentId}
+        subtitle={student.full_name}
+      />
+
+      {/* Desktop — Figma 1-71422 */}
+      <div className="hidden h-full min-h-0 md:flex md:flex-1">
+        <AdminStudentProfileDesktop
+          student={student}
+          parent={parent}
+          requestsCount={requests.length}
+          studentId={studentId}
+          feeDetails={feeDetails}
+          feeLoading={feeLoading}
+          feeError={feeError}
+          onPaymentRecorded={loadFeeDetails}
+          requestsPanel={requestsPanel}
+          onPaymentHistoryClick={openPaymentHistory}
+        />
+      </div>
+
+      {/* Mobile */}
+      <div className="flex min-h-screen flex-col bg-[#19191F] md:hidden">
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 z-30">
         <div className="bg-[#19191F] pt-6 pb-2 px-4 flex items-center justify-between  shadow-lg" style={{ minHeight: 72 }}>
@@ -331,37 +415,13 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
 
         {/* Billing & Payment Card */}
         <div className="bg-white rounded-2xl shadow-xl p-6 w-[340px] relative mb-6">
-          <div className="text-[18px] font-bold text-[#19191F] font-satoshi mb-4">Billing & Payment</div>
-          {/* Pending Payment */}
-          <div className="border border-[#F44336] rounded-xl p-4 mb-4">
-            <div className="text-[#F44336] text-[15px] font-bold font-satoshi mb-2">Pending Payments</div>
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-[#9B9B9B] text-[13px] font-satoshi">Due Date</div>
-              <div className="text-[#9B9B9B] text-[13px] font-satoshi">Amount</div>
-            </div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[#F44336] text-[15px] font-satoshi font-bold">01/06/2025</div>
-              <div className="text-[#19191F] text-[17px] font-satoshi font-bold">₹1300</div>
-            </div>
-            <button className="w-full bg-[#F44336] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
-              Record Payment
-            </button>
-          </div>
-          {/* Upcoming Payment */}
-          <div className="border border-[#E8B600] rounded-xl p-4">
-            <div className="text-[#E8B600] text-[15px] font-bold font-satoshi mb-2">Upcoming Payment</div>
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-[#9B9B9B] text-[13px] font-satoshi">Due Date</div>
-              <div className="text-[#9B9B9B] text-[13px] font-satoshi">Amount</div>
-            </div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[#E8B600] text-[15px] font-satoshi font-bold">01/07/2025</div>
-              <div className="text-[#19191F] text-[17px] font-satoshi font-bold">₹1300</div>
-            </div>
-            <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
-              Record Payment
-            </button>
-          </div>
+          <AdminStudentBilling
+            studentId={studentId}
+            feeDetails={feeDetails}
+            feeLoading={feeLoading}
+            feeError={feeError}
+            onPaymentRecorded={loadFeeDetails}
+          />
         </div>
 
         {/* History/Actions Card */}
@@ -374,12 +434,17 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
             <span>Service History</span>
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 7v5l3 3" stroke="#19191F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="9" stroke="#19191F" strokeWidth="1.5"/></svg>
           </button>
-          <button className="flex items-center justify-between w-full bg-white rounded-xl shadow-sm px-6 py-4 text-[#19191F] font-satoshi text-[17px] font-medium border border-[#E0E0E0]">
+          <button
+            type="button"
+            onClick={openPaymentHistory}
+            className="flex items-center justify-between w-full bg-white rounded-xl shadow-sm px-6 py-4 text-[#19191F] font-satoshi text-[17px] font-medium border border-[#E0E0E0]"
+          >
             <span>Payment History</span>
             <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" stroke="#19191F" strokeWidth="1.5"/><path d="M9 7h6M9 11h6M9 15h2" stroke="#19191F" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
         </div>
       </div>
     </div>
+    </>
   );
 } 
