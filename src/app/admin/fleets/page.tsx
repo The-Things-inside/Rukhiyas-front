@@ -1,55 +1,62 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import AdminBusTrackPanel from "@/components/admin/AdminBusTrackPanel";
+import AdminCreateBusSheet from "@/components/admin/AdminCreateBusSheet";
+import AdminDeleteBusDialog from "@/components/admin/AdminDeleteBusDialog";
+import {
+  fetchAdminBuses,
+  fetchBusTodayHistory,
+  recordBusArrivedSchool,
+  recordBusDepartedSchool,
+  recordBusStart,
+  type AdminBus,
+  type BusTodayHistory,
+} from "@/lib/admin-buses";
 
-type Bus = {
-  reg_no: string;
-  model: string;
-  capacity: number;
-  driver_name: string;
-  driver_phonenumber: string | null;
-  route: string;
-  id: number;
-  driver_photo_url: string | null;
-  on_duty: boolean;
-  total_occupancy: number;
-};
+type Bus = AdminBus;
 
 function FleetList() {
   const [buses, setBuses] = useState<Bus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editBusId, setEditBusId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>({});
+  const [trackingBusId, setTrackingBusId] = useState<number | null>(null);
+  const [todayHistory, setTodayHistory] = useState<
+    Record<number, BusTodayHistory | null>
+  >({});
+  const [historyLoadingId, setHistoryLoadingId] = useState<number | null>(null);
+  const [historyErrors, setHistoryErrors] = useState<Record<number, string>>(
+    {},
+  );
   const [startLoading, setStartLoading] = useState<number | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string>("");
   const [arrivedLoading, setArrivedLoading] = useState<number | null>(null);
-  const [arrivedMsg, setArrivedMsg] = useState<string>("");
   const [departedLoading, setDepartedLoading] = useState<number | null>(null);
-  const [departedMsg, setDepartedMsg] = useState<string>("");
+  const [actionMsg, setActionMsg] = useState<Record<number, string>>({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Bus | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const loadBuses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAdminBuses();
+      setBuses(data);
+    } catch (err) {
+      setBuses([]);
+      setError(
+        err instanceof Error ? err.message : "Failed to load bus list",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchBuses = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) throw new Error("No access token found");
-        const res = await fetch("/api/backend/admin/buses", {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch buses");
-        const data = await res.json();
-        setBuses(data);
-      } catch (err) {
-        setBuses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBuses();
-  }, []);
+    loadBuses();
+  }, [loadBuses]);
 
   const handleEdit = (bus: Bus) => {
     setEditBusId(bus.id);
@@ -102,9 +109,12 @@ function FleetList() {
       });
       if (!res.ok) throw new Error("Failed to update bus");
       const updated = await res.json();
-      setBuses((prev: Bus[]) => prev.map((b: Bus) => (b.id === busId ? { ...b, ...updated.bus } : b)));
+      setBuses((prev: Bus[]) =>
+        prev.map((b: Bus) => (b.id === busId ? { ...b, ...updated.bus } : b)),
+      );
       setEditBusId(null);
       setEditForm({});
+      await loadBuses();
     } catch (err) {
       alert("Failed to update bus info. Please try again.");
     }
@@ -122,23 +132,58 @@ function FleetList() {
     }
   };
 
+  const loadTodayHistory = async (busId: number) => {
+    setHistoryLoadingId(busId);
+    setHistoryErrors((prev) => {
+      const next = { ...prev };
+      delete next[busId];
+      return next;
+    });
+    try {
+      const data = await fetchBusTodayHistory(busId);
+      setTodayHistory((prev) => ({ ...prev, [busId]: data }));
+    } catch (err) {
+      setHistoryErrors((prev) => ({
+        ...prev,
+        [busId]:
+          err instanceof Error ? err.message : "Failed to load trip history",
+      }));
+    } finally {
+      setHistoryLoadingId(null);
+    }
+  };
+
+  const handleTrackBus = async (busId: number) => {
+    if (trackingBusId === busId) {
+      setTrackingBusId(null);
+      return;
+    }
+    setTrackingBusId(busId);
+    if (todayHistory[busId] === undefined) {
+      await loadTodayHistory(busId);
+    }
+  };
+
+  const applyHistory = (busId: number, history: BusTodayHistory, message: string) => {
+    setTodayHistory((prev) => ({ ...prev, [busId]: history }));
+    setTrackingBusId(busId);
+    setActionMsg((prev) => ({ ...prev, [busId]: message }));
+  };
+
   const handleBusStart = async (busId: number) => {
     setStartLoading(busId);
-    setSuccessMsg("");
+    setActionMsg((prev) => {
+      const next = { ...prev };
+      delete next[busId];
+      return next;
+    });
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("No access token found");
-      const res = await fetch(`/api/backend/buses/${busId}/start`, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to record bus start");
-      setSuccessMsg("Bus started successfully!");
+      const history = await recordBusStart(busId);
+      applyHistory(busId, history, "Bus start recorded.");
     } catch (err) {
-      alert("Failed to record bus start. Please try again.");
+      alert(
+        err instanceof Error ? err.message : "Failed to record bus start.",
+      );
     } finally {
       setStartLoading(null);
     }
@@ -146,21 +191,20 @@ function FleetList() {
 
   const handleBusArrived = async (busId: number) => {
     setArrivedLoading(busId);
-    setArrivedMsg("");
+    setActionMsg((prev) => {
+      const next = { ...prev };
+      delete next[busId];
+      return next;
+    });
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("No access token found");
-      const res = await fetch(`/api/backend/buses/${busId}/arrived-school`, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to record bus arrival");
-      setArrivedMsg("Bus arrived at school successfully!");
+      const history = await recordBusArrivedSchool(busId);
+      applyHistory(busId, history, "Arrived at school recorded.");
     } catch (err) {
-      alert("Failed to record bus arrival. Please try again.");
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to record bus arrival.",
+      );
     } finally {
       setArrivedLoading(null);
     }
@@ -168,37 +212,90 @@ function FleetList() {
 
   const handleBusDeparted = async (busId: number) => {
     setDepartedLoading(busId);
-    setDepartedMsg("");
+    setActionMsg((prev) => {
+      const next = { ...prev };
+      delete next[busId];
+      return next;
+    });
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) throw new Error("No access token found");
-      const res = await fetch(`/api/backend/buses/${busId}/departed-school`, {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to record bus departure");
-      setDepartedMsg("Bus departed school successfully!");
+      const history = await recordBusDepartedSchool(busId);
+      applyHistory(busId, history, "Departed school recorded.");
     } catch (err) {
-      alert("Failed to record bus departure. Please try again.");
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to record bus departure.",
+      );
     } finally {
       setDepartedLoading(null);
     }
   };
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) {
+    return (
+      <div
+        className="py-10 text-center text-[#19191F]"
+        style={{ fontFamily: "Satoshi, sans-serif" }}
+      >
+        Loading…
+      </div>
+    );
+  }
+
+  const handleDeleted = () => {
+    if (deleteTarget?.id === trackingBusId) setTrackingBusId(null);
+    if (deleteTarget?.id === editBusId) {
+      setEditBusId(null);
+      setEditForm({});
+    }
+    loadBuses();
+  };
 
   return (
-    <div className="p-4 bg-white min-h-screen">
-      {buses.length === 0 ? (
-        <div className="text-center text-[#19191F] font-satoshi">No buses found.</div>
+    <div className="bg-[#FAFAFA] p-4 pb-8 md:p-6">
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="rounded-full bg-[#E8B600] px-6 py-2.5 text-[16px] font-bold text-white shadow transition active:scale-95"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          + Add Bus
+        </button>
+      </div>
+
+      <AdminCreateBusSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={loadBuses}
+      />
+
+      <AdminDeleteBusDialog
+        bus={deleteTarget}
+        open={!!deleteTarget}
+        deleting={deleting}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        onConfirm={handleDeleted}
+        onDeletingChange={setDeleting}
+      />
+
+      {error && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+          {error}
+        </p>
+      )}
+      {!error && buses.length === 0 ? (
+        <div
+          className="text-center text-[#19191F]"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
+        >
+          No buses found.
+        </div>
       ) : (
-        buses.map((bus: Bus, idx: number) => (
+        buses.map((bus: Bus) => (
         <div
           key={bus.id}
-            className={`bg-white rounded-2xl border border-[#E8B600] mb-6 p-4 shadow relative${idx === buses.length - 1 ? ' pb-16' : ''}`}
+            className="relative mb-6 rounded-2xl border border-[#E8B600] bg-white p-4 shadow"
           >
             {editBusId === bus.id ? (
               <>
@@ -316,9 +413,21 @@ function FleetList() {
               <>
                 {/* View Card */}
                 {/* Title and Status */}
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-2 flex items-center justify-between">
                   <span className="text-lg font-bold text-[#19191F] font-satoshi">Bus {bus.id}</span>
-                  <span className={`text-sm font-bold font-satoshi ${bus.on_duty ? "text-[#E8B600]" : "text-[#9B9B9B]"}`}>{bus.on_duty ? "On Duty" : "Off Duty"}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-bold font-satoshi ${bus.on_duty ? "text-[#E8B600]" : "text-[#9B9B9B]"}`}>
+                      {bus.on_duty ? "On Duty" : "Off Duty"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(bus)}
+                      className="rounded-full border border-red-300 px-3 py-1 text-[13px] font-bold text-red-600 transition hover:bg-red-50"
+                      style={{ fontFamily: "Satoshi, sans-serif" }}
+                    >
+                      Delete
+                    </button>
+                  </div>
           </div>
                 {/* Driver Image and Name */}
                 <div className="flex items-center gap-3 mb-1">
@@ -358,43 +467,69 @@ function FleetList() {
             </div>
           </div>
                 {/* Action Buttons */}
-          <div className="flex gap-3 mt-2">
-            <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition">Track Bus</button>
-                  <button onClick={() => handleEdit(bus)} className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition">Update Info</button>
-                </div>
-         {/* Bus Status Buttons */}
-         <div className="flex gap-2 mt-3">
-           <button
-             className="flex-1 bg-green-500 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
-             disabled={startLoading === bus.id}
-             onClick={() => handleBusStart(bus.id)}
-           >
-             🟢 {startLoading === bus.id ? "Starting..." : "Start"}
-           </button>
-           <button
-             className="flex-1 bg-blue-500 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
-             disabled={arrivedLoading === bus.id}
-             onClick={() => handleBusArrived(bus.id)}
-           >
-             🚌 {arrivedLoading === bus.id ? "Arriving..." : "Arrived"}
-           </button>
-           <button
-             className="flex-1 bg-gray-400 text-white font-bold rounded-full py-2 font-satoshi shadow active:scale-95 transition disabled:opacity-60"
-             disabled={departedLoading === bus.id}
-             onClick={() => handleBusDeparted(bus.id)}
-           >
-             🏁 {departedLoading === bus.id ? "Departing..." : "Departed"}
-           </button>
-         </div>
-         {successMsg && startLoading === null && (
-           <div className="text-green-600 text-center font-satoshi font-medium mt-2">{successMsg}</div>
-         )}
-         {arrivedMsg && arrivedLoading === null && (
-           <div className="text-blue-600 text-center font-satoshi font-medium mt-2">{arrivedMsg}</div>
-         )}
-         {departedMsg && departedLoading === null && (
-           <div className="text-gray-600 text-center font-satoshi font-medium mt-2">{departedMsg}</div>
-         )}
+          <div className="mt-2 flex gap-3">
+            <button
+              type="button"
+              onClick={() => handleTrackBus(bus.id)}
+              className={`flex-1 rounded-full py-2 font-satoshi text-base font-bold shadow transition active:scale-95 ${
+                trackingBusId === bus.id
+                  ? "border-2 border-[#E8B600] bg-[#FFFAEA] text-[#E8B600]"
+                  : "bg-[#E8B600] text-white"
+              }`}
+            >
+              {trackingBusId === bus.id ? "Hide trip" : "Track Bus"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleEdit(bus)}
+              className="flex-1 rounded-full border border-[#E8B600] bg-white py-2 font-satoshi text-base font-bold text-[#E8B600] shadow transition active:scale-95"
+            >
+              Update Info
+            </button>
+          </div>
+
+          {trackingBusId === bus.id && (
+            <AdminBusTrackPanel
+              history={todayHistory[bus.id] ?? null}
+              loading={historyLoadingId === bus.id}
+              error={historyErrors[bus.id]}
+            />
+          )}
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              className="flex-1 rounded-full bg-green-500 py-2 font-satoshi text-base font-bold text-white shadow transition active:scale-95 disabled:opacity-60"
+              disabled={startLoading === bus.id}
+              onClick={() => handleBusStart(bus.id)}
+            >
+              {startLoading === bus.id ? "Starting…" : "Start"}
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-full bg-blue-500 py-2 font-satoshi text-base font-bold text-white shadow transition active:scale-95 disabled:opacity-60"
+              disabled={arrivedLoading === bus.id}
+              onClick={() => handleBusArrived(bus.id)}
+            >
+              {arrivedLoading === bus.id ? "Arriving…" : "Arrived"}
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-full bg-gray-500 py-2 font-satoshi text-base font-bold text-white shadow transition active:scale-95 disabled:opacity-60"
+              disabled={departedLoading === bus.id}
+              onClick={() => handleBusDeparted(bus.id)}
+            >
+              {departedLoading === bus.id ? "Departing…" : "Departed"}
+            </button>
+          </div>
+          {actionMsg[bus.id] && (
+            <p
+              className="mt-2 text-center text-[14px] font-medium text-green-600"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              {actionMsg[bus.id]}
+            </p>
+          )}
               </>
             )}
           </div>

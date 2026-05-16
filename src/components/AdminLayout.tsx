@@ -36,7 +36,7 @@ export default function AdminLayout({
         activeTab={initialActiveTab}
         onTabChange={handleTabChange}
       />
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden pt-16">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-y-contain pt-16 [-webkit-overflow-scrolling:touch]">
         {children}
       </main>
     </div>

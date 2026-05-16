@@ -1,43 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import api from "@/lib/api";
+import AdminRequestCard from "@/components/admin/AdminRequestCard";
+import AdminDashboardTaskCard from "@/components/admin/AdminDashboardTaskCard";
+import AdminNewRegistrationCard from "@/components/admin/AdminNewRegistrationCard";
+import { fetchAdminBuses, type AdminBus } from "@/lib/admin-buses";
+import {
+  approveRequest,
+  fetchDashboardCounts,
+  fetchNewRegistrations,
+  fetchPendingRequests,
+  fetchUnassignedStudents,
+  rejectRequest,
+  type AdminRequest,
+  type AdminStudent,
+  type DashboardCounts,
+} from "@/lib/admin-dashboard";
 
-interface Student {
-  id: number;
-  parent_id: number;
-  school_id: number;
-  bus_id: number | null;
-  full_name: string;
-  class_name: string;
-  division: string;
-  student_address: string;
-  location_latitude: number;
-  location_longitude: number;
-  approximate_fees: number;
-  actual_fees: number | null;
-  profile_picture_url: string | null;
-  is_submitted: boolean;
-  is_paid: boolean;
-  created_at: string;
-}
+type Student = AdminStudent;
 
-interface Bus {
-  id: number;
-  route: string;
-  reg_no: string;
-  model: string;
-  capacity: number;
-  driver_name: string;
-  driver_phonenumber: string | null;
-  driver_photo_url: string | null;
-  on_duty: boolean;
-  total_occupancy: number;
-}
+type Bus = AdminBus;
 
-const dropdownItems = [
-  { key: "new", label: "New Registrations", count: 0 },
-  { key: "bus", label: "Bus Assignments", count: 0 },
-  { key: "parent", label: "Parent Requests", count: 0 },
+type CategoryKey = "new" | "bus" | "parent";
+
+const CATEGORY_META: { key: CategoryKey; label: string }[] = [
+  { key: "new", label: "New Registrations" },
+  { key: "bus", label: "Bus Assignments" },
+  { key: "parent", label: "Parent Requests" },
 ];
+
+const SECTION_TITLE: Record<CategoryKey, string> = {
+  new: "Student Details",
+  bus: "Bus Assignments",
+  parent: "Parent Requests",
+};
+
+const CONTENT_PANEL =
+  "rounded-[24px] border border-[#EAEAEA] bg-white px-4 py-6 shadow-[0_3px_6px_rgba(0,0,0,0.04),0_11px_11px_rgba(0,0,0,0.03)] md:px-6 md:py-6";
 
 function BusSelect({
   value,
@@ -115,11 +113,17 @@ function BusSelect({
 
 export default function HomeContent() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selected, setSelected] = useState(dropdownItems[0]);
+  const [selectedKey, setSelectedKey] = useState<CategoryKey>("new");
+  const [counts, setCounts] = useState<DashboardCounts>({
+    newRegistrations: 0,
+    busAssignments: 0,
+    parentRequests: 0,
+  });
+  const [countsLoading, setCountsLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [unassignedStudents, setUnassignedStudents] = useState<Student[]>([]);
   const [buses, setBuses] = useState<Bus[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busSelections, setBusSelections] = useState<string[]>([]);
   const [busDropdowns, setBusDropdowns] = useState<boolean[]>([]);
@@ -136,109 +140,112 @@ export default function HomeContent() {
     boolean[]
   >([]);
 
-  const [parentRequests, setParentRequests] = useState<any[]>([]);
+  const [parentRequests, setParentRequests] = useState<AdminRequest[]>([]);
+  const [approveLoading, setApproveLoading] = useState<number | null>(null);
+  const [denyLoading, setDenyLoading] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchBuses = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-          throw new Error("No access token found");
-        }
+  const categories = useMemo(
+    () =>
+      CATEGORY_META.map((c) => ({
+        ...c,
+        count:
+          c.key === "new"
+            ? counts.newRegistrations
+            : c.key === "bus"
+              ? counts.busAssignments
+              : counts.parentRequests,
+      })),
+    [counts],
+  );
 
-        const response = await api.get("/admin/buses", {
-          headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
-        });
-        setBuses(response.data as any);
-      } catch (err) {
-        console.error("Failed to fetch buses:", err);
-      }
-    };
-    fetchBuses();
+  const selectedCategory = categories.find((c) => c.key === selectedKey);
+
+  const loadCounts = useCallback(async () => {
+    setCountsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchDashboardCounts();
+      setCounts(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load dashboard counts",
+      );
+    } finally {
+      setCountsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    fetchAdminBuses()
+      .then(setBuses)
+      .catch((err) => console.error("Failed to fetch buses:", err));
+  }, []);
+
+  useEffect(() => {
+    loadCounts();
+  }, [loadCounts, refreshKey]);
+
+  useEffect(() => {
+    const fetchList = async () => {
+      setListLoading(true);
       setError(null);
-
-      let url: string;
-      const endpointKey = selected.key;
-
-      if (endpointKey === "new") {
-        url = "/admin/students/no-fees";
-      } else if (endpointKey === "bus") {
-        url = "/admin/students/unassigned";
-      } else if (endpointKey === "parent") {
-        const fetchParentRequests = async () => {
-          setLoading(true);
-          setError(null);
-          try {
-            const token = localStorage.getItem("access_token");
-            if (!token) throw new Error("No access token found");
-            const response = await api.get("/admin/requests/pending", {
-              headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
-            });
-            setParentRequests(response.data as any);
-          } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to fetch parent requests");
-          } finally {
-            setLoading(false);
-          }
-        };
-        fetchParentRequests();
-        return;
-      } else {
-        setStudents([]);
-        setUnassignedStudents([]);
-        setLoading(false);
-        return;
-      }
-
       try {
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-          throw new Error("No access token found");
-        }
-
-        const response = await api.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: "application/json",
-          },
-        });
-
-        const data = response.data;
-
-        if (endpointKey === "new") {
+        if (selectedKey === "new") {
+          const data = await fetchNewRegistrations();
           setStudents(data);
           setBusSelections(data.map(() => ""));
           setBusDropdowns(data.map(() => false));
-        } else if (endpointKey === "bus") {
+          setCounts((prev) => ({ ...prev, newRegistrations: data.length }));
+        } else if (selectedKey === "bus") {
+          const data = await fetchUnassignedStudents();
           setUnassignedStudents(data);
           setBusAssignmentSelections(data.map(() => ""));
           setBusAssignmentDropdowns(data.map(() => false));
-        } else if (endpointKey === "parent") {
+          setCounts((prev) => ({ ...prev, busAssignments: data.length }));
+        } else if (selectedKey === "parent") {
+          const data = await fetchPendingRequests();
           setParentRequests(data);
+          setCounts((prev) => ({ ...prev, parentRequests: data.length }));
         }
-        
-        setSelected(prev => ({...prev, count: data.length}));
-
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to fetch data"
+          err instanceof Error ? err.message : "Failed to fetch data",
         );
       } finally {
-        setLoading(false);
+        setListLoading(false);
       }
     };
 
-    fetchData();
-  }, [selected.key, refreshKey]);
+    fetchList();
+  }, [selectedKey, refreshKey]);
 
-  const handleSelect = (item: (typeof dropdownItems)[0]) => {
-    setSelected(item);
+  const handleSelect = (key: CategoryKey) => {
+    setSelectedKey(key);
     setDropdownOpen(false);
+  };
+
+  const handleApproveRequest = async (requestId: number) => {
+    setApproveLoading(requestId);
+    try {
+      await approveRequest(requestId);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to approve request");
+    } finally {
+      setApproveLoading(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number) => {
+    setDenyLoading(requestId);
+    try {
+      await rejectRequest(requestId);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to reject request");
+    } finally {
+      setDenyLoading(null);
+    }
   };
 
   const handleAssignBus = async (studentId: number, busSelection: string) => {
@@ -306,346 +313,296 @@ export default function HomeContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 min-h-0 flex items-center justify-center">
-        <div className="text-[#19191F] text-[18px] font-satoshi">
-          Loading...
-        </div>
-      </div>
-    );
-  }
+  const displayCount = (count: number) => (countsLoading ? "…" : count);
 
-  if (error) {
-    return (
-      <div className="flex-1 min-h-0 flex items-center justify-center">
-        <div className="text-red-500 text-[18px] font-satoshi">{error}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 min-h-0 flex flex-col gap-6 px-2 py-4 overflow-y-auto">
-      {/* Dynamic Dropdown Card */}
-      <div className="mb-2">
-        <button
-          className={`w-full bg-[#FFF8E1] border border-[#E8B600] rounded-t-xl px-4 py-3 flex items-center justify-between ${dropdownOpen ? "rounded-b-none" : "rounded-b-xl"}`}
-          onClick={() => setDropdownOpen((open) => !open)}
+  const renderListContent = () => {
+    if (listLoading) {
+      return (
+        <p
+          className="py-12 text-center text-[#5E5E5E]"
+          style={{ fontFamily: "Satoshi, sans-serif" }}
         >
-          <div className="text-[18px] font-medium font-spartan font-satoshi text-[#19191F] flex items-center gap-2">
-            {selected.label}
-            <span className="text-[#E8B600] font-bold text-[22px] font-satoshi">
-              {selected.count}
-            </span>
-          </div>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#19191F"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : "rotate-0"}`}
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        {dropdownOpen && (
-          <div className="bg-white border-x border-b border-[#E8B600] rounded-b-xl px-4 divide-y divide-[#F3F3F3]">
-            {dropdownItems
-              .filter((item) => item.key !== selected.key)
-              .map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between py-3 cursor-pointer hover:bg-[#FFF8E1]"
-                  onClick={() => handleSelect(item)}
-                >
-                  <span className="text-[18px] font-medium font-spartan font-satoshi text-[#19191F] flex items-center gap-2">
-                    {item.label}
-                  </span>
-                  <span className="text-[#E8B600] font-bold text-[22px] font-satoshi">
-                    {item.count}
-                  </span>
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
-      {/* Conditional Content */}
-      {selected.key === "bus"
-        ? unassignedStudents.map((student, idx) => (
+          Loading…
+        </p>
+      );
+    }
+
+    if (selectedKey === "new") {
+      return (
+        <div className="flex flex-wrap gap-4">
+          {students.map((student, idx) => (
+            <AdminNewRegistrationCard
+              key={student.id}
+              student={student}
+              editing={editingFeeIdx === idx}
+              feeInput={feeInput}
+              updating={updatingFee === student.id}
+              onFeeInputChange={setFeeInput}
+              onEditFee={() => {
+                setEditingFeeIdx(idx);
+                setFeeInput(student.approximate_fees.toString());
+              }}
+              onCancelEdit={() => setEditingFeeIdx(null)}
+              onConfirmFee={() => {
+                const feeAmount = parseFloat(feeInput);
+                if (isNaN(feeAmount) || feeAmount <= 0) {
+                  alert("Please enter a valid fee amount");
+                  return;
+                }
+                handleUpdateFee(student.id, feeAmount);
+              }}
+            />
+          ))}
+          {students.length === 0 && (
+            <p
+              className="w-full py-8 text-center text-[#5E5E5E]"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              No new registrations
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    if (selectedKey === "bus") {
+      return (
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
+          {unassignedStudents.map((student, idx) => (
             <div
               key={student.id}
-              className="border border-[#E8B600] rounded-xl px-4 py-3 mb-2 bg-white"
+              className="w-full rounded-[12px] border border-[#E8B600] bg-white p-4 md:max-w-[339px] md:flex-[1_1_calc(33.333%-11px)] md:min-w-[280px]"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+              <div className="mb-1 flex items-center justify-between">
+                <span
+                  className="text-[16px] text-[#5E5E5E]"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
                   Name
                 </span>
-                <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                  {new Date(student.created_at).toLocaleDateString()}
+                <span
+                  className="text-[16px] font-medium text-[#5E5E5E]"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {new Date(student.created_at).toLocaleDateString("en-GB")}
                 </span>
               </div>
-              <div className="text-[#19191F] text-[16px] font-bold mb-2 font-satoshi">
+              <p
+                className="mb-3 text-[16px] font-medium text-black"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
+              >
                 {student.full_name}
-              </div>
-              <div className="flex gap-8 mb-1">
+              </p>
+              <div className="mb-3 flex gap-8">
                 <div>
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                  <span
+                    className="text-[16px] text-[#5E5E5E]"
+                    style={{ fontFamily: "Satoshi, sans-serif" }}
+                  >
                     Class
                   </span>
-                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                  <p
+                    className="text-[16px] font-medium text-black"
+                    style={{ fontFamily: "Satoshi, sans-serif" }}
+                  >
                     {student.class_name} {student.division}
-                  </div>
+                  </p>
                 </div>
                 <div>
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                  <span
+                    className="text-[16px] text-[#5E5E5E]"
+                    style={{ fontFamily: "Satoshi, sans-serif" }}
+                  >
                     School
                   </span>
-                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
+                  <p
+                    className="text-[16px] font-medium text-black"
+                    style={{ fontFamily: "Satoshi, sans-serif" }}
+                  >
                     School ID: {student.school_id}
-                  </div>
-                </div>
-              </div>
-              <div className="mb-1">
-                <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                  Address
-                </span>
-                <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                  {student.student_address}
+                  </p>
                 </div>
               </div>
               <div className="mb-3">
-                <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
+                <span
+                  className="text-[16px] text-[#5E5E5E]"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  Address
+                </span>
+                <p
+                  className="text-[16px] font-medium text-black"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {student.student_address}
+                </p>
+              </div>
+              <div className="mb-3">
+                <span
+                  className="mb-1 block text-[16px] text-[#5E5E5E]"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
                   Assign Bus/Route
                 </span>
-                <div className="mt-1">
-                  <div
-                    className={
-                      busAssignmentDropdowns[idx]
-                        ? "bg-[#FFF8E1] border border-[#E8B600] rounded-xl shadow-lg transition-all"
-                        : ""
+                <div
+                  className={
+                    busAssignmentDropdowns[idx]
+                      ? "rounded-xl border border-[#E8B600] bg-[#FFF8E1] shadow-lg"
+                      : ""
+                  }
+                >
+                  <BusSelect
+                    value={busAssignmentSelections[idx]}
+                    onChange={(bus) => {
+                      setBusAssignmentSelections((prev) => {
+                        const copy = [...prev];
+                        copy[idx] = bus;
+                        return copy;
+                      });
+                    }}
+                    open={busAssignmentDropdowns[idx]}
+                    setOpen={(v) =>
+                      setBusAssignmentDropdowns((prev) =>
+                        prev.map((open, i) => (i === idx ? v : open)),
+                      )
                     }
-                  >
-                    <BusSelect
-                      value={busAssignmentSelections[idx]}
-                      onChange={(bus) => {
-                        setBusAssignmentSelections((prev) => {
-                          const copy = [...prev];
-                          copy[idx] = bus;
-                          return copy;
-                        });
-                      }}
-                      open={busAssignmentDropdowns[idx]}
-                      setOpen={(v) =>
-                        setBusAssignmentDropdowns((prev) =>
-                          prev.map((open, i) => (i === idx ? v : open))
-                        )
-                      }
-                      buses={buses}
-                    />
-                  </div>
+                    buses={buses}
+                  />
                 </div>
               </div>
               <button
-                className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[18px] font-satoshi mt-2 disabled:opacity-50"
+                type="button"
+                className="flex h-11 w-full items-center justify-center rounded-[22px] bg-[#E8B600] text-[18px] font-bold capitalize text-[#FAFAFA] disabled:opacity-50"
+                style={{ fontFamily: "Satoshi, sans-serif" }}
                 onClick={() =>
                   handleAssignBus(student.id, busAssignmentSelections[idx])
                 }
                 disabled={assigningBus === student.id}
               >
-                {assigningBus === student.id ? "Assigning..." : "Assign Bus"}
+                {assigningBus === student.id ? "Assigning…" : "Assign Bus"}
               </button>
             </div>
-          ))
-        : selected.key === "new"
-          ? students.map((student, idx) => (
-              <div
-                key={student.id}
-                className="border border-[#E8B600] rounded-xl px-4 py-3 mb-2 bg-white"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    Name
-                  </span>
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    {new Date(student.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="text-[#19191F] text-[16px] font-bold mb-2 font-satoshi">
-                  {student.full_name}
-                </div>
-                <div className="flex gap-8 mb-1">
-                  <div>
-                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                      Class
-                    </span>
-                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      {student.class_name} {student.division}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                      School
-                    </span>
-                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      School ID: {student.school_id}
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-1">
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    Address
-                  </span>
-                  <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                    {student.student_address}
-                  </div>
-                </div>
-                <div className="mb-2">
-                  <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                    Exact Fee
-                  </span>
-                  {editingFeeIdx === idx ? (
-                    <input
-                      className="w-full px-3 py-2 border border-[#E8B600] rounded-lg text-[15px] font-satoshi mt-1 text-[#19191F]"
-                      value={feeInput}
-                      onChange={(e) => setFeeInput(e.target.value)}
-                      autoFocus
-                    />
-                  ) : (
-                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      ₹{student.approximate_fees}/month
-                    </div>
-                  )}
-                </div>
-                {editingFeeIdx === idx ? (
-                  <div className="flex gap-4 mt-2">
-                    <button
-                      className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi"
-                      onClick={() => setEditingFeeIdx(null)}
-                      disabled={updatingFee === student.id}
+          ))}
+          {unassignedStudents.length === 0 && (
+            <p
+              className="w-full py-8 text-center text-[#5E5E5E]"
+              style={{ fontFamily: "Satoshi, sans-serif" }}
+            >
+              No bus assignments pending
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {parentRequests.map((req) => (
+          <AdminRequestCard
+            key={req.id}
+            request={req}
+            onApprove={handleApproveRequest}
+            onReject={handleRejectRequest}
+            approveLoading={approveLoading}
+            denyLoading={denyLoading}
+          />
+        ))}
+        {parentRequests.length === 0 && (
+          <p
+            className="col-span-full py-8 text-center text-[#5E5E5E]"
+            style={{ fontFamily: "Satoshi, sans-serif" }}
+          >
+            No parent requests
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full bg-[#FAFAFA]">
+      <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-4 px-4 py-6 md:gap-4 md:px-0 md:py-6">
+        {error && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+            {error}
+          </p>
+        )}
+
+        <div className="hidden gap-4 md:flex">
+          {categories.map((cat) => (
+            <AdminDashboardTaskCard
+              key={cat.key}
+              label={cat.label}
+              count={displayCount(cat.count)}
+              selected={selectedKey === cat.key}
+              onClick={() => handleSelect(cat.key)}
+            />
+          ))}
+        </div>
+
+        <div className="mb-2 md:hidden">
+          <button
+            type="button"
+            className={`flex w-full items-center justify-between border border-[#E8B600] bg-[#FFF8E1] px-4 py-3 ${dropdownOpen ? "rounded-t-xl rounded-b-none" : "rounded-xl"}`}
+            onClick={() => setDropdownOpen((open) => !open)}
+          >
+            <div
+              className="flex items-center gap-2 text-[18px] font-medium text-[#19191F]"
+              style={{ fontFamily: "Spartan, sans-serif" }}
+            >
+              {selectedCategory?.label}
+              <span className="text-[22px] font-bold text-[#E8B600]">
+                {displayCount(selectedCategory?.count ?? 0)}
+              </span>
+            </div>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#19191F"
+              strokeWidth="2"
+              className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {dropdownOpen && (
+            <div className="divide-y divide-[#F3F3F3] rounded-b-xl border border-t-0 border-[#E8B600] bg-white px-4">
+              {categories
+                .filter((item) => item.key !== selectedKey)
+                .map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className="flex w-full items-center justify-between py-3 text-left hover:bg-[#FFF8E1]"
+                    onClick={() => handleSelect(item.key)}
+                  >
+                    <span
+                      className="text-[18px] font-medium text-[#19191F]"
+                      style={{ fontFamily: "Spartan, sans-serif" }}
                     >
-                      Cancel
-                    </button>
-                    <button
-                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi disabled:opacity-50"
-                      onClick={() => {
-                        const feeAmount = parseFloat(feeInput);
-                        if (isNaN(feeAmount) || feeAmount <= 0) {
-                          alert("Please enter a valid fee amount");
-                          return;
-                        }
-                        handleUpdateFee(student.id, feeAmount);
-                      }}
-                      disabled={updatingFee === student.id}
-                    >
-                      {updatingFee === student.id ? "Updating..." : "Confirm Fee"}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-4 mt-2">
-                    <button
-                      className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi"
-                      onClick={() => {
-                        setEditingFeeIdx(idx);
-                        setFeeInput(student.approximate_fees.toString());
-                      }}
-                    >
-                      Edit Fee
-                    </button>
-                    <button className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi">
-                      Confirm Fee
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))
-          : selected.key === "parent"
-            ? parentRequests.filter(r => r.request_type === "temporary_address").map((req) => (
-                <div
-                  key={req.id}
-                  className="border border-[#E8B600] rounded-xl px-4 py-3 mb-4 bg-white max-w-sm mx-auto shadow-sm"
-                  style={{ boxShadow: '0 2px 8px 0 #E8B60022' }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[#E8B600] text-[15px] font-medium font-satoshi">
-                      Temp Address Change
+                      {item.label}
                     </span>
-                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                      {req.created_at ? new Date(req.created_at).toLocaleDateString() : ""}
+                    <span className="text-[22px] font-bold text-[#E8B600]">
+                      {displayCount(item.count)}
                     </span>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[#19191F] text-[16px] font-bold font-satoshi">
-                      Name
-                    </span>
-                    <span className="text-[#19191F] text-[16px] font-bold font-satoshi">
-                      ID No.
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[#19191F] text-[15px] font-satoshi">
-                      {req.student_name || "-"}
-                    </span>
-                    <span className="text-[#19191F] text-[15px] font-satoshi">
-                      {req.student_id}
-                    </span>
-                  </div>
-                  <div className="mb-1">
-                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                      School
-                    </span>
-                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      {req.school_name || "-"}
-                    </div>
-                  </div>
-                  <div className="mb-1">
-                    <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                      Address
-                    </span>
-                    <div className="text-[#19191F] text-[15px] font-bold font-satoshi">
-                      {req.current_data}
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-[#E8B600] bg-[#FAFAFA] p-3 mt-3 mb-3">
-                    <div className="mb-2">
-                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                        New Pick Up
-                      </span>
-                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
-                        {req.requested_data}
-                      </div>
-                    </div>
-                    <div className="mb-2">
-                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                        New Drop Off
-                      </span>
-                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
-                        Same as pick up address
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-[#9B9B9B] text-[15px] font-medium font-satoshi">
-                        Dates
-                      </span>
-                      <div className="bg-[#E0E0E0] rounded-lg px-3 py-2 text-[#19191F] text-[15px] font-satoshi mt-1">
-                        {Array.isArray(req.temp_dates) ? req.temp_dates.map((d: string) => new Date(d).toLocaleDateString()).join(", ") : "-"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 mt-2">
-                    <button className="flex-1 bg-[#E8B600] text-white font-bold rounded-full py-2 text-[16px] font-satoshi">
-                      Confirm
-                    </button>
-                    <button className="flex-1 border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-[16px] bg-white font-satoshi">
-                      Deny
-                    </button>
-                  </div>
-              </div>
-            ))
-          : null}
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+
+        <div className={CONTENT_PANEL}>
+          <h3
+            className="mb-4 text-[18px] font-semibold text-black"
+            style={{ fontFamily: "Spartan, sans-serif" }}
+          >
+            {SECTION_TITLE[selectedKey]}
+          </h3>
+          {renderListContent()}
+        </div>
+      </div>
     </div>
   );
 }
