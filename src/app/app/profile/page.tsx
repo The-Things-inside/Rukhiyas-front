@@ -21,6 +21,7 @@ import { useStudentPayment } from "@/hooks/useStudentPayment";
 import PaymentHistorySheet from "@/components/PaymentHistorySheet";
 import ServiceHistorySheet from "@/components/ServiceHistorySheet";
 import ProfilePendingPayments from "@/components/profile/ProfilePendingPayments";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -379,11 +380,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center text-[#19191F]">
-        Loading...
-      </div>
-    );
+    return <FullPageLoader />;
   }
 
   if (error) {

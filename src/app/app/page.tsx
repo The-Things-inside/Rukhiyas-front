@@ -19,6 +19,7 @@ import {
 import { useStudentDriver } from "@/hooks/useStudentDriver";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 import type { ParentStudent } from "@/types/parent-student";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 type ParentDetails = {
   id: number;
@@ -156,11 +157,7 @@ export default function AppHome() {
   }, [desktopStudentMenuOpen]);
 
   if (loading) {
-    return (
-      <AppLayout header={null}>
-        <div className="p-6 text-center text-[#19191F]">Loading...</div>
-      </AppLayout>
-    );
+    return <FullPageLoader />;
   }
 
   if (noStudents) {

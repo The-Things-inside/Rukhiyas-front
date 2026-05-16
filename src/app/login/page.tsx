@@ -1,7 +1,8 @@
 "use client";
+
 import LoginHeader from "../../components/LoginHeader";
 import LoginForm from "../../components/LoginForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { parseJsonResponse } from "@/lib/auth-token";
@@ -19,16 +20,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // null = not yet measured (avoids mounting mobile form on desktop before hydration).
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const update = () => setIsDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
 
   const handleLogin = async (data: {
     emailOrMobile: string;
@@ -101,30 +92,19 @@ export default function LoginPage() {
     }
   };
 
-  if (isDesktop === null) {
-    return (
-      <div className="min-h-screen bg-[#19191F] md:bg-white flex items-center justify-center">
-        <p className="text-sm text-gray-500">Loading…</p>
-      </div>
-    );
-  }
+  const loginFormProps = {
+    onSubmit: handleLogin,
+    loading,
+    error,
+    showSocialLogin: true as const,
+    defaultEmail: "",
+    defaultPassword: "",
+  };
 
-  const loginForm = (
-    <LoginForm
-      onSubmit={handleLogin}
-      loading={loading}
-      error={error}
-      showSocialLogin
-      headerText={isDesktop ? "" : undefined}
-      variant={isDesktop ? "desktop" : "mobile"}
-      defaultEmail=""
-      defaultPassword=""
-    />
-  );
-
-  if (isDesktop) {
-    return (
-      <div className="min-h-screen bg-[#fff] flex flex-col items-center justify-center">
+  return (
+    <>
+      {/* Desktop */}
+      <div className="hidden md:flex min-h-screen bg-white flex-col items-center justify-center">
         <div className="flex w-[1100px] h-[700px] rounded-[32px] overflow-hidden shadow-2xl relative">
           <div
             className="relative flex-1 bg-cover bg-center flex flex-col justify-between p-8"
@@ -177,21 +157,20 @@ export default function LoginPage() {
                   Register
                 </span>
               </div>
-              {loginForm}
+              <LoginForm {...loginFormProps} headerText="" variant="desktop" />
             </div>
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-[#19191F] flex flex-col items-center justify-center">
-      <div className="w-full max-w-md mx-auto">
-        <LoginHeader onBack={() => router.back()} />
-        <div className="mt-2" />
-        {loginForm}
+      {/* Mobile */}
+      <div className="md:hidden min-h-screen bg-[#19191F] flex flex-col items-center justify-center">
+        <div className="w-full max-w-md mx-auto">
+          <LoginHeader onBack={() => router.back()} />
+          <div className="mt-2" />
+          <LoginForm {...loginFormProps} variant="mobile" />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
