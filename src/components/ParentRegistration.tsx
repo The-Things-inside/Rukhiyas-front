@@ -6,8 +6,9 @@ import RegistrationStepper from "./RegistrationStepper";
 import RegistrationForm from "./RegistrationForm";
 import StudentDetailsForm from "./StudentDetailsForm";
 import BottomSheetFooter from "./BottomSheetFooter";
-import ReviewAndPay, { StudentCard } from "./ReviewAndPay";
+import type { StudentCard } from "./ReviewAndPay";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ParentRegistrationProps {
   onBack?: () => void;
@@ -16,13 +17,20 @@ interface ParentRegistrationProps {
 export default function ParentRegistration({
   onBack,
 }: ParentRegistrationProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"online" | "call">("online");
   const [currentStep, setCurrentStep] = useState(1);
   const [students, setStudents] = useState<StudentCard[]>([]);
 
-  const handleContinue = (newStudents: StudentCard[]) => {
+  const handleStudentsRegistered = (newStudents: StudentCard[]) => {
     setStudents(newStudents);
-    setCurrentStep(3);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Registration session expired. Please sign in.");
+      router.push("/login");
+      return;
+    }
+    router.push("/app");
   };
 
   return (
@@ -90,28 +98,6 @@ export default function ParentRegistration({
                       <span className="w-2 h-2 bg-white rounded-full"></span>
                     )}
                   </div>
-                  {/* Step 3 */}
-                  <div
-                    className={`w-6 h-6 rounded-full ${currentStep >= 3 ? "bg-[#E8B600] border-2 border-[#E8B600]" : "bg-white border-2 border-gray-200"} flex items-center justify-center`}
-                  >
-                    {currentStep > 3 ? (
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    ) : (
-                      <span className="w-2 h-2 bg-white rounded-full"></span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -119,17 +105,12 @@ export default function ParentRegistration({
           {activeTab === "online" ? (
             currentStep === 1 ? (
               <RegistrationForm onContinue={() => setCurrentStep(2)} />
-            ) : currentStep === 2 ? (
+            ) : (
               <StudentDetailsForm
-                onContinue={handleContinue}
+                onContinue={handleStudentsRegistered}
                 students={students}
                 setStudents={setStudents}
                 parentId={parseInt(localStorage.getItem("parent_id") || "0")}
-              />
-            ) : (
-              <ReviewAndPay
-                students={students}
-                onStudentsChange={setStudents}
               />
             )
           ) : (

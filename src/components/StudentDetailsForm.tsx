@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import SchoolDropdown from "./SchoolDropdown";
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import api from "@/lib/api";
 
 interface FormValues {
   studentName: string;
@@ -123,6 +122,12 @@ export default function StudentDetailsForm({
     }
     setIsSubmitting(true);
     try {
+      const accessToken = localStorage.getItem("access_token");
+      if (!accessToken) {
+        alert("Session expired. Please complete parent registration again.");
+        return;
+      }
+
       for (const student of allStudents) {
         const studentData = {
           parent_id: parentId,
@@ -134,10 +139,18 @@ export default function StudentDetailsForm({
           location_latitude: student.location?.lat || 0,
           location_longitude: student.location?.lng || 0,
         };
-        console.log("Registering student:", studentData);
-        await api.post("/register-student", studentData, {
-          headers: { "Content-Type": "application/json", accept: "application/json" },
+        const response = await fetch("/api/backend/register-student", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(studentData),
         });
+        if (!response.ok) {
+          throw new Error("Failed to register student");
+        }
       }
       onContinue(allStudents);
     } catch {

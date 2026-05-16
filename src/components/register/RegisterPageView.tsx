@@ -4,18 +4,19 @@ import { useState } from "react";
 import RegistrationHeader from "../RegistrationHeader";
 import RegistrationForm from "../RegistrationForm";
 import StudentDetailsForm from "../StudentDetailsForm";
-import ReviewAndPay, { StudentCard } from "../ReviewAndPay";
+import type { StudentCard } from "../ReviewAndPay";
 import { DesktopSiteFooter } from "../SiteFooter";
+import { useRouter } from "next/navigation";
 
-function DesktopProgress({ step }: { step: 1 | 2 | 3 }) {
+function DesktopProgress({ step }: { step: 1 | 2 }) {
   return (
     <div className="w-full flex items-center justify-center py-[8px]">
       <div className="relative w-full max-w-[357px] h-[24px]">
         <div className="absolute left-[12px] right-[12px] top-1/2 -translate-y-1/2 h-[2px] bg-[#D1D5DB]" />
-        {[1, 2, 3].map((s, idx) => {
+        {[1, 2].map((s, idx) => {
           const active = step === s;
           const done = step > s;
-          const left = idx === 0 ? 0 : idx === 1 ? "50%" : "100%";
+          const left = idx === 0 ? 0 : "100%";
           return (
             <div
               key={s}
@@ -23,11 +24,7 @@ function DesktopProgress({ step }: { step: 1 | 2 | 3 }) {
               style={{
                 left,
                 transform:
-                  idx === 0
-                    ? "translateY(-50%)"
-                    : idx === 1
-                      ? "translate(-50%, -50%)"
-                      : "translate(-100%, -50%)",
+                  idx === 0 ? "translateY(-50%)" : "translate(-100%, -50%)",
               }}
             >
               <div
@@ -117,13 +114,20 @@ function DesktopTabs({
 }
 
 export default function RegisterPageView({ onBack }: { onBack?: () => void }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"online" | "call">("online");
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [students, setStudents] = useState<StudentCard[]>([]);
 
-  const handleContinue = (newStudents: StudentCard[]) => {
+  const handleStudentsRegistered = (newStudents: StudentCard[]) => {
     setStudents(newStudents);
-    setCurrentStep(3);
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Registration session expired. Please sign in.");
+      router.push("/login");
+      return;
+    }
+    router.push("/app");
   };
 
   return (
@@ -146,15 +150,13 @@ export default function RegisterPageView({ onBack }: { onBack?: () => void }) {
                       variant="desktop"
                       onContinue={() => setCurrentStep(2)}
                     />
-                  ) : currentStep === 2 ? (
+                  ) : (
                     <StudentDetailsForm
-                      onContinue={handleContinue}
+                      onContinue={handleStudentsRegistered}
                       students={students}
                       setStudents={setStudents}
                       parentId={parseInt(localStorage.getItem("parent_id") || "0")}
                     />
-                  ) : (
-                    <ReviewAndPay students={students} onStudentsChange={setStudents} />
                   )}
                 </>
               ) : (
