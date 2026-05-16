@@ -145,17 +145,11 @@ export async function createBus(input: CreateBusInput): Promise<AdminBus> {
     },
     body: formData,
   });
+  if (res.status === 401) {
+    throw new Error("Session expired. Please log in again as admin.");
+  }
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();
-}
-
-/** DELETE /buses/bus/{bus_id} */
-export async function deleteBus(busId: number): Promise<void> {
-  const res = await fetch(`/api/backend/buses/bus/${busId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error(await parseError(res));
 }
 
 export function formatBusEventTime(iso: string | null): string {

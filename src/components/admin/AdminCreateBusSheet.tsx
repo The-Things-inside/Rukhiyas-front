@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBus, type CreateBusInput } from "@/lib/admin-buses";
 import { AdminFormField, adminInputClass } from "@/components/admin/AdminFormField";
 
@@ -26,6 +26,15 @@ export default function AdminCreateBusSheet({
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -91,12 +100,12 @@ export default function AdminCreateBusSheet({
         onClick={handleClose}
       />
       <div
-        className="relative flex max-h-[92vh] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[24px] bg-white md:rounded-[24px]"
+        className="relative flex h-[min(92dvh,100%)] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[24px] bg-white md:h-auto md:max-h-[min(90vh,720px)] md:rounded-[24px]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-bus-title"
       >
-        <div className="border-b border-[#EAEAEA] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#EAEAEA] px-5 py-4">
           <h2
             id="create-bus-title"
             className="text-[20px] font-semibold text-black"
@@ -104,83 +113,94 @@ export default function AdminCreateBusSheet({
           >
             Add New Bus
           </h2>
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={submitting}
+            className="flex h-9 w-9 items-center justify-center text-[24px] leading-none text-black disabled:opacity-50"
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-1 flex-col overflow-y-auto px-6 py-4"
+          className="flex min-h-0 flex-1 flex-col"
         >
-          {error && (
-            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-red-600">
-              {error}
-            </p>
-          )}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4 [-webkit-overflow-scrolling:touch]">
+            {error && (
+              <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-red-600">
+                {error}
+              </p>
+            )}
 
-          <div className="flex flex-col gap-4">
-            <AdminFormField label="Registration number *">
-              <input
-                name="reg_no"
-                className={adminInputClass}
-                value={form.reg_no}
-                onChange={handleChange}
-                required
-              />
-            </AdminFormField>
-            <AdminFormField label="Model *">
-              <input
-                name="model"
-                className={adminInputClass}
-                value={form.model}
-                onChange={handleChange}
-                required
-              />
-            </AdminFormField>
-            <AdminFormField label="Capacity *">
-              <input
-                name="capacity"
-                type="number"
-                min={1}
-                className={adminInputClass}
-                value={form.capacity}
-                onChange={handleChange}
-                required
-              />
-            </AdminFormField>
-            <AdminFormField label="Driver name">
-              <input
-                name="driver_name"
-                className={adminInputClass}
-                value={form.driver_name}
-                onChange={handleChange}
-              />
-            </AdminFormField>
-            <AdminFormField label="Driver phone">
-              <input
-                name="driver_phonenumber"
-                className={adminInputClass}
-                value={form.driver_phonenumber}
-                onChange={handleChange}
-              />
-            </AdminFormField>
-            <AdminFormField label="Route">
-              <input
-                name="route"
-                className={adminInputClass}
-                value={form.route}
-                onChange={handleChange}
-              />
-            </AdminFormField>
-            <AdminFormField label="Driver photo">
-              <input
-                type="file"
-                accept="image/*"
-                className={adminInputClass}
-                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
-              />
-            </AdminFormField>
+            <div className="flex flex-col gap-4 pb-2">
+              <AdminFormField label="Registration number *">
+                <input
+                  name="reg_no"
+                  className={adminInputClass}
+                  value={form.reg_no}
+                  onChange={handleChange}
+                  required
+                />
+              </AdminFormField>
+              <AdminFormField label="Model *">
+                <input
+                  name="model"
+                  className={adminInputClass}
+                  value={form.model}
+                  onChange={handleChange}
+                  required
+                />
+              </AdminFormField>
+              <AdminFormField label="Capacity *">
+                <input
+                  name="capacity"
+                  type="number"
+                  min={1}
+                  className={adminInputClass}
+                  value={form.capacity}
+                  onChange={handleChange}
+                  required
+                />
+              </AdminFormField>
+              <AdminFormField label="Driver name">
+                <input
+                  name="driver_name"
+                  className={adminInputClass}
+                  value={form.driver_name}
+                  onChange={handleChange}
+                />
+              </AdminFormField>
+              <AdminFormField label="Driver phone">
+                <input
+                  name="driver_phonenumber"
+                  className={adminInputClass}
+                  value={form.driver_phonenumber}
+                  onChange={handleChange}
+                />
+              </AdminFormField>
+              <AdminFormField label="Route">
+                <input
+                  name="route"
+                  className={adminInputClass}
+                  value={form.route}
+                  onChange={handleChange}
+                />
+              </AdminFormField>
+              <AdminFormField label="Driver photo">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={adminInputClass}
+                  onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+                />
+              </AdminFormField>
+            </div>
           </div>
 
-          <div className="mt-6 flex gap-3 pb-4">
+          <div className="flex shrink-0 gap-3 border-t border-[#EAEAEA] bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={handleClose}

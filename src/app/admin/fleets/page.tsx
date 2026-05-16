@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import AdminBusTrackPanel from "@/components/admin/AdminBusTrackPanel";
 import AdminCreateBusSheet from "@/components/admin/AdminCreateBusSheet";
-import AdminDeleteBusDialog from "@/components/admin/AdminDeleteBusDialog";
 import {
   fetchAdminBuses,
   fetchBusTodayHistory,
@@ -35,8 +34,6 @@ function FleetList() {
   const [departedLoading, setDepartedLoading] = useState<number | null>(null);
   const [actionMsg, setActionMsg] = useState<Record<number, string>>({});
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Bus | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const loadBuses = useCallback(async () => {
     setLoading(true);
@@ -242,17 +239,8 @@ function FleetList() {
     );
   }
 
-  const handleDeleted = () => {
-    if (deleteTarget?.id === trackingBusId) setTrackingBusId(null);
-    if (deleteTarget?.id === editBusId) {
-      setEditBusId(null);
-      setEditForm({});
-    }
-    loadBuses();
-  };
-
   return (
-    <div className="bg-[#FAFAFA] p-4 pb-8 md:p-6">
+    <div className="bg-[#FAFAFA] p-4 pb-[max(7rem,env(safe-area-inset-bottom,1.5rem))] md:pb-8 md:p-6">
       <div className="mb-4 flex justify-end">
         <button
           type="button"
@@ -268,15 +256,6 @@ function FleetList() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={loadBuses}
-      />
-
-      <AdminDeleteBusDialog
-        bus={deleteTarget}
-        open={!!deleteTarget}
-        deleting={deleting}
-        onClose={() => !deleting && setDeleteTarget(null)}
-        onConfirm={handleDeleted}
-        onDeletingChange={setDeleting}
       />
 
       {error && (
@@ -415,19 +394,9 @@ function FleetList() {
                 {/* Title and Status */}
           <div className="mb-2 flex items-center justify-between">
                   <span className="text-lg font-bold text-[#19191F] font-satoshi">Bus {bus.id}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold font-satoshi ${bus.on_duty ? "text-[#E8B600]" : "text-[#9B9B9B]"}`}>
-                      {bus.on_duty ? "On Duty" : "Off Duty"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(bus)}
-                      className="rounded-full border border-red-300 px-3 py-1 text-[13px] font-bold text-red-600 transition hover:bg-red-50"
-                      style={{ fontFamily: "Satoshi, sans-serif" }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <span className={`text-sm font-bold font-satoshi ${bus.on_duty ? "text-[#E8B600]" : "text-[#9B9B9B]"}`}>
+                    {bus.on_duty ? "On Duty" : "Off Duty"}
+                  </span>
           </div>
                 {/* Driver Image and Name */}
                 <div className="flex items-center gap-3 mb-1">
