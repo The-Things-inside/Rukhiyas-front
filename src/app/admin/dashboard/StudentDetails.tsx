@@ -3,6 +3,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import AdminStudentBilling from "@/components/admin/AdminStudentBilling";
 import AdminStudentProfileDesktop from "@/components/admin/AdminStudentProfileDesktop";
 import AdminPaymentHistorySheet from "@/components/admin/AdminPaymentHistorySheet";
+import AdminEditStudentSheet from "@/components/admin/AdminEditStudentSheet";
+import AdminEditParentSheet from "@/components/admin/AdminEditParentSheet";
 import {
   fetchStudentFeeDetails,
   type StudentFeeDetails,
@@ -19,6 +21,8 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
   const [feeLoading, setFeeLoading] = useState(true);
   const [feeError, setFeeError] = useState<string | null>(null);
   const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
+  const [editStudentOpen, setEditStudentOpen] = useState(false);
+  const [editParentOpen, setEditParentOpen] = useState(false);
 
   const loadFeeDetails = useCallback(async () => {
     setFeeLoading(true);
@@ -39,30 +43,35 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
     loadFeeDetails();
   }, [loadFeeDetails]);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
+  const loadDetails = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
       setLoading(true);
       setError(null);
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) throw new Error("No access token found");
-        const res = await fetch(`/api/backend/admin/students/${studentId}/details`, {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error("Failed to fetch student details");
-        const json = await res.json();
-        setData(json);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch student details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetails();
+    }
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("No access token found");
+      const res = await fetch(`/api/backend/admin/students/${studentId}/details`, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch student details");
+      const json = await res.json();
+      setData(json);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch student details",
+      );
+    } finally {
+      if (!opts?.silent) setLoading(false);
+    }
   }, [studentId]);
+
+  useEffect(() => {
+    loadDetails();
+  }, [loadDetails]);
 
   async function handleApproveRequest(requestId: number) {
     setApproveLoading(requestId);
@@ -159,6 +168,14 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       return;
     }
     setPaymentHistoryOpen(true);
+  };
+
+  const openEditParent = () => {
+    if (!parentId) {
+      alert("Parent ID not available for this student.");
+      return;
+    }
+    setEditParentOpen(true);
   };
 
   function renderRequestCard(req: any) {
@@ -273,6 +290,22 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
         subtitle={student.full_name}
       />
 
+      <AdminEditStudentSheet
+        open={editStudentOpen}
+        onClose={() => setEditStudentOpen(false)}
+        student={student}
+        onSuccess={() => loadDetails({ silent: true })}
+      />
+
+      {parentId ? (
+        <AdminEditParentSheet
+          open={editParentOpen}
+          onClose={() => setEditParentOpen(false)}
+          parent={{ ...parent, id: parentId }}
+          onSuccess={() => loadDetails({ silent: true })}
+        />
+      ) : null}
+
       {/* Desktop — Figma 1-71422 */}
       <div className="hidden h-full min-h-0 md:flex md:flex-1">
         <AdminStudentProfileDesktop
@@ -286,6 +319,8 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
           onPaymentRecorded={loadFeeDetails}
           requestsPanel={requestsPanel}
           onPaymentHistoryClick={openPaymentHistory}
+          onEditStudent={() => setEditStudentOpen(true)}
+          onEditParent={openEditParent}
         />
       </div>
 
@@ -370,7 +405,11 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
             <div className="text-[#19191F] text-[15px] font-satoshi">{parent.mobile_no}</div>
           </div>
           {/* Edit Button */}
-          <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
+          <button
+            type="button"
+            onClick={() => setEditStudentOpen(true)}
+            className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition"
+          >
             Edit
           </button>
         </div>
@@ -408,7 +447,11 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
             <div className="text-[#19191F] text-[15px] font-satoshi">{parent.address || "-"}</div>
           </div>
           {/* Edit Button */}
-          <button className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition">
+          <button
+            type="button"
+            onClick={openEditParent}
+            className="w-full bg-[#E8B600] text-white font-bold rounded-full py-3 text-[17px] font-satoshi shadow-md active:scale-95 transition"
+          >
             Edit
           </button>
         </div>

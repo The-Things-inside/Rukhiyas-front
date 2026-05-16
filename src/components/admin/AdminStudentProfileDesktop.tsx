@@ -70,6 +70,8 @@ type AdminStudentProfileDesktopProps = {
   onPaymentRecorded: () => void;
   requestsPanel?: React.ReactNode;
   onPaymentHistoryClick?: () => void;
+  onEditStudent?: () => void;
+  onEditParent?: () => void;
 };
 
 export default function AdminStudentProfileDesktop({
@@ -83,6 +85,8 @@ export default function AdminStudentProfileDesktop({
   onPaymentRecorded,
   requestsPanel,
   onPaymentHistoryClick,
+  onEditStudent,
+  onEditParent,
 }: AdminStudentProfileDesktopProps) {
   const [requestsOpen, setRequestsOpen] = useState(false);
 
@@ -143,6 +147,7 @@ export default function AdminStudentProfileDesktop({
 
             <button
               type="button"
+              onClick={onEditStudent}
               className="h-11 w-full rounded-[22px] bg-[#E8B600] text-[18px] font-bold capitalize text-[#FAFAFA]"
               style={{ fontFamily: "Satoshi, sans-serif" }}
             >
@@ -193,6 +198,7 @@ export default function AdminStudentProfileDesktop({
               </a>
               <button
                 type="button"
+                onClick={onEditParent}
                 className="flex h-11 flex-1 items-center justify-center rounded-[22px] border border-[#E8B600] text-[18px] font-bold capitalize text-[#E8B600]"
                 style={{ fontFamily: "Satoshi, sans-serif" }}
               >
