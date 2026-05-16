@@ -1,26 +1,17 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { ParentStudent } from "@/types/parent-student";
 
 const TITLES: Record<string, string> = {
   "/app": "Dashboard",
   "/app/profile": "Profile",
 };
 
-interface Student {
-  id: number;
-  full_name: string;
-  profile_picture_url: string | null;
-  bus_id: number | null;
-  student_address: string;
-  temp_address: string | null;
-  temp_dates?: string[];
-}
-
 interface PageHeaderProps {
-  students: Student[];
-  selectedStudent: Student | null;
-  setSelectedStudent: React.Dispatch<React.SetStateAction<Student | null>>;
+  students: ParentStudent[];
+  selectedStudent: ParentStudent | null;
+  setSelectedStudent: React.Dispatch<React.SetStateAction<ParentStudent | null>>;
 }
 
 export default function PageHeader({ students, selectedStudent, setSelectedStudent }: PageHeaderProps) {

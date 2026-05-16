@@ -80,6 +80,7 @@ export default function AdminEditStudentSheet({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!student) return;
     const parsedSchoolId = Number(schoolId);
     if (!fullName.trim()) {
       toast.error("Student name is required");

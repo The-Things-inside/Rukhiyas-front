@@ -18,22 +18,7 @@ import {
 } from "@/lib/auth-token";
 import { useStudentDriver } from "@/hooks/useStudentDriver";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
-
-interface Student {
-  id: number;
-  full_name: string;
-  profile_picture_url: string | null;
-  bus_id: number | null;
-  student_address: string;
-  temp_address: string | null;
-  temp_pick_address?: string | null;
-  temp_drop_address?: string | null;
-  temp_dates?: string[];
-  approximate_fees: number | null;
-  actual_fees: number | null;
-  fee_expiry: string | null;
-  is_paid: boolean;
-}
+import type { ParentStudent } from "@/types/parent-student";
 
 type ParentDetails = {
   id: number;
@@ -46,8 +31,8 @@ type ParentDetails = {
 
 export default function AppHome() {
   const router = useRouter();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [students, setStudents] = useState<ParentStudent[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<ParentStudent | null>(null);
   const [parent, setParent] = useState<ParentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +45,7 @@ export default function AppHome() {
     try {
       const response = await authFetch("/api/backend/students/me");
       if (!response.ok) return;
-      const data = await parseJsonResponse<Student[]>(response);
+      const data = await parseJsonResponse<ParentStudent[]>(response);
       setStudents(data);
       setSelectedStudent((prev) => {
         if (!prev) return data[0] ?? null;
@@ -100,7 +85,7 @@ export default function AppHome() {
           }
         }
         if (!response.ok) throw new Error("Failed to fetch students");
-        const data = await parseJsonResponse<Student[]>(response);
+        const data = await parseJsonResponse<ParentStudent[]>(response);
         setStudents(data);
         if (data.length > 0) {
           setSelectedStudent(data[0]);

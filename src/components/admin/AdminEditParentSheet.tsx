@@ -67,6 +67,7 @@ export default function AdminEditParentSheet({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!parent) return;
     if (!fullName.trim()) {
       toast.error("Parent name is required");
       return;
