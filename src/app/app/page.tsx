@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import RideStatusCard from "@/components/RideStatusCard";
 import BusDetailsCard from "@/components/BusDetailsCard";
@@ -11,6 +11,7 @@ import NoStudentsView from "@/components/app/NoStudentsView";
 import { useRouter } from "next/navigation";
 import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
 import { useStudentDriver } from "@/hooks/useStudentDriver";
+import { useStudentPayment } from "@/hooks/useStudentPayment";
 
 interface Student {
   id: number;
@@ -20,6 +21,9 @@ interface Student {
   student_address: string;
   temp_address: string | null;
   temp_dates?: string[];
+  approximate_fees: number | null;
+  actual_fees: number | null;
+  is_paid: boolean;
 }
 
 type ParentDetails = {
@@ -41,6 +45,26 @@ export default function AppHome() {
   const [noStudents, setNoStudents] = useState(false);
   const [desktopStudentMenuOpen, setDesktopStudentMenuOpen] = useState(false);
   const studentMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const reloadStudents = useCallback(async () => {
+    const accessToken = getAccessToken();
+    if (!accessToken) return;
+    const response = await fetch("/api/backend/students/me", {
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!response.ok) return;
+    const data = await parseJsonResponse<Student[]>(response);
+    setStudents(data);
+    setSelectedStudent((prev) => {
+      if (!prev) return data[0] ?? null;
+      return data.find((s) => s.id === prev.id) ?? data[0] ?? null;
+    });
+  }, []);
+
+  const { paying, startPayment } = useStudentPayment(reloadStudents);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -111,6 +135,28 @@ export default function AppHome() {
   } = useStudentDriver(selectedStudent?.id);
 
   const resolvedBusId = selectedStudent?.bus_id ?? driverBusId ?? null;
+
+  const selectedPaymentAmount = useMemo(() => {
+    if (!selectedStudent) return null;
+    return selectedStudent.actual_fees ?? selectedStudent.approximate_fees ?? null;
+  }, [selectedStudent]);
+
+  const selectedIsPaid = selectedStudent?.is_paid ?? true;
+
+  const handlePayNow = useCallback(() => {
+    if (!selectedStudent) return;
+    startPayment(
+      { id: selectedStudent.id, name: selectedStudent.full_name },
+      parent,
+    );
+  }, [selectedStudent, parent, startPayment]);
+
+  const paymentCardProps = {
+    amount: selectedPaymentAmount,
+    isPaid: selectedIsPaid,
+    paying,
+    onPayNow: handlePayNow,
+  };
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -355,7 +401,7 @@ export default function AppHome() {
                 Payments &amp; History
               </div>
               <div className="mt-[12px]">
-                <PaymentsHistoryCard />
+                <PaymentsHistoryCard {...paymentCardProps} />
               </div>
             </section>
           </div>
@@ -373,7 +419,7 @@ export default function AppHome() {
             />
           }
         >
-          <div className="p-4 flex flex-col items-center w-full max-w-md mx-auto">
+          <div className="p-4 pb-10 flex flex-col items-center w-full max-w-md mx-auto">
             <BusDetailsCard
               driver={driver}
               loading={driverLoading}
@@ -389,7 +435,7 @@ export default function AppHome() {
             <div className="h-6" />
             <ManagePickupDropoffCard selectedStudent={selectedStudent} />
             <div className="h-6" />
-            <PaymentsHistoryCard />
+            <PaymentsHistoryCard {...paymentCardProps} />
           </div>
         </AppLayout>
       </div>

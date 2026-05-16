@@ -20,7 +20,7 @@ export default function BottomNavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#19191F] border-t border-gray-800 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#19191F] border-t border-gray-800 z-50 pb-[env(safe-area-inset-bottom,0px)]">
       <div className="max-w-md mx-auto px-4">
         <div className="flex justify-between items-center h-20">
           {navItems.map((item) => {

@@ -6,28 +6,24 @@ interface AppLayoutProps {
   header?: ReactNode;
 }
 
-// ... existing code ...
 export default function AppLayout({ children, header }: AppLayoutProps) {
-  // Header: 64px, Navbar: 80px
+  const headerHeight = header ? 64 : 0;
+  const navHeight = 80;
+
   return (
     <div className="min-h-screen bg-[#19191F]">
-      {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        {header}
-      </div>
-      {/* Fixed Main White Box */}
+      {header ? (
+        <div className="fixed top-0 left-0 right-0 z-50">{header}</div>
+      ) : null}
       <div
-        className="fixed left-0 right-0 mx-auto bg-white rounded-t-[24px] max-w-md"
+        className="fixed left-0 right-0 mx-auto bg-white rounded-t-[24px] max-w-md overflow-y-auto overscroll-contain"
         style={{
-          top: 64, // header height
-          bottom: 80, // navbar height
-          height: "calc(100vh - 64px - 80px)",
-          overflowY: "auto",
+          top: headerHeight,
+          bottom: `calc(${navHeight}px + env(safe-area-inset-bottom, 0px))`,
         }}
       >
-        {children}
+        <div className="min-h-full pb-8">{children}</div>
       </div>
-      {/* Fixed Bottom Navbar */}
       <BottomNavBar />
     </div>
   );
