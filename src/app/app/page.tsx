@@ -6,6 +6,7 @@ import RideStatusCard from "@/components/RideStatusCard";
 import BusDetailsCard from "@/components/BusDetailsCard";
 import ManagePickupDropoffCard from "@/components/ManagePickupDropoffCard";
 import PaymentsHistoryCard from "@/components/PaymentsHistoryCard";
+import PaymentHistorySheet from "@/components/PaymentHistorySheet";
 import PageHeader from "@/components/PageHeader";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import { useRouter } from "next/navigation";
@@ -45,6 +46,7 @@ export default function AppHome() {
   const [error, setError] = useState<string | null>(null);
   const [noStudents, setNoStudents] = useState(false);
   const [desktopStudentMenuOpen, setDesktopStudentMenuOpen] = useState(false);
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
   const studentMenuRef = useRef<HTMLDivElement | null>(null);
 
   const reloadStudents = useCallback(async () => {
@@ -158,6 +160,8 @@ export default function AppHome() {
     feeExpiry: selectedStudent?.fee_expiry ?? null,
     paying,
     onPayNow: handlePayNow,
+    onViewHistory: () => setPaymentHistoryOpen(true),
+    canViewHistory: !!selectedStudent,
   };
 
   useEffect(() => {
@@ -188,6 +192,12 @@ export default function AppHome() {
 
   return (
     <>
+      <PaymentHistorySheet
+        open={paymentHistoryOpen}
+        onClose={() => setPaymentHistoryOpen(false)}
+        studentId={selectedStudent?.id ?? null}
+        studentName={selectedStudent?.full_name}
+      />
       {/* Desktop dashboard (Figma: 1:2798) */}
       <div className="hidden md:flex min-h-screen bg-[#FAFAFA]">
         <aside className="w-[320px] bg-[#14141B] text-white flex flex-col justify-between rounded-[32px] m-[24px] h-[calc(100vh-48px)] sticky top-[24px] overflow-hidden">

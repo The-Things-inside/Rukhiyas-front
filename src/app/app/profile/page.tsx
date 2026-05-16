@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
 import { earliestFeeExpiry, formatFeeExpiry } from "@/lib/utils";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
+import PaymentHistorySheet from "@/components/PaymentHistorySheet";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -100,6 +101,11 @@ export default function ProfilePage() {
   >([]);
   const [mobileAddMapFor, setMobileAddMapFor] = useState<string | null>(null);
   const [mobileAdding, setMobileAdding] = useState(false);
+  const [paymentHistoryOpen, setPaymentHistoryOpen] = useState(false);
+  const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const reloadStudents = useCallback(async () => {
     const token = getAccessToken();
@@ -205,6 +211,21 @@ export default function ProfilePage() {
 
   const nextPaymentDueDate = useMemo(
     () => formatFeeExpiry(earliestFeeExpiry(students.map((s) => s.fee_expiry))),
+    [students],
+  );
+
+  const openPaymentHistory = useCallback(
+    (studentId?: number) => {
+      const target = studentId
+        ? students.find((s) => s.id === studentId)
+        : students[0];
+      if (!target) {
+        toast.error("No student found");
+        return;
+      }
+      setPaymentHistoryStudent({ id: target.id, name: target.full_name });
+      setPaymentHistoryOpen(true);
+    },
     [students],
   );
 
@@ -377,6 +398,12 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
+      <PaymentHistorySheet
+        open={paymentHistoryOpen}
+        onClose={() => setPaymentHistoryOpen(false)}
+        studentId={paymentHistoryStudent?.id ?? null}
+        studentName={paymentHistoryStudent?.name}
+      />
       {/* Desktop */}
       <div className="hidden md:flex min-h-screen">
         {/* Sidebar */}
@@ -760,6 +787,9 @@ export default function ProfilePage() {
                   <button
                     key={x}
                     type="button"
+                    onClick={() => {
+                      if (x === "Payment History") openPaymentHistory();
+                    }}
                     className="w-full py-[12px] flex items-center justify-between text-black"
                     style={{ fontFamily: "Satoshi, sans-serif" }}
                   >
@@ -1280,9 +1310,17 @@ export default function ProfilePage() {
                 "Get Help",
                 "Policies & Terms",
               ].map((x) => (
-                <li key={x} className="flex items-center justify-between py-2 cursor-pointer text-black">
-                  <span className="flex items-center gap-2">{x}</span>
-                  <span>&gt;</span>
+                <li key={x}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (x === "Payment History") openPaymentHistory();
+                    }}
+                    className="flex w-full items-center justify-between py-2 text-left text-black"
+                  >
+                    <span className="flex items-center gap-2">{x}</span>
+                    <span>&gt;</span>
+                  </button>
                 </li>
               ))}
             </ul>

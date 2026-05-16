@@ -7,6 +7,8 @@ export interface PaymentsHistoryCardProps {
   feeExpiry?: string | null;
   paying?: boolean;
   onPayNow?: () => void;
+  onViewHistory?: () => void;
+  canViewHistory?: boolean;
 }
 
 function formatInr(amount: number | null): string {
@@ -20,6 +22,8 @@ export default function PaymentsHistoryCard({
   feeExpiry = null,
   paying = false,
   onPayNow,
+  onViewHistory,
+  canViewHistory = true,
 }: PaymentsHistoryCardProps) {
   const sectionTitle = isPaid ? "Next Payment" : "Payment Pending";
   const dueDateLabel = formatFeeExpiry(feeExpiry);
@@ -108,7 +112,9 @@ export default function PaymentsHistoryCard({
         )}
         <button
           type="button"
-          className="w-full border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-base bg-white hover:bg-[#fffbe6] transition"
+          disabled={!canViewHistory || !onViewHistory}
+          onClick={onViewHistory}
+          className="w-full border border-[#E8B600] text-[#E8B600] font-bold rounded-full py-2 text-base bg-white hover:bg-[#fffbe6] transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           View Payment History
         </button>
