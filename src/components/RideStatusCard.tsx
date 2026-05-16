@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
 
 interface RideStatus {
   id: number;
@@ -20,33 +21,61 @@ interface Student {
 
 interface RideStatusCardProps {
   selectedStudent: Student | null;
+  /** Resolved bus id (from student record or driver API). */
+  busId?: number | null;
 }
 
-export default function RideStatusCard({ selectedStudent }: RideStatusCardProps) {
+export default function RideStatusCard({
+  selectedStudent,
+  busId: busIdProp,
+}: RideStatusCardProps) {
   const [rideStatus, setRideStatus] = useState<RideStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resolvedBusId =
+    busIdProp ?? selectedStudent?.bus_id ?? null;
 
   useEffect(() => {
-    if (!selectedStudent || !selectedStudent.bus_id) {
+    if (!selectedStudent || !resolvedBusId) {
       setRideStatus(null);
       return;
     }
-    setLoading(true);
-    setError(null);
-    fetch(`/api/backend/buses/${selectedStudent.bus_id}/today`, {
-      headers: {
-        accept: "application/json",
-      },
-    })
-      .then((res) => {
+
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      setError(null);
+      setRideStatus(null);
+
+      const busId = resolvedBusId;
+
+      try {
+        const token = getAccessToken();
+        const res = await fetch(`/api/backend/buses/${busId}/today`, {
+          headers: {
+            accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
         if (!res.ok) throw new Error("Failed to fetch ride status");
-        return res.json();
-      })
-      .then((data) => setRideStatus(data))
-      .catch((err) => setError(err.message || "Failed to fetch ride status"))
-      .finally(() => setLoading(false));
-  }, [selectedStudent]);
+        const data = await parseJsonResponse<RideStatus>(res);
+        if (!cancelled) setRideStatus(data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch ride status",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedStudent, resolvedBusId]);
 
   if (!selectedStudent) {
     return (
@@ -55,12 +84,8 @@ export default function RideStatusCard({ selectedStudent }: RideStatusCardProps)
       </div>
     );
   }
-  if (!selectedStudent.bus_id) {
-    return (
-      <div className="bg-white rounded-[20px] shadow-lg p-4 w-full mx-auto border border-gray-200 text-center text-gray-500">
-        No bus assigned for this student.
-      </div>
-    );
+  if (!resolvedBusId) {
+    return null;
   }
   if (loading) {
     return (

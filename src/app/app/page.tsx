@@ -3,12 +3,14 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import RideStatusCard from "@/components/RideStatusCard";
+import BusDetailsCard from "@/components/BusDetailsCard";
 import ManagePickupDropoffCard from "@/components/ManagePickupDropoffCard";
 import PaymentsHistoryCard from "@/components/PaymentsHistoryCard";
 import PageHeader from "@/components/PageHeader";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import { useRouter } from "next/navigation";
 import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { useStudentDriver } from "@/hooks/useStudentDriver";
 
 interface Student {
   id: number;
@@ -100,6 +102,15 @@ export default function AppHome() {
   const otherStudents = useMemo(() => {
     return students.filter((s) => s.id !== selectedStudent?.id);
   }, [students, selectedStudent?.id]);
+
+  const {
+    driver,
+    loading: driverLoading,
+    noBus: driverNoBus,
+    busId: driverBusId,
+  } = useStudentDriver(selectedStudent?.id);
+
+  const resolvedBusId = selectedStudent?.bus_id ?? driverBusId ?? null;
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -301,28 +312,32 @@ export default function AppHome() {
               </div>
             </section>
 
-            {/* Ride status */}
-            <section className="bg-white rounded-[24px] border border-[#EAEAEA] shadow-sm p-[20px]">
-              <div className="flex items-center justify-between">
-                <div className="text-[18px] font-bold text-black" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  Ride Status
+            {/* Bus details + ride status */}
+            <div className="flex flex-col gap-[20px]">
+              <BusDetailsCard
+                driver={driver}
+                loading={driverLoading}
+                noBus={driverNoBus}
+                studentSelected={!!selectedStudent}
+                className="w-full"
+              />
+              <section className="bg-white rounded-[24px] border border-[#EAEAEA] shadow-sm p-[20px]">
+                <div className="flex items-center justify-between">
+                  <div className="text-[18px] font-bold text-black" style={{ fontFamily: "Satoshi, sans-serif" }}>
+                    Ride Status
+                  </div>
+                  <div className="text-[14px] text-[#9B9B9B]" style={{ fontFamily: "Satoshi, sans-serif" }}>
+                    On Time
+                  </div>
                 </div>
-                <div className="text-[14px] text-[#9B9B9B]" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  On Time
+                <div className="mt-[12px]">
+                  <RideStatusCard
+                    selectedStudent={selectedStudent}
+                    busId={resolvedBusId}
+                  />
                 </div>
-              </div>
-              <div className="mt-[12px]">
-                {/* keep existing card (works with selectedStudent) */}
-                <RideStatusCard selectedStudent={selectedStudent} />
-              </div>
-              <button
-                type="button"
-                className="mt-[14px] w-full h-[44px] rounded-[22px] border border-[#E8B600] text-[#E8B600] font-bold"
-                style={{ fontFamily: "Satoshi, sans-serif" }}
-              >
-                Call Driver
-              </button>
-            </section>
+              </section>
+            </div>
           </div>
 
           <div className="mt-[20px] grid grid-cols-[1fr_420px] gap-[20px]">
@@ -358,8 +373,19 @@ export default function AppHome() {
             />
           }
         >
-          <div className="p-4 flex flex-col items-center">
-            <RideStatusCard selectedStudent={selectedStudent} />
+          <div className="p-4 flex flex-col items-center w-full max-w-md mx-auto">
+            <BusDetailsCard
+              driver={driver}
+              loading={driverLoading}
+              noBus={driverNoBus}
+              studentSelected={!!selectedStudent}
+              className="w-full"
+            />
+            <div className="h-6" />
+            <RideStatusCard
+              selectedStudent={selectedStudent}
+              busId={resolvedBusId}
+            />
             <div className="h-6" />
             <ManagePickupDropoffCard selectedStudent={selectedStudent} />
             <div className="h-6" />
