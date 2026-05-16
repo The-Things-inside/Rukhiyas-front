@@ -10,6 +10,7 @@ import NoStudentsView from "@/components/app/NoStudentsView";
 import SchoolDropdown from "@/components/SchoolDropdown";
 import dynamic from "next/dynamic";
 import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { earliestFeeExpiry, formatFeeExpiry } from "@/lib/utils";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
@@ -43,6 +44,7 @@ type Student = {
   distance_to_pickup: number | null;
   approximate_fees: number | null;
   actual_fees: number | null;
+  fee_expiry: string | null;
   profile_picture_url: string | null;
   temp_pick_address: string | null;
   temp_drop_address: string | null;
@@ -193,6 +195,16 @@ export default function ProfilePage() {
 
   const unpaidStudents = useMemo(
     () => students.filter((s) => !s.is_paid),
+    [students],
+  );
+
+  const pendingDueDate = useMemo(
+    () => formatFeeExpiry(earliestFeeExpiry(unpaidStudents.map((s) => s.fee_expiry))),
+    [unpaidStudents],
+  );
+
+  const nextPaymentDueDate = useMemo(
+    () => formatFeeExpiry(earliestFeeExpiry(students.map((s) => s.fee_expiry))),
     [students],
   );
 
@@ -682,7 +694,7 @@ export default function ProfilePage() {
                 <div className="mt-[10px] text-[12px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   <div className="flex justify-between text-black">
                     <span className="text-[#9B9B9B]">Due Date</span>
-                    <span>--/--/----</span>
+                    <span>{pendingDueDate}</span>
                   </div>
                   <div className="flex justify-between text-black mt-[6px]">
                     <span className="text-[#9B9B9B]">Amount</span>
@@ -712,7 +724,7 @@ export default function ProfilePage() {
                 <div className="mt-[10px] text-[12px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   <div className="flex justify-between text-black">
                     <span className="text-[#9B9B9B]">Due Date</span>
-                    <span>--/--/----</span>
+                    <span>{nextPaymentDueDate}</span>
                   </div>
                   <div className="flex justify-between text-black mt-[6px]">
                     <span className="text-[#9B9B9B]">Amount</span>
@@ -1212,7 +1224,7 @@ export default function ProfilePage() {
                 <div className="text-xs text-red-600 font-semibold mb-1">Payment Pending</div>
                 <div className="flex justify-between text-xs mb-1 text-black">
                   <span className="font-medium text-gray-500">Due Date</span>
-                  <span>--/--/----</span>
+                  <span>{pendingDueDate}</span>
                 </div>
                 <div className="flex justify-between text-xs mb-2 text-black">
                   <span className="font-medium text-gray-500">Amount</span>
@@ -1237,7 +1249,7 @@ export default function ProfilePage() {
                 <div className="text-xs text-black font-semibold mb-1">Next Payment</div>
                 <div className="flex justify-between text-xs mb-1 text-black">
                   <span className="font-medium text-gray-500">Due Date</span>
-                  <span>--/--/----</span>
+                  <span>{nextPaymentDueDate}</span>
                 </div>
                 <div className="flex justify-between text-xs mb-2 text-black">
                   <span className="font-medium text-gray-500">Amount</span>

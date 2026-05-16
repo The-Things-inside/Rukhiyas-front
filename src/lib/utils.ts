@@ -13,6 +13,31 @@ export function formatDate(date: Date | string): string {
   });
 }
 
+/** Formats `fee_expiry` from `/students/me` as DD/MM/YYYY for payment due dates. */
+export function formatFeeExpiry(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+export function earliestFeeExpiry(
+  expires: (string | null | undefined)[],
+): string | null {
+  let best: { time: number; iso: string } | null = null;
+  for (const iso of expires) {
+    if (!iso) continue;
+    const time = new Date(iso).getTime();
+    if (Number.isNaN(time)) continue;
+    if (!best || time < best.time) best = { time, iso };
+  }
+  return best?.iso ?? null;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

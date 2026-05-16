@@ -23,6 +23,7 @@ interface Student {
   temp_dates?: string[];
   approximate_fees: number | null;
   actual_fees: number | null;
+  fee_expiry: string | null;
   is_paid: boolean;
 }
 
@@ -154,6 +155,7 @@ export default function AppHome() {
   const paymentCardProps = {
     amount: selectedPaymentAmount,
     isPaid: selectedIsPaid,
+    feeExpiry: selectedStudent?.fee_expiry ?? null,
     paying,
     onPayNow: handlePayNow,
   };

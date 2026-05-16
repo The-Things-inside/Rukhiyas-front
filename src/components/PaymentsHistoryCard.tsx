@@ -1,8 +1,10 @@
 import React from "react";
+import { formatFeeExpiry } from "@/lib/utils";
 
 export interface PaymentsHistoryCardProps {
   amount: number | null;
   isPaid: boolean;
+  feeExpiry?: string | null;
   paying?: boolean;
   onPayNow?: () => void;
 }
@@ -15,10 +17,12 @@ function formatInr(amount: number | null): string {
 export default function PaymentsHistoryCard({
   amount,
   isPaid,
+  feeExpiry = null,
   paying = false,
   onPayNow,
 }: PaymentsHistoryCardProps) {
   const sectionTitle = isPaid ? "Next Payment" : "Payment Pending";
+  const dueDateLabel = formatFeeExpiry(feeExpiry);
 
   return (
     <div
@@ -79,7 +83,7 @@ export default function PaymentsHistoryCard({
               color: "#000",
             }}
           >
-            --/--/----
+            {dueDateLabel}
           </span>
           <span
             style={{
@@ -157,7 +161,9 @@ export default function PaymentsHistoryCard({
           </button>
         )}
         <div className="text-xs text-center text-gray-500 mt-2 italic">
-          Offer Expires On 30/07/2025*
+          {feeExpiry
+            ? `Offer expires on ${formatFeeExpiry(feeExpiry)}*`
+            : "Offer expiry date not available*"}
         </div>
       </div>
     </div>
