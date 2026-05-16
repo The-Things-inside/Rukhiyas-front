@@ -96,8 +96,8 @@ export default function AdminStudentProfileDesktop({
   const busLabel = `Bus ${student.bus_id ?? "—"}${student.bus_route ? ` - ${student.bus_route}` : ""}`;
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-[#FAFAFA] p-6 lg:p-8">
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4">
+    <div className="h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto bg-[#FAFAFA]">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-6 py-8 lg:px-8">
         {/* Row: Student | Parent | Quick actions */}
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr_minmax(200px,280px)]">
           {/* Student Details */}

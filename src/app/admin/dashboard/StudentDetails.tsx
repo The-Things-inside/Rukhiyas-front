@@ -307,7 +307,7 @@ export default function StudentDetails({ studentId, onBack }: { studentId: numbe
       ) : null}
 
       {/* Desktop — Figma 1-71422 */}
-      <div className="hidden h-full min-h-0 md:flex md:flex-1">
+      <div className="hidden h-full min-h-0 w-full min-w-0 flex-1 flex-col md:flex">
         <AdminStudentProfileDesktop
           student={student}
           parent={parent}
