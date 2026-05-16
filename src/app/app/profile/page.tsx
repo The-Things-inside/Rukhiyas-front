@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import BottomNavBar from "@/components/BottomNavBar";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import NoStudentsView from "@/components/app/NoStudentsView";
 import SchoolDropdown from "@/components/SchoolDropdown";
 import dynamic from "next/dynamic";
 import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
+import { useStudentPayment } from "@/hooks/useStudentPayment";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -98,6 +99,19 @@ export default function ProfilePage() {
   const [mobileAddMapFor, setMobileAddMapFor] = useState<string | null>(null);
   const [mobileAdding, setMobileAdding] = useState(false);
 
+  const reloadStudents = useCallback(async () => {
+    const token = getAccessToken();
+    if (!token) return;
+    const studentsRes = await fetch("/api/backend/students/me", {
+      headers: { accept: "application/json", Authorization: `Bearer ${token}` },
+    });
+    if (studentsRes.ok) {
+      setStudents(await parseJsonResponse<Student[]>(studentsRes));
+    }
+  }, []);
+
+  const { paying, startPayment } = useStudentPayment(reloadStudents);
+
   const schoolNameById = useMemo(() => {
     // Keep in sync with `SchoolDropdown` list.
     return new Map<number, string>([
@@ -176,6 +190,28 @@ export default function ProfilePage() {
   const nextPaymentAmount = useMemo(() => {
     return subscriptions.reduce((sum, x) => sum + (x.amount || 0), 0);
   }, [subscriptions]);
+
+  const unpaidStudents = useMemo(
+    () => students.filter((s) => !s.is_paid),
+    [students],
+  );
+
+  const handlePayNow = useCallback(
+    (studentId?: number) => {
+      const target = studentId
+        ? students.find((s) => s.id === studentId)
+        : unpaidStudents[0] ?? students[0];
+      if (!target) {
+        toast.error("No student available for payment");
+        return;
+      }
+      if (unpaidStudents.length > 1 && !studentId) {
+        toast.info(`Opening payment for ${target.full_name}`);
+      }
+      startPayment({ id: target.id, name: target.full_name }, parent);
+    },
+    [students, unpaidStudents, parent, startPayment],
+  );
 
   function handleLogout() {
     localStorage.removeItem("access_token");
@@ -617,9 +653,19 @@ export default function ProfilePage() {
                     <span>Amount</span>
                   </div>
                   {subscriptions.map((x) => (
-                    <div key={x.id} className="flex justify-between text-black mb-[6px]">
-                      <span className="truncate pr-2">{x.name}</span>
-                      <span>{x.amount ? `₹${x.amount}/month` : "-"}</span>
+                    <div key={x.id} className="flex justify-between items-center text-black mb-[6px] gap-2">
+                      <span className="truncate pr-2 flex-1">{x.name}</span>
+                      <span className="shrink-0">{x.amount ? `₹${x.amount}/month` : "-"}</span>
+                      {!x.isPaid && (
+                        <button
+                          type="button"
+                          disabled={paying}
+                          onClick={() => handlePayNow(x.id)}
+                          className="shrink-0 text-[11px] font-bold text-[#E8B600] disabled:opacity-50"
+                        >
+                          Pay
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -643,8 +689,14 @@ export default function ProfilePage() {
                     <span>{pendingAmount ? `₹${pendingAmount}` : "₹0"}</span>
                   </div>
                 </div>
-                <button className="mt-[10px] w-full h-[38px] rounded-[19px] bg-red-600 text-white font-bold text-[14px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  Pay Now
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={() => handlePayNow()}
+                  className="mt-[10px] w-full h-[38px] rounded-[19px] bg-red-600 text-white font-bold text-[14px] disabled:opacity-60"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {paying ? "Processing…" : "Pay Now"}
                 </button>
                 <div className="mt-[6px] text-[10px] text-[#9B9B9B] text-center" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   Pay now to avoid late fees*
@@ -667,8 +719,14 @@ export default function ProfilePage() {
                     <span>{nextPaymentAmount ? `₹${nextPaymentAmount}` : "₹0"}</span>
                   </div>
                 </div>
-                <button className="mt-[10px] w-full h-[38px] rounded-[19px] bg-[#E8B600] text-white font-bold text-[14px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
-                  Pay Now
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={() => handlePayNow(students[0]?.id)}
+                  className="mt-[10px] w-full h-[38px] rounded-[19px] bg-[#E8B600] text-white font-bold text-[14px] disabled:opacity-60"
+                  style={{ fontFamily: "Satoshi, sans-serif" }}
+                >
+                  {paying ? "Processing…" : "Pay Now"}
                 </button>
               </div>
               )}
@@ -1128,9 +1186,19 @@ export default function ProfilePage() {
               <div className="text-xs font-semibold mb-1 text-black">Current Subscriptions</div>
               <div className="border rounded-xl p-2 mb-2 flex flex-col gap-1">
                 {subscriptions.map((x) => (
-                  <div key={x.id} className="flex justify-between text-xs text-black">
-                    <span className="truncate pr-2">{x.name}</span>
-                    <span>{x.amount ? `₹${x.amount}/month` : "-"}</span>
+                  <div key={x.id} className="flex justify-between items-center text-xs text-black gap-2">
+                    <span className="truncate pr-2 flex-1">{x.name}</span>
+                    <span className="shrink-0">{x.amount ? `₹${x.amount}/month` : "-"}</span>
+                    {!x.isPaid && (
+                      <button
+                        type="button"
+                        disabled={paying}
+                        onClick={() => handlePayNow(x.id)}
+                        className="shrink-0 text-[11px] font-bold text-[#E8B600] disabled:opacity-50"
+                      >
+                        Pay
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1150,8 +1218,13 @@ export default function ProfilePage() {
                   <span className="font-medium text-gray-500">Amount</span>
                   <span>{pendingAmount ? `₹${pendingAmount}` : "₹0"}</span>
                 </div>
-                <button className="w-full bg-red-600 text-white font-semibold rounded-full py-1">
-                  Pay Now
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={() => handlePayNow()}
+                  className="w-full bg-red-600 text-white font-semibold rounded-full py-1 disabled:opacity-60"
+                >
+                  {paying ? "Processing…" : "Pay Now"}
                 </button>
                 <div className="text-[10px] text-gray-500 text-center mt-1">Pay now to avoid late fees*</div>
               </div>
@@ -1170,8 +1243,13 @@ export default function ProfilePage() {
                   <span className="font-medium text-gray-500">Amount</span>
                   <span>{nextPaymentAmount ? `₹${nextPaymentAmount}` : "₹0"}</span>
                 </div>
-                <button className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1">
-                  Pay Now
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={() => handlePayNow(students[0]?.id)}
+                  className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1 disabled:opacity-60"
+                >
+                  {paying ? "Processing…" : "Pay Now"}
                 </button>
               </div>
             </div>
