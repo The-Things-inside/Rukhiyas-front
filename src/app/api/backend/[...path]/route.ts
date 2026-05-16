@@ -21,11 +21,19 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   const incomingUrl = new URL(req.url);
   incomingUrl.searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
 
-  const headers = new Headers(req.headers);
-  // Let fetch set correct host headers for target.
-  headers.delete("host");
-  headers.delete("connection");
-  headers.delete("content-length");
+  // Only forward headers the backend needs. Browser Origin/Referer/Cookie from
+  // LAN dev URLs can cause intermittent 403 responses from the API.
+  const headers = new Headers();
+  const forward = [
+    "accept",
+    "authorization",
+    "content-type",
+    "accept-language",
+  ] as const;
+  for (const name of forward) {
+    const value = req.headers.get(name);
+    if (value) headers.set(name, value);
+  }
 
   const res = await fetch(targetUrl.toString(), {
     method: req.method,
@@ -37,12 +45,15 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
     redirect: "manual",
   });
 
+  // Read body here so Node decompresses gzip/br before forwarding. Streaming
+  // `res.body` after stripping `content-encoding` yields binary JSON parse errors.
+  const body = await res.arrayBuffer();
+
   const outHeaders = new Headers(res.headers);
-  // Avoid forwarding compressed responses that Next would need to re-handle.
   outHeaders.delete("content-encoding");
   outHeaders.delete("content-length");
 
-  return new NextResponse(res.body, {
+  return new NextResponse(body, {
     status: res.status,
     statusText: res.statusText,
     headers: outHeaders,

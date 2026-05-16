@@ -8,6 +8,7 @@ import PaymentsHistoryCard from "@/components/PaymentsHistoryCard";
 import PageHeader from "@/components/PageHeader";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import { useRouter } from "next/navigation";
+import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
 
 interface Student {
   id: number;
@@ -45,8 +46,8 @@ export default function AppHome() {
       setError(null);
       setNoStudents(false);
       try {
-        const accessToken = localStorage.getItem("access_token");
-        if (!accessToken) throw new Error("No access token found");
+        const accessToken = getAccessToken();
+        if (!accessToken) throw new Error("No access token found. Please sign in again.");
 
         // Parent details (for desktop greeting/sidebar)
         const parentRes = await fetch("/api/backend/parent-details", {
@@ -56,7 +57,7 @@ export default function AppHome() {
           },
         });
         if (parentRes.ok) {
-          setParent((await parentRes.json()) as ParentDetails);
+          setParent(await parseJsonResponse<ParentDetails>(parentRes));
         }
 
         const response = await fetch("/api/backend/students/me", {
@@ -66,7 +67,9 @@ export default function AppHome() {
           },
         });
         if (response.status === 404) {
-          const body = await response.json().catch(() => null);
+          const body = await parseJsonResponse<{ detail?: string }>(response).catch(
+            () => null,
+          );
           if (body?.detail === "No students found for this parent") {
             setStudents([]);
             setSelectedStudent(null);
@@ -75,7 +78,7 @@ export default function AppHome() {
           }
         }
         if (!response.ok) throw new Error("Failed to fetch students");
-        const data = await response.json();
+        const data = await parseJsonResponse<Student[]>(response);
         setStudents(data);
         if (data.length > 0) {
           setSelectedStudent(data[0]);

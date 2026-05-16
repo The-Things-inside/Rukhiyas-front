@@ -7,10 +7,14 @@ const nextConfig = {
   // Next expects host patterns (not full origin URLs).
   allowedDevOrigins: [
     "localhost",
+    "localhost:3000",
     "127.0.0.1",
+    "127.0.0.1:3000",
     "0.0.0.0",
     "172.20.10.8",
+    "172.20.10.8:3000",
     "192.168.29.100",
+    "192.168.29.100:3000",
     "*.local",
   ],
   // Prevent dev-server cache corruption (.next/cache/webpack/*.pack.gz ENOENT)

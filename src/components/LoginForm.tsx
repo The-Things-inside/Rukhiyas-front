@@ -19,6 +19,9 @@ interface LoginFormProps {
   defaultPassword?: string;
   error?: string;
   registerLink?: string;
+  /** Avoid duplicate ids when only one form is mounted; still unique per page. */
+  idPrefix?: string;
+  variant?: "mobile" | "desktop";
 }
 
 export default function LoginForm({
@@ -26,10 +29,12 @@ export default function LoginForm({
   loading,
   headerText = "Log in to view your child's transport details and account info",
   showSocialLogin = true,
-  defaultEmail = "test@test.com",
-  defaultPassword = "test",
+  defaultEmail = "",
+  defaultPassword = "",
   error,
   registerLink = "/register",
+  idPrefix = "login-",
+  variant = "mobile",
 }: LoginFormProps) {
   const [emailOrMobile, setEmailOrMobile] = useState(defaultEmail);
   const [password, setPassword] = useState(defaultPassword);
@@ -55,10 +60,21 @@ export default function LoginForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // Read DOM values so desktop browser autofill works (React state can stay empty).
+    const fd = new FormData(e.currentTarget);
+    const emailValue = String(fd.get("emailOrMobile") ?? emailOrMobile).trim();
+    const passwordValue = String(fd.get("password") ?? password);
+    const stayValue =
+      fd.get("stayLoggedIn") === "on" || fd.get("stayLoggedIn") === "true" || stayLoggedIn;
+
     if (onSubmit) {
-      onSubmit({ emailOrMobile, password, stayLoggedIn });
+      onSubmit({
+        emailOrMobile: emailValue,
+        password: passwordValue,
+        stayLoggedIn: stayValue,
+      });
     }
   };
 
@@ -79,30 +95,36 @@ export default function LoginForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-t-3xl  px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4 min-h-[calc(100vh-80px)]"
-      autoComplete="off"
+      className={
+        variant === "desktop"
+          ? "bg-white px-0 pt-0 pb-0 w-full flex flex-col gap-4"
+          : "bg-white rounded-t-3xl px-6 pt-8 pb-8 w-full max-w-md mx-auto flex flex-col gap-4 min-h-[calc(100vh-80px)]"
+      }
+      autoComplete="on"
     >
-      <div className="mb-2">
-        <h2
-          className="text-[18px] text-black mb-2 leading-[28px] tracking-[0.02em] text-left font-medium"
-          style={{ fontFamily: "Spartan, sans-serif", letterSpacing: "0.02em" }}
-        >
-          {headerText}
-          <br />
-        </h2>
-      </div>
+      {headerText ? (
+        <div className="mb-2">
+          <h2
+            className="text-[18px] text-black mb-2 leading-[28px] tracking-[0.02em] text-left font-medium"
+            style={{ fontFamily: "Spartan, sans-serif", letterSpacing: "0.02em" }}
+          >
+            {headerText}
+          </h2>
+        </div>
+      ) : null}
       <div>
         <label
-          htmlFor="emailOrMobile"
+          htmlFor={`${idPrefix}emailOrMobile`}
           className="block text-sm font-medium text-gray-900 mb-1"
         >
           Email or Mobile Number
         </label>
         <input
-          id="emailOrMobile"
+          id={`${idPrefix}emailOrMobile`}
+          name="emailOrMobile"
           type="text"
           inputMode="email"
-          autoComplete="off"
+          autoComplete="username"
           autoCapitalize="none"
           className={`w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] bg-[#faf9f6] placeholder-gray-400 text-[#000000] ${
             emailError ? "border-[#E20020]" : "border-gray-300"
@@ -110,6 +132,7 @@ export default function LoginForm({
           placeholder="Enter email or mobile number"
           value={emailOrMobile}
           onChange={handleEmailChange}
+          onInput={(e) => setEmailOrMobile(e.currentTarget.value)}
           required
         />
         {emailError && (
@@ -127,16 +150,17 @@ export default function LoginForm({
       </div>
       <div>
         <label
-          htmlFor="password"
+          htmlFor={`${idPrefix}password`}
           className="block text-sm font-medium text-gray-900 mb-1"
         >
           Password
         </label>
         <div className="relative">
           <input
-            id="password"
+            id={`${idPrefix}password`}
+            name="password"
             type={showPassword ? "text" : "password"}
-            autoComplete="off"
+            autoComplete="current-password"
             className={`w-full border rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#f2c200] pr-12 bg-[#faf9f6] placeholder-gray-400 text-[#000000] ${
               passwordError ? "border-[#E20020]" : "border-gray-300"
             } ${shakePassword ? "animate-shake" : ""}`}
@@ -144,6 +168,10 @@ export default function LoginForm({
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
+              setPasswordError(false);
+            }}
+            onInput={(e) => {
+              setPassword(e.currentTarget.value);
               setPasswordError(false);
             }}
             required
@@ -190,7 +218,7 @@ export default function LoginForm({
               color: "#E20020",
             }}
           >
-            Incorrect password
+            {error || "Incorrect password"}
           </p>
         )}
       </div>
@@ -217,14 +245,15 @@ export default function LoginForm({
       </button>
       <div className="flex items-center justify-center gap-2 mb-2">
         <input
-          id="stayLoggedIn"
+          id={`${idPrefix}stayLoggedIn`}
+          name="stayLoggedIn"
           type="checkbox"
           checked={stayLoggedIn}
           onChange={(e) => setStayLoggedIn(e.target.checked)}
           className="accent-[#19191F] w-4 h-4 rounded focus:ring-[#f2c200]"
         />
         <label
-          htmlFor="stayLoggedIn"
+          htmlFor={`${idPrefix}stayLoggedIn`}
           className="text-sm text-gray-700 select-none cursor-pointer"
         >
           Stay logged in on this device
@@ -269,18 +298,20 @@ export default function LoginForm({
           </button>
         </>
       )}
-      <div className="text-center mt-4">
-        <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
-          Don&apos;t have an account?&nbsp;
-          <a
-            href="#"
-            onClick={handleRegister}
-            className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
-          >
-            Register
-          </a>
-        </span>
-      </div>
+      {variant !== "desktop" ? (
+        <div className="text-center mt-4">
+          <span className="inline-flex flex-nowrap items-baseline justify-center text-[#5C5C5C] text-[18px] leading-[22px] tracking-[0.02em] font-normal whitespace-nowrap">
+            Don&apos;t have an account?&nbsp;
+            <a
+              href="#"
+              onClick={handleRegister}
+              className="text-[#f2c200] font-normal whitespace-nowrap leading-[22px] align-baseline"
+            >
+              Register
+            </a>
+          </span>
+        </div>
+      ) : null}
     </form>
   );
 }

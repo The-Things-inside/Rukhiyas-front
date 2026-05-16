@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import NoStudentsView from "@/components/app/NoStudentsView";
 import SchoolDropdown from "@/components/SchoolDropdown";
 import dynamic from "next/dynamic";
+import { getAccessToken, parseJsonResponse } from "@/lib/auth-token";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -113,8 +114,8 @@ export default function ProfilePage() {
       setLoading(true);
       setError(null);
       try {
-        const token = localStorage.getItem("access_token");
-        if (!token) throw new Error("No access token found");
+        const token = getAccessToken();
+        if (!token) throw new Error("No access token found. Please sign in again.");
 
         const parentRes = await fetch("/api/backend/parent-details", {
           headers: { accept: "application/json", Authorization: `Bearer ${token}` },
@@ -123,23 +124,18 @@ export default function ProfilePage() {
           toast.error("Failed to fetch parent details");
           throw new Error("Failed to fetch parent details");
         }
-        const parentJson = (await parentRes.json()) as ParentDetails;
+        const parentJson = await parseJsonResponse<ParentDetails>(parentRes);
         setParent(parentJson);
-        toast.success("Parent details loaded");
 
-        const studentsRes = await fetch(
-          `/api/backend/students?parent_id=${encodeURIComponent(parentJson.id)}`,
-          {
-            headers: { accept: "application/json", Authorization: `Bearer ${token}` },
-          },
-        );
+        const studentsRes = await fetch("/api/backend/students/me", {
+          headers: { accept: "application/json", Authorization: `Bearer ${token}` },
+        });
         if (!studentsRes.ok) {
           toast.error("Failed to fetch students");
           throw new Error("Failed to fetch students");
         }
-        const studentsJson = (await studentsRes.json()) as Student[];
+        const studentsJson = await parseJsonResponse<Student[]>(studentsRes);
         setStudents(studentsJson);
-        toast.success("Student details loaded");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load profile");
       } finally {
@@ -167,6 +163,20 @@ export default function ProfilePage() {
       .reduce((sum, x) => sum + (x.amount || 0), 0);
   }, [subscriptions]);
 
+  const hasUnpaidStudents = useMemo(
+    () => students.some((s) => !s.is_paid),
+    [students],
+  );
+
+  const allStudentsPaid = useMemo(
+    () => students.length > 0 && students.every((s) => s.is_paid),
+    [students],
+  );
+
+  const nextPaymentAmount = useMemo(() => {
+    return subscriptions.reduce((sum, x) => sum + (x.amount || 0), 0);
+  }, [subscriptions]);
+
   function handleLogout() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("parent_id");
@@ -190,7 +200,7 @@ export default function ProfilePage() {
     if (!parent || !editDraft) return;
     try {
       setSavingEdit(true);
-      const token = localStorage.getItem("access_token");
+      const token = getAccessToken();
       if (!token) throw new Error("No access token found");
       if (!editDraft.location) throw new Error("Please set location on map");
 
@@ -245,7 +255,7 @@ export default function ProfilePage() {
     if (!parent || !mobileEditDraft) return;
     try {
       setMobileSaving(true);
-      const token = localStorage.getItem("access_token");
+      const token = getAccessToken();
       if (!token) throw new Error("No access token found");
       if (!mobileEditDraft.location) throw new Error("Please set location on map");
 
@@ -596,7 +606,7 @@ export default function ProfilePage() {
               Billing &amp; Payment
             </div>
 
-            <div className="mt-[14px] grid grid-cols-3 gap-[16px]">
+            <div className="mt-[14px] grid grid-cols-2 gap-[16px]">
               <div className="border border-[#EAEAEA] rounded-[16px] p-[14px]">
                 <div className="text-[12px] font-bold text-black" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   Current Subscriptions
@@ -606,7 +616,7 @@ export default function ProfilePage() {
                     <span>Name</span>
                     <span>Amount</span>
                   </div>
-                  {subscriptions.slice(0, 2).map((x) => (
+                  {subscriptions.map((x) => (
                     <div key={x.id} className="flex justify-between text-black mb-[6px]">
                       <span className="truncate pr-2">{x.name}</span>
                       <span>{x.amount ? `₹${x.amount}/month` : "-"}</span>
@@ -618,6 +628,7 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {hasUnpaidStudents && (
               <div className="border border-red-300 rounded-[16px] p-[14px]">
                 <div className="text-[12px] font-bold text-red-600" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   Payment Pending
@@ -639,7 +650,9 @@ export default function ProfilePage() {
                   Pay now to avoid late fees*
                 </div>
               </div>
+              )}
 
+              {allStudentsPaid && (
               <div className="border border-[#EAEAEA] rounded-[16px] p-[14px]">
                 <div className="text-[12px] font-bold text-black" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   Next Payment
@@ -651,13 +664,14 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex justify-between text-black mt-[6px]">
                     <span className="text-[#9B9B9B]">Amount</span>
-                    <span>{pendingAmount ? `₹${pendingAmount}` : "₹0"}</span>
+                    <span>{nextPaymentAmount ? `₹${nextPaymentAmount}` : "₹0"}</span>
                   </div>
                 </div>
                 <button className="mt-[10px] w-full h-[38px] rounded-[19px] bg-[#E8B600] text-white font-bold text-[14px]" style={{ fontFamily: "Satoshi, sans-serif" }}>
                   Pay Now
                 </button>
               </div>
+              )}
             </div>
 
             <div className="mt-[22px] bg-white rounded-[16px] border border-[#EAEAEA] p-[16px]">
@@ -1006,7 +1020,7 @@ export default function ProfilePage() {
                       if (!parent) return;
                       setMobileAdding(true);
                       try {
-                        const token = localStorage.getItem("access_token");
+                        const token = getAccessToken();
                         if (!token) throw new Error("No access token found");
 
                         const valid = mobileAddDrafts.filter(
@@ -1113,7 +1127,7 @@ export default function ProfilePage() {
             <div className="mb-3">
               <div className="text-xs font-semibold mb-1 text-black">Current Subscriptions</div>
               <div className="border rounded-xl p-2 mb-2 flex flex-col gap-1">
-                {subscriptions.slice(0, 2).map((x) => (
+                {subscriptions.map((x) => (
                   <div key={x.id} className="flex justify-between text-xs text-black">
                     <span className="truncate pr-2">{x.name}</span>
                     <span>{x.amount ? `₹${x.amount}/month` : "-"}</span>
@@ -1124,6 +1138,7 @@ export default function ProfilePage() {
                 Manage Subscriptions
               </button>
             </div>
+            {hasUnpaidStudents && (
             <div className="mb-3">
               <div className="border border-red-400 rounded-xl p-3 mb-2">
                 <div className="text-xs text-red-600 font-semibold mb-1">Payment Pending</div>
@@ -1141,6 +1156,26 @@ export default function ProfilePage() {
                 <div className="text-[10px] text-gray-500 text-center mt-1">Pay now to avoid late fees*</div>
               </div>
             </div>
+            )}
+
+            {allStudentsPaid && (
+            <div className="mb-3">
+              <div className="border border-[#EAEAEA] rounded-xl p-3 mb-2">
+                <div className="text-xs text-black font-semibold mb-1">Next Payment</div>
+                <div className="flex justify-between text-xs mb-1 text-black">
+                  <span className="font-medium text-gray-500">Due Date</span>
+                  <span>--/--/----</span>
+                </div>
+                <div className="flex justify-between text-xs mb-2 text-black">
+                  <span className="font-medium text-gray-500">Amount</span>
+                  <span>{nextPaymentAmount ? `₹${nextPaymentAmount}` : "₹0"}</span>
+                </div>
+                <button className="w-full bg-[#e8b600] text-white font-semibold rounded-full py-1">
+                  Pay Now
+                </button>
+              </div>
+            </div>
+            )}
           </section>
 
           {/* Account Settings */}
