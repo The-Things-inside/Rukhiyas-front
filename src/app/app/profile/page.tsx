@@ -19,6 +19,7 @@ import {
 import { earliestFeeExpiry, formatFeeExpiry } from "@/lib/utils";
 import { useStudentPayment } from "@/hooks/useStudentPayment";
 import PaymentHistorySheet from "@/components/PaymentHistorySheet";
+import ServiceHistorySheet from "@/components/ServiceHistorySheet";
 
 const MapAddressPicker = dynamic(() => import("@/components/MapAddressPicker"), {
   ssr: false,
@@ -111,6 +112,11 @@ export default function ProfilePage() {
   const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<{
     id: number;
     name: string;
+  } | null>(null);
+  const [serviceHistoryOpen, setServiceHistoryOpen] = useState(false);
+  const [serviceHistoryBus, setServiceHistoryBus] = useState<{
+    busId: number;
+    studentName: string;
   } | null>(null);
 
   const reloadStudents = useCallback(async () => {
@@ -227,6 +233,28 @@ export default function ProfilePage() {
       }
       setPaymentHistoryStudent({ id: target.id, name: target.full_name });
       setPaymentHistoryOpen(true);
+    },
+    [students],
+  );
+
+  const openServiceHistory = useCallback(
+    (studentId?: number) => {
+      const target = studentId
+        ? students.find((s) => s.id === studentId)
+        : students.find((s) => s.bus_id != null) ?? students[0];
+      if (!target) {
+        toast.error("No student found");
+        return;
+      }
+      if (!target.bus_id) {
+        toast.error("No bus assigned for this student yet");
+        return;
+      }
+      setServiceHistoryBus({
+        busId: target.bus_id,
+        studentName: target.full_name,
+      });
+      setServiceHistoryOpen(true);
     },
     [students],
   );
@@ -405,6 +433,12 @@ export default function ProfilePage() {
         onClose={() => setPaymentHistoryOpen(false)}
         studentId={paymentHistoryStudent?.id ?? null}
         studentName={paymentHistoryStudent?.name}
+      />
+      <ServiceHistorySheet
+        open={serviceHistoryOpen}
+        onClose={() => setServiceHistoryOpen(false)}
+        busId={serviceHistoryBus?.busId ?? null}
+        studentName={serviceHistoryBus?.studentName}
       />
       {/* Desktop */}
       <div className="hidden md:flex min-h-screen">
@@ -789,6 +823,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => {
                       if (x === "Payment History") openPaymentHistory();
+                      if (x === "Service History") openServiceHistory();
                     }}
                     className="w-full py-[12px] flex items-center justify-between text-black"
                     style={{ fontFamily: "Satoshi, sans-serif" }}
@@ -1315,6 +1350,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => {
                       if (x === "Payment History") openPaymentHistory();
+                      if (x === "Service History") openServiceHistory();
                     }}
                     className="flex w-full items-center justify-between py-2 text-left text-black"
                   >
